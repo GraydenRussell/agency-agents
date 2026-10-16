@@ -3,6 +3,8 @@ import { GoogleCard } from "@/components/settings/google-card";
 import { AssistantSettings, MemoryEditor } from "@/components/settings/assistant-settings";
 import { AutomationsCard, NotificationSettings, RemindersCard } from "@/components/settings/notification-settings";
 import { JOBS } from "@/lib/automations";
+import { BusinessSettings } from "@/components/settings/business-settings";
+import { quickLinks } from "@/lib/services/business";
 import { channelStatus } from "@/lib/notify";
 import { describeRrule } from "@/lib/recurrence";
 import { formatDateTime } from "@/lib/time";
@@ -10,7 +12,6 @@ import { aiConfigured, spentToday } from "@/lib/ai/client";
 import { APPROVAL_ACTIONS } from "@/lib/assistant/policy";
 import { getAllSettings } from "@/lib/services/settings";
 import { addDays, today } from "@/lib/time";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/lib/db";
 import { isMock } from "@/lib/integrations/mode";
 
@@ -27,6 +28,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
     db.apiUsage.aggregate({ where: { date: { gte: addDays(today(), -6) } }, _sum: { costUsd: true } }),
     db.apiUsage.groupBy({ by: ["purpose"], where: { date: { gte: addDays(today(), -6) } }, _sum: { costUsd: true } }),
   ]);
+  const links = await quickLinks();
   const [reminders, devices, runs] = await Promise.all([
     db.reminder.findMany({ where: { OR: [{ status: "SCHEDULED" }, { status: "FAILED" }] }, orderBy: { nextFireAt: "asc" }, take: 50 }),
     db.pushSubscription.count(),
@@ -66,14 +68,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             return { name, label: j.label, schedule: j.schedule, last: last ? { at: formatDateTime(last.startedAt), ok: last.ok, summary: last.summary, error: last.error } : null };
           })}
         />
-        <Card>
-          <CardHeader>
-            <CardTitle>Coming in later phases</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm text-muted-foreground">
-            <p>GitHub + Vercel (Phase 7) · Admin dashboard + quick links (Phase 8)</p>
-          </CardContent>
-        </Card>
+        <BusinessSettings links={links} adminConfigured={isMock() || Boolean(process.env.ADMIN_DASH_URL && process.env.LIFE_OS_API_TOKEN)} github={isMock() || Boolean(process.env.GITHUB_TOKEN)} vercel={isMock() || Boolean(process.env.VERCEL_TOKEN)} />
       </div>
     </>
   );

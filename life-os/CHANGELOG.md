@@ -2,6 +2,20 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Phase 8] Business hub — 2026-10-16
+### Added
+- Business page: revenue today / week / month and last month, month-pace projection, today's jobs, recent leads,
+  the admin dashboard's own daily brief (if it provides one), quick links (Google Business Profile, Meta Ads, GA4,
+  Housecall Pro, admin dashboard) editable in Settings.
+- Integration via a token-protected `GET /api/life-os/summary` on the admin dashboard (Zod-validated contract,
+  5-minute cache). `docs/admin-dashboard-endpoint.md` has a drop-in Next.js route handler with the four queries to
+  map to your tables (the dashboard repo was empty on GitHub, so table names need confirming).
+- Housecall Pro jobs appear on the Today timeline; a business card on Today; numbers feed the daily brief and the
+  assistant's `business_numbers` tool.
+- Settings: connection status for admin dashboard, GitHub, Vercel; quick-links editor.
+- Tests: contract validation, pacing, live fetch auth + error handling, quick links, timeline jobs; Playwright
+  business page + quick links.
+
 ## [Phase 7] Projects hub — 2026-10-16
 ### Added
 - GitHub discovery (fine-grained token): all repos you own/collaborate on for `GITHUB_OWNERS`, with description,

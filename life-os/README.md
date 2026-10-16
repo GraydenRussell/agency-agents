@@ -113,6 +113,12 @@ Vercel Cron instead: the same endpoints accept `GET` with `Authorization: Bearer
 - Quiet hours (default 9:30 PM–6:00 AM) hold SMS/push; reminders you set always go through. Use **Test** buttons in
   Settings to verify each channel.
 
+## Business hub (admin dashboard)
+
+Life OS doesn't duplicate the admin dashboard's Housecall Pro sync. Add the small endpoint in
+[`docs/admin-dashboard-endpoint.md`](./docs/admin-dashboard-endpoint.md) to `Rapid-Windows-dash`, then set
+`ADMIN_DASH_URL` and `LIFE_OS_API_TOKEN` (same token in both apps).
+
 ## Projects hub
 
 - **GitHub:** create a fine-grained token (Settings → Developer settings → Fine-grained tokens) with access to all

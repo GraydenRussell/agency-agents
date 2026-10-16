@@ -1,7 +1,8 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { getWeather, type Weather } from "@/lib/integrations/weather";
-import { atLocalMinutes, endOfLocalDay, startOfLocalDay, today, type LocalDate } from "@/lib/time";
+import { businessConfigured, getBusinessSummary, type BusinessSummary } from "@/lib/integrations/business";
+import { atLocalMinutes, endOfLocalDay, localDateOf, startOfLocalDay, today, type LocalDate } from "@/lib/time";
 import { habitsWithStatus, type HabitStatus } from "./habits";
 import { syncIfStale } from "./calendar";
 import { checklistsForDate, templateForDate } from "./routines";
@@ -31,9 +32,10 @@ export type TodayData = {
   weather: Weather | { error: string };
   brief: { markdown: string; createdAt: Date } | null;
   evening: { markdown: string; createdAt: Date } | null;
+  business: BusinessSummary | null;
 };
 
-export async function buildTimeline(date: LocalDate, scheduledTasks: DayTasks["scheduled"]): Promise<TimelineItem[]> {
+export async function buildTimeline(date: LocalDate, scheduledTasks: DayTasks["scheduled"], business: BusinessSummary | null = null): Promise<TimelineItem[]> {
   const start = startOfLocalDay(date);
   const end = endOfLocalDay(date);
   const [events, template] = await Promise.all([
@@ -46,6 +48,10 @@ export async function buildTimeline(date: LocalDate, scheduledTasks: DayTasks["s
     ...scheduledTasks
       .filter((t) => t.scheduledStart && !events.some((e) => e.taskId === t.id))
       .map((t) => ({ id: t.id, kind: "task" as const, title: t.title, start: t.scheduledStart as Date, end: t.scheduledEnd ?? new Date((t.scheduledStart as Date).getTime() + 30 * 60_000), href: `/tasks?task=${t.id}` })),
+    // Housecall Pro jobs via the admin dashboard (only those on this date).
+    ...(business?.jobs.today ?? [])
+      .filter((j) => localDateOf(new Date(j.start)) === date)
+      .map((j) => ({ id: j.id, kind: "job" as const, title: `Job: ${j.customer}`, start: new Date(j.start), end: j.end ? new Date(j.end) : new Date(new Date(j.start).getTime() + 90 * 60_000), location: j.address ?? null, href: "/business" })),
   ];
   return items.sort((a, b) => Number(b.allDay ?? false) - Number(a.allDay ?? false) || a.start.getTime() - b.start.getTime());
 }
@@ -67,9 +73,9 @@ export async function inboxSummary(): Promise<InboxSummary> {
 
 export async function getToday(date: LocalDate = today()): Promise<TodayData> {
   await syncIfStale(10 * 60_000);
-  const tasks = await tasksForDay(date);
+  const [tasks, business] = await Promise.all([tasksForDay(date), businessConfigured() ? getBusinessSummary().catch(() => null) : Promise.resolve(null)]);
   const [timeline, habits, checklists, inbox, weather, brief, evening] = await Promise.all([
-    buildTimeline(date, tasks.scheduled),
+    buildTimeline(date, tasks.scheduled, business),
     habitsWithStatus(date),
     checklistsForDate(date),
     inboxSummary(),
@@ -77,5 +83,5 @@ export async function getToday(date: LocalDate = today()): Promise<TodayData> {
     db.brief.findUnique({ where: { type_date: { type: "DAILY", date } }, select: { markdown: true, createdAt: true } }),
     db.brief.findUnique({ where: { type_date: { type: "EVENING", date } }, select: { markdown: true, createdAt: true } }),
   ]);
-  return { date, timeline, tasks, habits, checklists, inbox, weather, brief, evening };
+  return { date, timeline, tasks, habits, checklists, inbox, weather, brief, evening, business };
 }

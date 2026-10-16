@@ -14,7 +14,7 @@ import { getToday } from "@/lib/services/today";
 import { Markdown } from "@/components/assistant/markdown";
 import { RunJobButton } from "@/components/today/run-job-button";
 import { formatLocalDate, greeting } from "@/lib/time";
-import { pluralize } from "@/lib/utils";
+import { formatUsd, pluralize } from "@/lib/utils";
 
 export const metadata = { title: "Today" };
 
@@ -127,6 +127,31 @@ export default async function TodayPage() {
 
         <div className="min-w-0 space-y-4">
           <WeatherCard weather={d.weather} />
+
+          {d.business && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Rapid Window Cleaning</CardTitle>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/business">Open</Link>
+                </Button>
+              </CardHeader>
+              <CardContent className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg bg-muted/50 p-2">
+                  <p className="font-display text-xl">{formatUsd(d.business.revenue.today)}</p>
+                  <p className="text-[11px] text-muted-foreground">today</p>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-2">
+                  <p className="font-display text-xl">{d.business.jobs.today.length}</p>
+                  <p className="text-[11px] text-muted-foreground">jobs</p>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-2">
+                  <p className="font-display text-xl text-brand-cyan">{d.business.leads.new24h}</p>
+                  <p className="text-[11px] text-muted-foreground">new leads</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

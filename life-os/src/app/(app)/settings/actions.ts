@@ -78,3 +78,12 @@ export async function cancelReminderAction(id: string) {
     return undefined;
   });
 }
+
+export async function saveQuickLinksAction(links: Array<{ label: string; url: string }>) {
+  return runAction(async () => {
+    await setSetting("business.quickLinks", links.filter((l) => l.label.trim() && l.url.trim()).map((l) => ({ label: l.label.trim(), url: l.url.trim() })));
+    revalidatePath("/settings");
+    revalidatePath("/business");
+    return undefined;
+  });
+}
