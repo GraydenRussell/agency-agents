@@ -13,7 +13,7 @@ import { TaskList } from "@/components/tasks/task-list";
 import { getToday } from "@/lib/services/today";
 import { Markdown } from "@/components/assistant/markdown";
 import { RunJobButton } from "@/components/today/run-job-button";
-import { formatLocalDate, greeting } from "@/lib/time";
+import { formatLocalDate, greeting, relativeDayLabel } from "@/lib/time";
 import { formatUsd, pluralize } from "@/lib/utils";
 
 export const metadata = { title: "Today" };
@@ -149,6 +149,34 @@ export default async function TodayPage() {
                   <p className="font-display text-xl text-brand-cyan">{d.business.leads.new24h}</p>
                   <p className="text-[11px] text-muted-foreground">new leads</p>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {(d.headsUp.bills.length > 0 || d.headsUp.followUps.length > 0 || d.headsUp.birthdays.length > 0) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Heads up</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1.5 text-sm" data-testid="heads-up">
+                {d.headsUp.bills.map((b) => (
+                  <Link key={`${b.id}-${b.due}`} href="/money" className="flex justify-between gap-2 hover:underline">
+                    <span>💵 {b.name}{b.autopay ? " (autopay)" : ""}</span>
+                    <span className="text-muted-foreground">
+                      {formatUsd(b.amount)} · {relativeDayLabel(b.due)}
+                    </span>
+                  </Link>
+                ))}
+                {d.headsUp.followUps.map((p) => (
+                  <Link key={p.id} href={`/people?person=${p.id}`} className="block hover:underline">
+                    👋 Follow up with {p.name}
+                  </Link>
+                ))}
+                {d.headsUp.birthdays.map((b) => (
+                  <p key={b.name}>
+                    🎂 {b.name}&apos;s birthday {b.inDays === 0 ? "today" : `in ${b.inDays} day${b.inDays === 1 ? "" : "s"}`}
+                  </p>
+                ))}
               </CardContent>
             </Card>
           )}

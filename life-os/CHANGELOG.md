@@ -2,6 +2,21 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Phase 9] Health, money, people — 2026-10-16
+### Added
+- **Health:** water tracker (+8/16/32 oz, 100 oz Phoenix-heat target), sleep log (hours + quality), workout log,
+  habit check-ins with streaks, and 14-day sleep / water and 8-week workout-minutes charts (accessible SVG bar charts:
+  single hue validated for colorblind/contrast on the dark surface, target lines, hover tooltips, screen-reader tables).
+- **Money:** monthly budget by category with pace warnings ("ahead of pace", "over"), manual transactions,
+  bills with due-day clamping, autopay, mark-paid, and a bills calendar; month navigation. The schema keeps an
+  `externalId` on transactions for a future Plaid import.
+- **People:** contacts with relation/company/phone/email/birthday/notes, touchpoint log that resets a per-person
+  follow-up interval, follow-up reminders (one tap → scheduled reminder), call/email shortcuts.
+- Today "Heads up" card (bills due within 7 days, follow-ups due, birthdays within 14 days) and a "Money & people"
+  section in the daily brief.
+- Tests: water clamping, sleep upsert, weekly minutes, bill clamping/autopay/paid, month summary, upcoming bills,
+  follow-up logic, birthdays across the year boundary; Playwright for all three pages.
+
 ## [Phase 8] Business hub — 2026-10-16
 ### Added
 - Business page: revenue today / week / month and last month, month-pace projection, today's jobs, recent leads,

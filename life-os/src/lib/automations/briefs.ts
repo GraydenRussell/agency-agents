@@ -8,6 +8,8 @@ import { notify, smsText, type ChannelName } from "@/lib/notify";
 import { listEvents } from "@/lib/services/calendar";
 import { goalTree, type GoalNode } from "@/lib/services/goals";
 import { habitsWithStatus } from "@/lib/services/habits";
+import { upcomingBills } from "@/lib/services/money";
+import { dueFollowUps } from "@/lib/services/people";
 import { getSetting } from "@/lib/services/settings";
 import { addDays, endOfLocalDay, formatLocalDate, formatTime, startOfLocalDay, today, weekRange, type LocalDate } from "@/lib/time";
 import { formatUsd } from "@/lib/utils";
@@ -59,6 +61,7 @@ export async function buildDailyBrief(date: LocalDate = today()): Promise<BriefR
     safe<BusinessSummary>(() => getBusinessSummary()),
   ]);
   const replyCount = await db.emailThread.count({ where: { inInbox: true, needsReply: true } });
+  const [bills, followUps] = await Promise.all([upcomingBills(3, date), dueFollowUps(date)]);
   const overdueCount = await db.task.count({ where: { deletedAt: null, parentId: null, status: { in: ["TODO", "DOING"] }, dueAt: { lt: start } } });
   const priorities = top3.length ? top3 : topOpen;
   const jobs = business?.jobs.today ?? [];
@@ -94,6 +97,7 @@ export async function buildDailyBrief(date: LocalDate = today()): Promise<BriefR
     business ? `${formatUsd(business.revenue.today)} today · ${formatUsd(business.revenue.wtd)} this week · ${formatUsd(business.revenue.mtd)} this month\n${jobs.length} jobs today · ${business.leads.new24h} new leads (24h) · ${business.leads.open} open` : "Admin dashboard not connected.",
     `## Overdue`,
     bullets(overdue.map((t) => t.title), "Nothing overdue"),
+    ...(bills.length || followUps.length ? [`## Money & people`, bullets([...bills.map((b) => `${b.name} ${formatUsd(b.amount)} due ${formatLocalDate(b.due)}${b.autopay ? " (autopay)" : ""}`), ...followUps.map((p) => `Follow up with ${p.name}`)])] : []),
     `## One suggestion`,
     tip,
   ].join("\n\n");

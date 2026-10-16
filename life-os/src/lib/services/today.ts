@@ -5,6 +5,8 @@ import { businessConfigured, getBusinessSummary, type BusinessSummary } from "@/
 import { atLocalMinutes, endOfLocalDay, localDateOf, startOfLocalDay, today, type LocalDate } from "@/lib/time";
 import { habitsWithStatus, type HabitStatus } from "./habits";
 import { syncIfStale } from "./calendar";
+import { upcomingBills } from "./money";
+import { dueFollowUps, upcomingBirthdays } from "./people";
 import { checklistsForDate, templateForDate } from "./routines";
 import { tasksForDay, type DayTasks } from "./tasks";
 
@@ -33,6 +35,7 @@ export type TodayData = {
   brief: { markdown: string; createdAt: Date } | null;
   evening: { markdown: string; createdAt: Date } | null;
   business: BusinessSummary | null;
+  headsUp: { bills: Awaited<ReturnType<typeof upcomingBills>>; followUps: Array<{ id: string; name: string }>; birthdays: ReturnType<typeof upcomingBirthdays> };
 };
 
 export async function buildTimeline(date: LocalDate, scheduledTasks: DayTasks["scheduled"], business: BusinessSummary | null = null): Promise<TimelineItem[]> {
@@ -74,7 +77,7 @@ export async function inboxSummary(): Promise<InboxSummary> {
 export async function getToday(date: LocalDate = today()): Promise<TodayData> {
   await syncIfStale(10 * 60_000);
   const [tasks, business] = await Promise.all([tasksForDay(date), businessConfigured() ? getBusinessSummary().catch(() => null) : Promise.resolve(null)]);
-  const [timeline, habits, checklists, inbox, weather, brief, evening] = await Promise.all([
+  const [timeline, habits, checklists, inbox, weather, brief, evening, bills, followUps, people] = await Promise.all([
     buildTimeline(date, tasks.scheduled, business),
     habitsWithStatus(date),
     checklistsForDate(date),
@@ -82,6 +85,9 @@ export async function getToday(date: LocalDate = today()): Promise<TodayData> {
     getWeather().catch((e: unknown) => ({ error: e instanceof Error ? e.message : "Weather unavailable" })),
     db.brief.findUnique({ where: { type_date: { type: "DAILY", date } }, select: { markdown: true, createdAt: true } }),
     db.brief.findUnique({ where: { type_date: { type: "EVENING", date } }, select: { markdown: true, createdAt: true } }),
+    upcomingBills(7, date),
+    dueFollowUps(date),
+    db.person.findMany({ where: { birthday: { not: null } }, select: { name: true, birthday: true } }),
   ]);
-  return { date, timeline, tasks, habits, checklists, inbox, weather, brief, evening, business };
+  return { date, timeline, tasks, habits, checklists, inbox, weather, brief, evening, business, headsUp: { bills, followUps: followUps.map((p) => ({ id: p.id, name: p.name })), birthdays: upcomingBirthdays(people, date, 14) } };
 }
