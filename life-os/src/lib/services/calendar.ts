@@ -193,7 +193,9 @@ export async function createEvent(input: EventInput) {
 
 export async function updateEvent(id: string, patch: Partial<EventInput>) {
   const current = await db.calendarEvent.findUniqueOrThrow({ where: { id } });
-  const merged = eventInputSchema.parse({ ...current, ...patch, attendees: patch.attendees ?? attendeesOf(current) });
+  // Ignore keys explicitly set to undefined so partial patches never blank existing fields.
+  const defined = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
+  const merged = eventInputSchema.parse({ ...current, ...defined, attendees: patch.attendees ?? attendeesOf(current) });
   const e = await db.calendarEvent.update({
     where: { id },
     data: { title: merged.title, description: merged.description, location: merged.location, start: merged.start, end: merged.end, allDay: merged.allDay ?? false, attendees: merged.attendees ?? [], dirty: true },

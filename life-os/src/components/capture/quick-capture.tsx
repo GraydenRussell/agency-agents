@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Bell, BookOpen, CalendarPlus, CheckSquare, Loader2, StickyNote } from "lucide-react";
+import { Bell, BookOpen, CalendarPlus, CheckSquare, Loader2, Sparkles, StickyNote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,7 +13,7 @@ import { parseCapture, type CaptureKind } from "@/lib/capture/parse";
 import { AREA_META, PRIORITY_META } from "@/lib/labels";
 import { formatDateTime, formatLocalDate, localDateOf } from "@/lib/time";
 import { cn } from "@/lib/utils";
-import { captureAction } from "@/app/(app)/capture-actions";
+import { captureAction, captureWithAIAction } from "@/app/(app)/capture-actions";
 
 const KINDS: Array<{ kind: CaptureKind; label: string; icon: React.ComponentType<{ className?: string }> }> = [
   { kind: "task", label: "Task", icon: CheckSquare },
@@ -106,6 +106,21 @@ function CaptureForm({ initial, onDone }: { initial: string; onDone: () => void 
       <div className="flex justify-end gap-2">
         <Button variant="ghost" onClick={onDone}>
           Cancel
+        </Button>
+        <Button
+          variant="outline"
+          disabled={pending || !text.trim()}
+          title="Let the assistant decide what this is and fill in the details"
+          onClick={() =>
+            run(() => captureWithAIAction(text), {
+              onSuccess: (r) => {
+                onDone();
+                toast.success(`${r.message}${r.source === "rules" ? " (AI unavailable, used quick rules)" : ""}`, { description: r.title, action: { label: "Open", onClick: () => router.push(r.href) } });
+              },
+            })
+          }
+        >
+          <Sparkles /> AI file
         </Button>
         <Button onClick={submit} disabled={pending || !text.trim()}>
           {pending && <Loader2 className="animate-spin" />} Save <kbd className="ml-1 border-white/30 bg-white/10 text-white">↵</kbd>

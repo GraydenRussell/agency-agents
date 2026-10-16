@@ -12,3 +12,15 @@ export async function captureAction(text: string, kind?: CaptureKind) {
     return r;
   });
 }
+
+export async function captureWithAIAction(text: string) {
+  return runAction(async () => {
+    if (!text.trim()) throw new Error("Nothing to capture");
+    const { aiParseCapture } = await import("@/lib/ai/capture");
+    const { commitCapture } = await import("@/lib/services/capture");
+    const parsed = await aiParseCapture(text);
+    const r = await commitCapture(parsed);
+    revalidatePath("/", "layout");
+    return { ...r, source: parsed.source };
+  });
+}

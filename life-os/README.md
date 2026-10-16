@@ -71,6 +71,17 @@ All variables are documented in [`.env.example`](./.env.example). Highlights:
 3. **Vercel**: import the repo, set the env vars above (`AUTH_MODE=supabase`), deploy.
 4. First visit: sign in → scan the 2FA QR code → done.
 
+## The assistant
+
+- Set `ANTHROPIC_API_KEY` and `INTEGRATION_MODE=live`. Model: `ANTHROPIC_MODEL` (default `claude-opus-5-5`);
+  high-volume work (email triage, capture filing) uses `ANTHROPIC_FAST_MODEL` (same default; set
+  `claude-haiku-5-5` to cut cost).
+- Without a key (or in mock mode) an offline demo model handles a few phrasings so you can try the flows.
+- Safety defaults: sending email, deleting anything, and events with other people go to **Approvals**. Change
+  per-action auto-approve, the daily spend cap (default $5), tool-call rate limits, and effort in **Settings**.
+- Everything the assistant does is in the **Activity Log** with Undo where possible.
+- The chat endpoint streams for up to 300 s (`maxDuration`); Vercel Hobby with Fluid Compute allows this.
+
 ## Google OAuth (Gmail + Calendar)
 
 1. Google Cloud Console → create a project → **APIs & Services → Library**: enable *Google Calendar API* and *Gmail API*.

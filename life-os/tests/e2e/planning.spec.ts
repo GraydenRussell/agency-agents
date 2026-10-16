@@ -12,7 +12,7 @@ test("quick capture creates a task that appears on the Tasks page", async ({ pag
   await box.press("Enter");
   await expect(page.getByText("Task added")).toBeVisible();
   await page.goto("/tasks");
-  await expect(page.getByText(`Buy ladder stabilizer ${isMobile ? "m" : "d"}`)).toBeVisible();
+  await expect(page.getByText(`Buy ladder stabilizer ${isMobile ? "m" : "d"}`, { exact: true }).first()).toBeVisible();
 });
 
 test("completing a Top 3 task updates Today with undo", async ({ page }) => {

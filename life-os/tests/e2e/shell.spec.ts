@@ -20,7 +20,7 @@ test("command palette opens with Cmd/Ctrl+K and navigates", async ({ page, isMob
 test("g-chord navigation works", async ({ page, isMobile }) => {
   test.skip(isMobile, "keyboard shortcuts are a desktop affordance");
   await page.goto("/today");
-  await page.locator("body").click();
+  await page.getByRole("heading", { level: 1 }).first().click(); // focus the page without hitting a control
   await page.keyboard.press("g");
   await page.keyboard.press("t");
   await expect(page).toHaveURL(/\/tasks$/);

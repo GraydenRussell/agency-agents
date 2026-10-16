@@ -2,6 +2,40 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Phase 5] AI assistant — 2026-10-16
+### Added
+- **Assistant** in a ⌘J side panel on every page and a full page with conversation history. Streams responses
+  (SSE), shows tool activity inline, renders safe Markdown.
+- Agent loop on `claude-opus-5-5` (adaptive thinking, configurable effort, prompt caching on system + memory,
+  server-side refusal fallback `fallbacks: "default"`, Anthropic web search tool). Transcript is stored verbatim and
+  append-only (thinking blocks and cache prefixes stay valid); per-turn context (Phoenix time, Top 3, counts) rides on
+  the user message instead of the system prompt.
+- **33 tools**, each a real server function validated with Zod: email (search, read, summarize, draft, send, archive,
+  label, trash), calendar (list, create, move, delete, find free time), tasks (list, create, update, complete, delete,
+  prioritize, plan day, plan week), reminders (schedule one-off/recurring via SMS/push/email, list, cancel), notes
+  (create, search, journal), projects (status, next step), business numbers, memory (write, forget).
+- **Approvals queue**: sending email, deleting anything, and creating/changing events with other people wait for a
+  one-tap Approve/Reject (inline card + Approvals page + nav badge). Atomic claim prevents double execution; outcomes
+  are fed back to the conversation. Per-action **auto-approve** toggles in Settings (all off by default); auto-send
+  additionally requires an allow-listed email category.
+- **Activity Log** of every write by the assistant, automations, and you, with **Undo** where an inverse exists
+  (tasks, events, email archive/label/trash, notes/journal, reminders, memory, projects).
+- **Memory** table (facts, preferences, writing style, people) read before every conversation; editable in Settings;
+  the assistant can add/forget items.
+- **Safety & cost**: per-minute and per-day tool-call rate limits (atomic DB counters), daily spend cap checked
+  before every model call, usage/cost per call, spend shown in Settings and on the assistant page. Email/web content
+  is treated as untrusted in the system prompt.
+- Quick capture **"AI file"** button: the model classifies and fills in the capture (rule parser fallback).
+- **Offline demo model** (mock mode / no API key) that emits real tool calls for common phrasings, so the whole
+  pipeline is usable and tested without network access.
+- Tests: every tool through the executor (approvals, auto-approve, undo, rate limit, validation), agent loop with a
+  scripted model, history normalization, Markdown renderer; Playwright: create via assistant + undo, approval flow,
+  ⌘J panel, settings.
+
+### Fixed
+- Partial event updates with an explicit `undefined` field no longer blank that field.
+- Tool "not found" errors during summarization are returned to the model instead of aborting the turn.
+
 ## [Phase 4] Gmail + AI triage — 2026-10-16
 ### Added
 - Gmail REST adapter (threads, history, modify, trash, send, labels) with MIME parsing (multipart, HTML→text,
