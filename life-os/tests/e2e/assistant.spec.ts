@@ -46,8 +46,8 @@ test("assistant panel opens with Cmd/Ctrl+J and remembers the conversation", asy
 test("settings: auto-approve toggles default off; memory can be added", async ({ page }) => {
   await page.goto("/settings");
   await expect(page.getByRole("switch", { name: "Send email replies" })).not.toBeChecked();
-  await page.getByLabel("Memory key").fill("preference.crew-calls");
-  await page.getByLabel("Memory value").fill("Call the crew before 7am, never text.");
+  await page.getByLabel("Memory key", { exact: true }).fill("preference.crew-calls");
+  await page.getByLabel("Memory value", { exact: true }).fill("Call the crew before 7am, never text.");
   await page.getByRole("button", { name: "Save memory" }).click();
   await expect(page.getByText("Call the crew before 7am, never text.")).toBeVisible();
 });

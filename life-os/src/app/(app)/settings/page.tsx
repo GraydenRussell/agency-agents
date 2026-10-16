@@ -1,6 +1,11 @@
 import { PageHeader } from "@/components/shell/page-header";
 import { GoogleCard } from "@/components/settings/google-card";
 import { AssistantSettings, MemoryEditor } from "@/components/settings/assistant-settings";
+import { AutomationsCard, NotificationSettings, RemindersCard } from "@/components/settings/notification-settings";
+import { JOBS } from "@/lib/automations";
+import { channelStatus } from "@/lib/notify";
+import { describeRrule } from "@/lib/recurrence";
+import { formatDateTime } from "@/lib/time";
 import { aiConfigured, spentToday } from "@/lib/ai/client";
 import { APPROVAL_ACTIONS } from "@/lib/assistant/policy";
 import { getAllSettings } from "@/lib/services/settings";
@@ -22,12 +27,17 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
     db.apiUsage.aggregate({ where: { date: { gte: addDays(today(), -6) } }, _sum: { costUsd: true } }),
     db.apiUsage.groupBy({ by: ["purpose"], where: { date: { gte: addDays(today(), -6) } }, _sum: { costUsd: true } }),
   ]);
+  const [reminders, devices, runs] = await Promise.all([
+    db.reminder.findMany({ where: { OR: [{ status: "SCHEDULED" }, { status: "FAILED" }] }, orderBy: { nextFireAt: "asc" }, take: 50 }),
+    db.pushSubscription.count(),
+    db.jobRun.findMany({ orderBy: { startedAt: "desc" }, take: 200 }),
+  ]);
   return (
     <>
       <PageHeader title="Settings" />
       {sp.connected === "google" && <p className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm">Google connected. Your calendar is syncing.</p>}
       {typeof sp.google_error === "string" && <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm">Google connection failed: {sp.google_error}</p>}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         <GoogleCard
           status={google?.status ?? null}
           email={google?.accountEmail ?? null}
@@ -48,12 +58,19 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           usage={{ today: spent, week: week._sum.costUsd ?? 0, byPurpose: byPurpose.map((b) => ({ purpose: b.purpose, cost: b._sum.costUsd ?? 0 })) }}
         />
         <MemoryEditor memories={memories} />
+        <NotificationSettings status={channelStatus()} briefChannels={settings["notifications.briefChannels"]} quiet={settings["notifications.quietHours"]} threshold={settings["notifications.highPriorityThreshold"]} devices={devices} />
+        <RemindersCard reminders={reminders.map((r) => ({ id: r.id, title: r.title, next: r.nextFireAt && r.nextFireAt.getFullYear() < 9999 ? formatDateTime(r.nextFireAt) : null, recurring: r.rrule ? describeRrule(r.rrule) : null, channels: r.channels, status: r.status, lastError: r.lastError }))} />
+        <AutomationsCard
+          jobs={Object.entries(JOBS).map(([name, j]) => {
+            const last = runs.find((r) => r.job === name);
+            return { name, label: j.label, schedule: j.schedule, last: last ? { at: formatDateTime(last.startedAt), ok: last.ok, summary: last.summary, error: last.error } : null };
+          })}
+        />
         <Card>
           <CardHeader>
             <CardTitle>Coming in later phases</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm text-muted-foreground">
-            <p>Reminders, notification channels, quiet hours, brief delivery (Phase 6)</p>
             <p>GitHub + Vercel (Phase 7) · Admin dashboard + quick links (Phase 8)</p>
           </CardContent>
         </Card>

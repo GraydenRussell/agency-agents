@@ -50,3 +50,31 @@ export async function deleteMemoryAction(key: string) {
     return undefined;
   });
 }
+
+export async function sendTestNotificationAction(channel: "SMS" | "PUSH" | "EMAIL") {
+  return runAction(async () => {
+    const { notify } = await import("@/lib/notify");
+    const [r] = await notify({ title: "Test from Life OS", body: "If you can read this, notifications work.", channels: [channel], urgent: true, url: "/settings" });
+    if (!r?.ok) throw new Error(r?.error ?? r?.skipped ?? "Not delivered");
+    return channel;
+  });
+}
+
+export async function runJobAction(name: string) {
+  return runAction(async () => {
+    const { runNamedJob } = await import("@/lib/automations");
+    const r = await runNamedJob(name, { force: true });
+    revalidatePath("/", "layout");
+    if (r.status === "failed") throw new Error(r.error);
+    return r.status === "ran" ? r.summary : r.reason;
+  });
+}
+
+export async function cancelReminderAction(id: string) {
+  return runAction(async () => {
+    const { cancelReminder } = await import("@/lib/services/reminders");
+    await cancelReminder(id);
+    revalidatePath("/settings");
+    return undefined;
+  });
+}

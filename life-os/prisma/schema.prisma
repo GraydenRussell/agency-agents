@@ -317,6 +317,8 @@ model EmailThread {
   needsReply     Boolean        @default(false)
   triagedAt      DateTime?
   snoozedUntil   DateTime?
+  /// When a high-priority alert was sent for the latest message (dedupes notifications).
+  notifiedAt     DateTime?
   historyId      String?
   messages       EmailMessage[]
   drafts         EmailDraft[]

@@ -65,7 +65,7 @@ export function Kanban({ tasks: initial }: { tasks: TaskRowData[] }) {
   const active = tasks.find((t) => t.id === activeId);
   return (
     <DndContext sensors={sensors} collisionDetection={collision} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {KANBAN_COLUMNS.map((status) => (
           <Column key={status} status={status} tasks={columns[status] ?? []} onOpen={open} />
         ))}

@@ -2,6 +2,24 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Phase 6] Reminders & automations — 2026-10-16
+### Added
+- Notification layer: SMS via Twilio REST, web push (VAPID, service worker with click-through), email to yourself
+  via Gmail; quiet hours (crossing midnight) for non-urgent notices; every delivery in the Activity Log; mock outbox.
+- Reminders: one-off or recurring (RRULE in Phoenix time), any mix of channels, claimed atomically before sending
+  (no double sends), next occurrence scheduled after delivery, failures recorded and shown in Settings.
+- Scheduled jobs with per-slot idempotency (`JobRun`): daily brief (6 AM), evening wrap-up (9 PM), weekly review
+  (Sunday 6 PM), inbox check every 30 min (sync, triage, AI drafts for important threads, alerts only for
+  high-priority mail, deduped per message), reminders every minute, calendar sync every 10 min, nightly maintenance.
+- Briefs saved to the Today page (rendered) and delivered on configurable channels; SMS gets a condensed version.
+  One AI suggestion per brief (rule-based fallback).
+- `/api/cron/<job>` (pg_cron POST with `x-cron-secret`, or Vercel Cron GET with Bearer), `npm run cron:sql`
+  generator for Supabase pg_cron + pg_net.
+- Settings: channel status + test buttons, push enable/disable per device, brief channels, quiet hours, alert
+  threshold, reminders list (cancel), automations with last run + Run now. Today: "Generate now" for the brief.
+- Tests: job idempotency/retry, reminder dispatch (one-off, recurring, urgent vs quiet hours), inbox alert dedupe,
+  brief contents, cron auth; Playwright: generate brief, test notification, run job.
+
 ## [Phase 5] AI assistant — 2026-10-16
 ### Added
 - **Assistant** in a ⌘J side panel on every page and a full page with conversation history. Streams responses

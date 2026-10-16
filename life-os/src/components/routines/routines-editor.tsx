@@ -44,7 +44,7 @@ const KIND_COLOR: Record<BlockKind, string> = {
 
 export function RoutinesEditor({ templates, checklists, habits }: { templates: Template[]; checklists: Checklist[]; habits: Habit[] }) {
   return (
-    <div className="grid gap-4 xl:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
       <div className="space-y-4">
         {templates.map((t) => (
           <TemplateCard key={t.id} template={t} />

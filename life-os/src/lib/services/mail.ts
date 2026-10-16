@@ -43,7 +43,7 @@ export async function upsertThread(gt: GmailThread, me: string) {
     inInbox: msgs.some((m) => m.labelIds.includes("INBOX")) && !labels.includes("TRASH"),
     historyId: gt.historyId,
     // A new message re-opens triage; a reply from me closes the needs-reply flag.
-    ...(changed ? { triagedAt: null } : {}),
+    ...(changed ? { triagedAt: null, notifiedAt: null } : {}),
     ...(lastFromMe ? { needsReply: false } : {}),
   };
   const thread = existing ? await db.emailThread.update({ where: { id: existing.id }, data }) : await db.emailThread.create({ data: { gmailThreadId: gt.id, ...data } });

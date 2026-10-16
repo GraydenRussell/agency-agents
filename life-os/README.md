@@ -82,6 +82,37 @@ All variables are documented in [`.env.example`](./.env.example). Highlights:
 - Everything the assistant does is in the **Activity Log** with Undo where possible.
 - The chat endpoint streams for up to 300 s (`maxDuration`); Vercel Hobby with Fluid Compute allows this.
 
+## Scheduled jobs (Supabase pg_cron)
+
+Vercel Hobby only runs cron once a day, so every schedule runs in Supabase with `pg_cron` + `pg_net`, which call
+signed endpoints on the app (`POST /api/cron/<job>` with `x-cron-secret`). Each job is idempotent per time slot.
+
+| Job | Phoenix time | What it does |
+|---|---|---|
+| `daily-brief` | 6:00 AM | Weather, schedule + jobs, Top 3, emails needing replies, business numbers, overdue, one suggestion |
+| `evening-wrap` | 9:00 PM | Done today, what rolls over, tomorrow's events, prompt to plan |
+| `weekly-review` | Sun 6:00 PM | Goal progress, wins, habit streaks, next week's focus |
+| `inbox` | every 30 min | Gmail sync + triage, AI drafts for important threads, alert only for high-priority mail |
+| `reminders` | every minute | Sends due reminders (SMS / push / email), schedules the next occurrence |
+| `calendar` | every 10 min | Google Calendar two-way sync |
+| `maintenance` | 3:00 AM | Expires old approvals, prunes rate-limit buckets and job history |
+
+Setup: Supabase → Database → Extensions: enable `pg_cron` and `pg_net`. Then
+`APP_URL=https://<your-domain> CRON_SECRET=<same as Vercel> npm run cron:sql > cron.sql` and run `cron.sql` in the
+SQL editor. Settings → Automations shows the last run of each job and has **Run now**. (On Vercel Pro you can use
+Vercel Cron instead: the same endpoints accept `GET` with `Authorization: Bearer $CRON_SECRET`.)
+
+## Notifications
+
+- **SMS (Twilio):** buy a number, then register it for US texting (A2P 10DLC brand + campaign, or toll-free
+  verification); carriers block unregistered traffic. Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
+  `TWILIO_FROM_NUMBER` (E.164, e.g. +14805550100) and `MY_PHONE_NUMBER`.
+- **Web push:** `npx web-push generate-vapid-keys`, set `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
+  `VAPID_SUBJECT=mailto:you@…`, then Settings → **Enable push on this device** (on iPhone: Add to Home Screen first).
+- **Email:** sent to yourself through your connected Gmail.
+- Quiet hours (default 9:30 PM–6:00 AM) hold SMS/push; reminders you set always go through. Use **Test** buttons in
+  Settings to verify each channel.
+
 ## Google OAuth (Gmail + Calendar)
 
 1. Google Cloud Console → create a project → **APIs & Services → Library**: enable *Google Calendar API* and *Gmail API*.

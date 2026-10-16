@@ -33,6 +33,7 @@ test("drag a task from the tray onto the calendar to time-block it", async ({ pa
   await page.mouse.down();
   await page.mouse.move(from.x + 30, from.y + 30, { steps: 4 });
   await page.mouse.move(to.x + to.width / 2, viewport.y + 120, { steps: 12 });
+  await page.waitForTimeout(150); // let dnd-kit settle on the drop target
   await page.mouse.up();
   await expect(page.getByText(/Time-blocked for/)).toBeVisible();
   await expect(page.getByRole("button", { name: new RegExp(title.slice(0, 20).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) }).first()).toBeVisible();

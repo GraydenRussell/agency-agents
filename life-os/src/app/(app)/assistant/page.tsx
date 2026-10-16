@@ -36,7 +36,7 @@ export default async function AssistantPage({ searchParams }: PageProps<"/assist
           </Button>
         }
       />
-      <div className="grid gap-4 lg:grid-cols-[14rem_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[14rem_minmax(0,1fr)]">
         <nav aria-label="Conversations" className="hidden space-y-1 lg:block">
           {conversations.length === 0 && <p className="text-sm text-muted-foreground">No conversations yet.</p>}
           {conversations.map((c) => (

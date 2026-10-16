@@ -98,7 +98,7 @@ function CaptureForm({ initial, onDone }: { initial: string; onDone: () => void 
                 #{t}
               </Badge>
             ))}
-            {kind === "reminder" && <Badge variant="warning">Delivery (push/SMS) is enabled in Phase 6</Badge>}
+            {kind === "reminder" && <Badge variant="secondary">Push notification</Badge>}
             {kind === "event" && <Badge variant="secondary">Syncs to Google once connected</Badge>}
           </div>
         </div>

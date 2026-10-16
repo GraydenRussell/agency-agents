@@ -30,6 +30,7 @@ export type TodayData = {
   inbox: InboxSummary;
   weather: Weather | { error: string };
   brief: { markdown: string; createdAt: Date } | null;
+  evening: { markdown: string; createdAt: Date } | null;
 };
 
 export async function buildTimeline(date: LocalDate, scheduledTasks: DayTasks["scheduled"]): Promise<TimelineItem[]> {
@@ -67,13 +68,14 @@ export async function inboxSummary(): Promise<InboxSummary> {
 export async function getToday(date: LocalDate = today()): Promise<TodayData> {
   await syncIfStale(10 * 60_000);
   const tasks = await tasksForDay(date);
-  const [timeline, habits, checklists, inbox, weather, brief] = await Promise.all([
+  const [timeline, habits, checklists, inbox, weather, brief, evening] = await Promise.all([
     buildTimeline(date, tasks.scheduled),
     habitsWithStatus(date),
     checklistsForDate(date),
     inboxSummary(),
     getWeather().catch((e: unknown) => ({ error: e instanceof Error ? e.message : "Weather unavailable" })),
     db.brief.findUnique({ where: { type_date: { type: "DAILY", date } }, select: { markdown: true, createdAt: true } }),
+    db.brief.findUnique({ where: { type_date: { type: "EVENING", date } }, select: { markdown: true, createdAt: true } }),
   ]);
-  return { date, timeline, tasks, habits, checklists, inbox, weather, brief };
+  return { date, timeline, tasks, habits, checklists, inbox, weather, brief, evening };
 }

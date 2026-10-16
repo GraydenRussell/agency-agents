@@ -53,6 +53,7 @@ test("kanban drag moves a card to Doing", async ({ page, isMobile }) => {
   await page.mouse.down();
   await page.mouse.move(from.x + 40, from.y + 20, { steps: 5 });
   await page.mouse.move(to.x + to.width / 2, Math.max(to.y, 0) + 60, { steps: 15 });
+  await page.waitForTimeout(150); // let dnd-kit settle on the drop target
   await page.mouse.up();
   await expect(doing.getByText("Read: The E-Myth Revisited")).toBeVisible();
   await page.reload();

@@ -42,7 +42,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
       {!connected && (
         <EmptyState icon={InboxIcon} title="Connect Gmail" description="Connect Google in Settings to sync your inbox." className="mb-4" action={<Link href="/settings#integrations" className="underline">Open Settings</Link>} />
       )}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
         <div className={cn("min-w-0", open && "max-lg:hidden")}>
           <div className="mb-3 inline-flex rounded-lg bg-muted p-1 text-sm">
             {(
