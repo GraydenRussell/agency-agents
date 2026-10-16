@@ -129,3 +129,19 @@ export function greeting(now: Date = new Date()): string {
   if (min < 17 * 60) return "Good afternoon";
   return "Good evening";
 }
+
+/** Value for <input type="datetime-local"> in Phoenix time. */
+export function toLocalInput(d: Date | null | undefined): string {
+  if (!d) return "";
+  return `${localDateOf(d)}T${pad(Math.floor(localMinutes(d) / 60))}:${pad(localMinutes(d) % 60)}`;
+}
+
+/** Parses "YYYY-MM-DDTHH:mm" (Phoenix wall time) or "YYYY-MM-DD" (5 PM default) into an instant. */
+export function fromLocalInput(v: string, defaultMinutes = 17 * 60): Date | null {
+  if (!v) return null;
+  const [date, time] = v.split("T");
+  if (!date) return null;
+  if (!time) return atLocalMinutes(date, defaultMinutes);
+  const [h, m] = time.split(":").map(Number);
+  return atLocalMinutes(date, (h ?? 0) * 60 + (m ?? 0));
+}

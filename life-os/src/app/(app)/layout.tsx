@@ -9,6 +9,8 @@ import { ShortcutSheet } from "@/components/shell/shortcut-sheet";
 import { GlobalHotkeys } from "@/components/shell/global-hotkeys";
 import { QuickCapture } from "@/components/capture/quick-capture";
 import { AssistantPanel } from "@/components/assistant/assistant-panel";
+import { TaskSheetHost } from "@/components/tasks/task-sheet";
+import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ShortcutSheet />
       <QuickCapture />
       <AssistantPanel />
+      <Suspense>
+        <TaskSheetHost />
+      </Suspense>
       <GlobalHotkeys />
     </ShellProvider>
   );
