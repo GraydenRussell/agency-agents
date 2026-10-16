@@ -2,6 +2,23 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Phase 3] Google Calendar two-way sync — 2026-10-16
+### Added
+- Google OAuth (offline access, consent requests Calendar + Gmail scopes up front), CSRF state cookie, encrypted
+  token storage, automatic refresh, revoke on disconnect, and a "reconnect" banner when Google revokes access.
+- Calendar REST adapter (no `googleapis` dependency) + deterministic mock adapter for offline dev/tests.
+- Two-way sync: incremental pulls with sync tokens (auto full resync on 410), push of local creates/edits/deletes,
+  etag-guarded updates; on conflict Google's version wins and the conflict is written to the Activity Log.
+  Sync runs on page load when stale (5–10 min), on demand ("Sync"), and right after local edits.
+- Calendar page: day / week / month views, routine blocks as background, all-day row, now-line, overlap layout,
+  drag events to move them, drag tasks from the tray to time-block them (linked event + task schedule),
+  double-click a slot to create, event dialog (all-day, location, guests with invite warning, description, delete
+  with undo), per-calendar sync toggles in Settings.
+- `findFreeTime` (working hours, routine-aware, weekend skip) ready for the assistant.
+- Settings page with the Google integration card.
+- Tests: sync/push/conflict/time-block, free-slot math, event mapping, OAuth exchange/refresh/invalid_grant,
+  grid layout; Playwright calendar flows.
+
 ## [Phase 2] Tasks, goals, notes, routines, Today — 2026-10-16
 ### Added
 - **Today view**: greeting + progress, daily-brief slot, Top 3 priorities (max 3, pinned with ☆), schedule timeline

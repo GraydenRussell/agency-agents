@@ -10,6 +10,7 @@ import { GlobalHotkeys } from "@/components/shell/global-hotkeys";
 import { QuickCapture } from "@/components/capture/quick-capture";
 import { AssistantPanel } from "@/components/assistant/assistant-panel";
 import { TaskSheetHost } from "@/components/tasks/task-sheet";
+import { IntegrationBanner } from "@/components/shell/integration-banner";
 import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +32,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <Sidebar badges={badges} />
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar />
-          <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-4 pb-24 md:px-6 lg:pt-8 lg:pb-10">{children}</main>
+          <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-4 pb-24 md:px-6 lg:pt-8 lg:pb-10">
+            <IntegrationBanner />
+            {children}
+          </main>
         </div>
       </div>
       <MobileNav badges={badges} />

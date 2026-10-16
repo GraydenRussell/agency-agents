@@ -71,6 +71,18 @@ All variables are documented in [`.env.example`](./.env.example). Highlights:
 3. **Vercel**: import the repo, set the env vars above (`AUTH_MODE=supabase`), deploy.
 4. First visit: sign in → scan the 2FA QR code → done.
 
+## Google OAuth (Gmail + Calendar)
+
+1. Google Cloud Console → create a project → **APIs & Services → Library**: enable *Google Calendar API* and *Gmail API*.
+2. **OAuth consent screen**: if your Gmail is a Google Workspace account, choose **Internal** (tokens don't expire
+   weekly and no verification is needed). For a personal @gmail.com account choose **External**, add yourself as a
+   test user; note Google expires refresh tokens for unverified "Testing" apps after 7 days, so the app will ask you
+   to reconnect weekly (a banner appears).
+3. **Credentials → Create OAuth client ID → Web application**. Authorized redirect URI:
+   `https://<your-domain>/api/google/callback` (and `http://localhost:3000/api/google/callback` for local).
+4. Put the client ID/secret in `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, set `INTEGRATION_MODE=live`, then
+   Settings → **Connect Google**.
+
 ## Security model
 
 - Single user: `proxy.ts` rejects any session that isn't `ALLOWED_EMAIL` at assurance level `aal2` (password + TOTP).

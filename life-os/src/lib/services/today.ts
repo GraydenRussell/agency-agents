@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getWeather, type Weather } from "@/lib/integrations/weather";
 import { atLocalMinutes, endOfLocalDay, startOfLocalDay, today, type LocalDate } from "@/lib/time";
 import { habitsWithStatus, type HabitStatus } from "./habits";
+import { syncIfStale } from "./calendar";
 import { checklistsForDate, templateForDate } from "./routines";
 import { tasksForDay, type DayTasks } from "./tasks";
 
@@ -64,6 +65,7 @@ export async function inboxSummary(): Promise<InboxSummary> {
 }
 
 export async function getToday(date: LocalDate = today()): Promise<TodayData> {
+  await syncIfStale(10 * 60_000);
   const tasks = await tasksForDay(date);
   const [timeline, habits, checklists, inbox, weather, brief] = await Promise.all([
     buildTimeline(date, tasks.scheduled),
