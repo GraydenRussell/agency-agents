@@ -158,12 +158,18 @@ export const memoryTools = [
     schema: z.object({ key: z.string() }),
     actionType: "memory.forget",
     kind: "write",
-    summarize: (i) => `Forget ${i.key}`,
+    // Deleting anything needs approval by default.
+    approval: () => ({ key: "memory.delete" }),
+    summarize: async (i) => {
+      const m = await db.memory.findUnique({ where: { key: i.key } });
+      if (!m) throw new Error(`Nothing remembered under ${i.key}`);
+      return `Forget ${i.key}: ${m.value}`;
+    },
     run: async (i) => {
       const before = await db.memory.findUnique({ where: { key: i.key } });
       if (!before) throw new Error(`Nothing remembered under ${i.key}`);
       await db.memory.delete({ where: { key: i.key } });
-      return { result: { forgot: i.key } };
+      return { result: { forgot: i.key }, undo: { actionType: "memory.restore", payload: { key: before.key, value: before.value, kind: before.kind, source: before.source } } };
     },
   }),
 ];

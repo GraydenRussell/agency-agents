@@ -1,0 +1,65 @@
+name: Life OS
+
+on:
+  push:
+    paths: ["life-os/**", ".github/workflows/life-os.yml"]
+  pull_request:
+    paths: ["life-os/**", ".github/workflows/life-os.yml"]
+
+concurrency:
+  group: life-os-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: life-os
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    # Test-only values: dev auth (refused on Vercel), mock integrations, throwaway keys.
+    env:
+      CI: "true"
+      DATABASE_URL: postgresql://postgres@localhost:5432/lifeos_e2e
+      DIRECT_URL: postgresql://postgres@localhost:5432/lifeos_e2e
+      TEST_DATABASE_URL: postgresql://postgres@localhost:5432/lifeos_test
+      E2E_DATABASE_URL: postgresql://postgres@localhost:5432/lifeos_e2e
+      AUTH_MODE: dev
+      INTEGRATION_MODE: mock
+      ALLOWED_EMAIL: grayden@example.com
+      ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+      CRON_SECRET: ci-cron-secret-0123456789
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: life-os/package-lock.json
+      - name: Create databases
+        run: |
+          psql -h localhost -U postgres -c "create database lifeos_test"
+          psql -h localhost -U postgres -c "create database lifeos_e2e"
+      - run: npm ci
+      - name: Typecheck, lint, unit tests
+        run: npm run check
+      - run: npm run build
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Playwright
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: life-os/test-results
+          retention-days: 7

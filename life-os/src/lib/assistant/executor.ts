@@ -118,8 +118,15 @@ export async function undoActivity(activityId: string) {
   if (entry.undoneAt) throw new Error("Already undone");
   const spec = entry.undo as UndoSpec | null;
   if (!spec) throw new Error("This action can't be undone");
-  await runUndo(spec);
-  await db.activityLog.update({ where: { id: activityId }, data: { undoneAt: new Date() } });
+  // Claim first so a double-tap can't run the inverse twice; release the claim if it fails.
+  const claimed = await db.activityLog.updateMany({ where: { id: activityId, undoneAt: null }, data: { undoneAt: new Date() } });
+  if (claimed.count === 0) throw new Error("Already undone");
+  try {
+    await runUndo(spec);
+  } catch (e) {
+    await db.activityLog.update({ where: { id: activityId }, data: { undoneAt: null } });
+    throw e;
+  }
   await db.activityLog.create({ data: { actor: "USER", actionType: "activity.undo", summary: `Undid: ${entry.summary}` } });
 }
 

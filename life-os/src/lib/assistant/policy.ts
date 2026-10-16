@@ -15,6 +15,7 @@ export const APPROVAL_ACTIONS: Record<string, string> = {
   "task.delete": "Delete tasks",
   "note.delete": "Delete notes",
   "reminder.cancel": "Cancel reminders",
+  "memory.delete": "Forget remembered items",
 };
 
 export async function isAutoApproved(actionType: string, opts: { emailCategory?: string | null } = {}): Promise<boolean> {

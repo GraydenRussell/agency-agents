@@ -186,6 +186,24 @@ describe("reminders, notes, projects, business, memory", () => {
     expect(await db.memory.count()).toBe(0);
   });
 
+  it("forgetting a memory needs approval and can be undone", async () => {
+    ok(await run("memory_write", { key: "person.tyce", value: "Business partner", kind: "PERSON" }));
+    const p = pending(await run("memory_forget", { key: "person.tyce" }));
+    expect(await db.memory.count()).toBe(1);
+    const r = ok(await approve(p.approvalId));
+    expect(await db.memory.count()).toBe(0);
+    await undoActivity(r.activityId);
+    expect(await db.memory.findUniqueOrThrow({ where: { key: "person.tyce" } })).toMatchObject({ value: "Business partner", kind: "PERSON" });
+    expect(await run("memory_forget", { key: "nope" })).toMatchObject({ status: "error" });
+  });
+
+  it("undo runs at most once, even on concurrent taps", async () => {
+    const t = ok(await run("task_create", { title: "Double tap" }));
+    const results = await Promise.allSettled([undoActivity(t.activityId), undoActivity(t.activityId)]);
+    expect(results.filter((x) => x.status === "fulfilled")).toHaveLength(1);
+    expect(await db.activityLog.count({ where: { actionType: "activity.undo" } })).toBe(1);
+  });
+
   it("enforces the per-minute tool-call limit", async () => {
     await setSetting("ai.maxToolCallsPerMinute", 2);
     ok(await run("task_list", {}));

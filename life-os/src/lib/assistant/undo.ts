@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import type { MemoryKind } from "@/generated/prisma/client";
 import * as cal from "@/lib/services/calendar";
 import * as mail from "@/lib/services/mail";
 import * as reminders from "@/lib/services/reminders";
@@ -27,6 +28,12 @@ const HANDLERS: Record<string, Handler> = {
   "reminder.restore": (p) => reminders.restoreReminder(s(p.id)),
   "memory.delete": (p) => db.memory.delete({ where: { key: s(p.key) } }),
   "memory.revert": (p) => db.memory.update({ where: { key: s(p.key) }, data: { value: s(p.value) } }),
+  "memory.restore": (p) =>
+    db.memory.upsert({
+      where: { key: s(p.key) },
+      create: { key: s(p.key), value: s(p.value), kind: p.kind as MemoryKind, source: p.source ? s(p.source) : null },
+      update: { value: s(p.value), kind: p.kind as MemoryKind },
+    }),
   "project.revert": (p) => db.project.update({ where: { id: s(p.id) }, data: p.data as object }),
 };
 

@@ -2,6 +2,16 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Hardening] Security review and CI — 2026-10-16
+### Fixed
+- The assistant's `memory_forget` deleted without approval; it now goes through the Approvals queue
+  (`memory.delete`, auto-approve toggle default OFF) and can be undone.
+- Undo is claimed atomically, so a double tap can't run the inverse operation twice; a failed undo releases the claim.
+- E2E tests no longer depend on leftover seed data or grab a hidden streamed copy of a form (repeat-safe).
+### Added
+- GitHub Actions workflow `.github/workflows/life-os.yml`: Postgres service, typecheck, lint, unit tests, build,
+  Playwright (desktop + mobile, axe). Runs only when `life-os/**` changes.
+
 ## [Phase 10] PWA, polish, accessibility, deployment — 2026-10-16
 ### Added
 - Installable PWA: generated icons (any + maskable, Apple touch icon), manifest with shortcuts, service worker that
