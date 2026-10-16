@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 
 type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
 
-/** Registers the service worker in production builds. */
+/** Registers the service worker in production builds; also marks the page hydrated (tests wait on it). */
 export function ServiceWorkerRegistrar() {
   useEffect(() => {
+    document.documentElement.dataset.hydrated = "true";
     if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
     navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   }, []);

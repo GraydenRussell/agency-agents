@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { gotoReady } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 test.skip(({ isMobile }) => isMobile, "calendar drag flows are desktop");
@@ -40,8 +41,7 @@ test("drag a task from the tray onto the calendar to time-block it", async ({ pa
 });
 
 test("month view and settings connect state (mock)", async ({ page }) => {
-  await page.goto("/calendar?view=month");
-  await page.waitForLoadState("networkidle");
+  await gotoReady(page, "/calendar?view=month");
   await expect(page.getByText(/\+\d more|Crew huddle/).first()).toBeVisible({ timeout: 10_000 });
   await page.goto("/settings");
   await page.getByRole("link", { name: /Connect Google|Reconnect/ }).click();

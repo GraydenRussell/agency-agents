@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { gotoReady } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 test.skip(({ isMobile }) => isMobile, "desktop flow");
@@ -36,8 +37,7 @@ test("sending email via the assistant waits for one-tap approval", async ({ page
 });
 
 test("assistant panel opens with Cmd/Ctrl+J and remembers the conversation", async ({ page }) => {
-  await page.goto("/today");
-  await page.waitForLoadState("networkidle"); // hotkeys attach after hydration
+  await gotoReady(page, "/today"); // hotkeys attach after hydration
   await page.getByRole("heading", { level: 1 }).first().click(); // focus the page without hitting a control
   await page.keyboard.press("ControlOrMeta+j");
   await expect(page.getByRole("dialog").getByRole("heading", { name: "Assistant" })).toBeVisible();

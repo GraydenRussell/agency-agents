@@ -57,6 +57,13 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Playwright
         run: npx playwright test
+      - name: Print failing page snapshots
+        if: failure()
+        run: |
+          for f in test-results/*/error-context.md; do
+            [ -f "$f" ] || continue
+            echo "::group::$f"; head -c 6000 "$f"; echo "::endgroup::"
+          done
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
