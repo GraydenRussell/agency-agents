@@ -1,0 +1,710 @@
+// Life OS database schema. Single-user app: no userId columns; access is enforced by
+// Supabase auth (allowed email + MFA) in the app, and RLS deny-all for anon/authenticated
+// roles in Postgres (see prisma/sql/rls.sql). The server connects with the DB owner role.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Core ─────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+enum IntegrationProvider {
+  GOOGLE
+  GITHUB
+  VERCEL
+  TWILIO
+  BUSINESS
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  NEEDS_REAUTH
+  ERROR
+  DISCONNECTED
+}
+
+model IntegrationAccount {
+  id              String              @id @default(cuid())
+  provider        IntegrationProvider
+  accountEmail    String?
+  encryptedTokens String?
+  scopes          String[]
+  status          IntegrationStatus   @default(CONNECTED)
+  lastError       String?
+  lastSyncAt      DateTime?
+  syncCursor      String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@unique([provider, accountEmail])
+}
+
+// ─────────────────────────── Planning ───────────────────────────
+
+enum Area {
+  BUSINESS
+  PERSONAL
+  HEALTH
+  MONEY
+  LEARNING
+}
+
+enum GoalLevel {
+  YEAR
+  QUARTER
+  WEEK
+}
+
+enum GoalStatus {
+  ACTIVE
+  ACHIEVED
+  DROPPED
+}
+
+model Goal {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  level       GoalLevel
+  area        Area
+  status      GoalStatus @default(ACTIVE)
+  periodStart DateTime   @db.Date
+  periodEnd   DateTime   @db.Date
+  /// Optional numeric target (e.g. revenue). When set, progress = currentValue / targetValue.
+  targetValue Float?
+  currentValue Float?
+  unit        String?
+  parentId    String?
+  parent      Goal?      @relation("GoalTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Goal[]     @relation("GoalTree")
+  tasks       Task[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([level, periodStart])
+}
+
+enum TaskStatus {
+  TODO
+  DOING
+  DONE
+  CANCELED
+}
+
+model Task {
+  id                 String     @id @default(cuid())
+  title              String
+  notes              String?
+  status             TaskStatus @default(TODO)
+  /// 1 = urgent … 4 = low
+  priority           Int        @default(3)
+  area               Area       @default(PERSONAL)
+  dueAt              DateTime?
+  scheduledStart     DateTime?
+  scheduledEnd       DateTime?
+  /// Phoenix-local date (YYYY-MM-DD) this task is pinned as a Top-3 priority for.
+  top3Date           String?
+  estimateMinutes    Int?
+  sortOrder          Float      @default(0)
+  completedAt        DateTime?
+  /// RFC 5545 RRULE (without DTSTART); the template task holds it.
+  recurrenceRule     String?
+  recurrenceParentId String?
+  recurrenceParent   Task?      @relation("TaskRecurrence", fields: [recurrenceParentId], references: [id], onDelete: SetNull)
+  recurrences        Task[]     @relation("TaskRecurrence")
+  parentId           String?
+  parent             Task?      @relation("Subtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks           Task[]     @relation("Subtasks")
+  goalId             String?
+  goal               Goal?      @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  events             CalendarEvent[]
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  deletedAt          DateTime?
+
+  @@index([status, dueAt])
+  @@index([top3Date])
+  @@index([parentId])
+}
+
+enum DayType {
+  WEEKDAY
+  WEEKEND
+  CUSTOM
+}
+
+model RoutineTemplate {
+  id        String         @id @default(cuid())
+  name      String
+  dayType   DayType
+  /// ISO weekdays 1 (Mon) … 7 (Sun) this template applies to.
+  days      Int[]
+  active    Boolean        @default(true)
+  blocks    RoutineBlock[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+enum BlockKind {
+  WAKE
+  GYM
+  WORK
+  ADMIN
+  MEAL
+  WIND_DOWN
+  SLEEP
+  OTHER
+}
+
+model RoutineBlock {
+  id         String          @id @default(cuid())
+  templateId String
+  template   RoutineTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  title      String
+  kind       BlockKind       @default(OTHER)
+  /// Minutes after local midnight.
+  startMin   Int
+  endMin     Int
+  color      String?
+  sortOrder  Int             @default(0)
+}
+
+enum ChecklistKind {
+  MORNING
+  EVENING
+  CUSTOM
+}
+
+model Checklist {
+  id        String          @id @default(cuid())
+  name      String
+  kind      ChecklistKind
+  items     ChecklistItem[]
+  runs      ChecklistRun[]
+  createdAt DateTime        @default(now())
+}
+
+model ChecklistItem {
+  id          String    @id @default(cuid())
+  checklistId String
+  checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  label       String
+  sortOrder   Int       @default(0)
+}
+
+model ChecklistRun {
+  id             String    @id @default(cuid())
+  checklistId    String
+  checklist      Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  /// Phoenix-local date YYYY-MM-DD
+  date           String
+  checkedItemIds String[]
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([checklistId, date])
+}
+
+enum HabitCadence {
+  DAILY
+  WEEKLY
+}
+
+model Habit {
+  id        String       @id @default(cuid())
+  name      String
+  area      Area         @default(HEALTH)
+  cadence   HabitCadence @default(DAILY)
+  /// Target count per cadence period (e.g. 8 glasses, 1 workout).
+  target    Int          @default(1)
+  unit      String?
+  icon      String?
+  archived  Boolean      @default(false)
+  sortOrder Int          @default(0)
+  logs      HabitLog[]
+  createdAt DateTime     @default(now())
+}
+
+model HabitLog {
+  id      String @id @default(cuid())
+  habitId String
+  habit   Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date    String
+  value   Int    @default(1)
+
+  @@unique([habitId, date])
+}
+
+// ──────────────────────── Calendar & Mail ───────────────────────
+
+enum EventSource {
+  GOOGLE
+  LOCAL
+  TASK
+}
+
+model CalendarEvent {
+  id          String      @id @default(cuid())
+  googleId    String?
+  calendarId  String      @default("primary")
+  etag        String?
+  title       String
+  description String?
+  location    String?
+  start       DateTime
+  end         DateTime
+  allDay      Boolean     @default(false)
+  /// [{ email, name?, responseStatus? }]
+  attendees   Json?
+  source      EventSource @default(LOCAL)
+  taskId      String?
+  task        Task?       @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  /// Local edit not yet pushed to Google.
+  dirty       Boolean     @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([calendarId, googleId])
+  @@index([start, end])
+}
+
+model CalendarSyncState {
+  calendarId String    @id
+  summary    String?
+  syncToken  String?
+  enabled    Boolean   @default(true)
+  writable   Boolean   @default(false)
+  color      String?
+  lastSyncAt DateTime?
+}
+
+enum EmailCategory {
+  CUSTOMER
+  LEAD
+  VENDOR
+  PERSONAL
+  NEWSLETTER
+  SPAM
+  OTHER
+}
+
+model EmailThread {
+  id             String         @id @default(cuid())
+  gmailThreadId  String         @unique
+  subject        String
+  fromName       String?
+  fromEmail      String
+  snippet        String?
+  lastMessageAt  DateTime
+  labels         String[]
+  unread         Boolean        @default(true)
+  inInbox        Boolean        @default(true)
+  category       EmailCategory?
+  /// 0–100, higher = more important
+  priority       Int?
+  summary        String?
+  needsReply     Boolean        @default(false)
+  triagedAt      DateTime?
+  snoozedUntil   DateTime?
+  historyId      String?
+  messages       EmailMessage[]
+  drafts         EmailDraft[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([inInbox, lastMessageAt])
+  @@index([needsReply])
+}
+
+model EmailMessage {
+  id             String      @id @default(cuid())
+  gmailMessageId String      @unique
+  threadId       String
+  thread         EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  fromName       String?
+  fromEmail      String
+  to             String[]
+  cc             String[]
+  date           DateTime
+  subject        String
+  bodyText       String
+  /// RFC 2822 Message-ID header, used for In-Reply-To when replying.
+  messageIdHeader String?
+  isFromMe       Boolean     @default(false)
+}
+
+enum DraftStatus {
+  DRAFT
+  QUEUED
+  SENT
+  DISCARDED
+}
+
+model EmailDraft {
+  id        String      @id @default(cuid())
+  threadId  String
+  thread    EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  body      String
+  model     String?
+  status    DraftStatus @default(DRAFT)
+  sentAt    DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+// ─────────────────────────── Assistant ──────────────────────────
+
+model Conversation {
+  id        String        @id @default(cuid())
+  title     String?
+  messages  ChatMessage[]
+  approvals PendingApproval[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+model ChatMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           ChatRole
+  /// Anthropic content blocks as sent/received (kept verbatim for replay).
+  content        Json
+  inputTokens    Int?
+  outputTokens   Int?
+  costUsd        Float?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+enum MemoryKind {
+  FACT
+  PREFERENCE
+  STYLE
+  PERSON
+}
+
+model Memory {
+  id        String     @id @default(cuid())
+  kind      MemoryKind
+  key       String     @unique
+  value     String
+  source    String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  FAILED
+}
+
+model PendingApproval {
+  id             String         @id @default(cuid())
+  actionType     String
+  payload        Json
+  summary        String
+  risk           String         @default("medium")
+  status         ApprovalStatus @default(PENDING)
+  conversationId String?
+  conversation   Conversation?  @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  toolUseId      String?
+  result         Json?
+  error          String?
+  decidedAt      DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime       @default(now())
+
+  @@index([status, createdAt])
+}
+
+enum Actor {
+  ASSISTANT
+  AUTOMATION
+  USER
+}
+
+model ActivityLog {
+  id         String    @id @default(cuid())
+  actor      Actor
+  actionType String
+  summary    String
+  input      Json?
+  result     Json?
+  /// Inverse operation { actionType, payload } when the action can be undone.
+  undo       Json?
+  undoneAt   DateTime?
+  ok         Boolean   @default(true)
+  error      String?
+  approvalId String?
+  createdAt  DateTime  @default(now())
+
+  @@index([createdAt])
+}
+
+model ApiUsage {
+  id           String   @id @default(cuid())
+  /// Phoenix-local date
+  date         String
+  model        String
+  purpose      String
+  inputTokens  Int
+  outputTokens Int
+  cacheRead    Int      @default(0)
+  cacheWrite   Int      @default(0)
+  costUsd      Float
+  createdAt    DateTime @default(now())
+
+  @@index([date])
+}
+
+model RateLimitBucket {
+  key         String   @id
+  windowStart DateTime
+  count       Int
+}
+
+// ───────────────────── Reminders & Automations ──────────────────
+
+enum Channel {
+  SMS
+  PUSH
+  EMAIL
+}
+
+enum ReminderStatus {
+  SCHEDULED
+  SENT
+  CANCELED
+  FAILED
+}
+
+model Reminder {
+  id         String         @id @default(cuid())
+  title      String
+  body       String?
+  channels   Channel[]
+  fireAt     DateTime
+  /// RRULE for recurring reminders (DTSTART = fireAt)
+  rrule      String?
+  nextFireAt DateTime?
+  status     ReminderStatus @default(SCHEDULED)
+  lastSentAt DateTime?
+  lastError  String?
+  linkedType String?
+  linkedId   String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([status, nextFireAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+enum BriefType {
+  DAILY
+  EVENING
+  WEEKLY
+}
+
+model Brief {
+  id           String    @id @default(cuid())
+  type         BriefType
+  date         String
+  content      Json
+  markdown     String
+  deliveredVia Channel[]
+  createdAt    DateTime  @default(now())
+
+  @@unique([type, date])
+}
+
+model JobRun {
+  id         String    @id @default(cuid())
+  job        String
+  /// Idempotency slot, e.g. "2026-10-16" or "2026-10-16T13:30"
+  slot       String
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  ok         Boolean?
+  summary    String?
+  error      String?
+
+  @@unique([job, slot])
+  @@index([startedAt])
+}
+
+// ─────────────────────────── Life areas ─────────────────────────
+
+model Note {
+  id          String   @id @default(cuid())
+  title       String
+  body        String   @default("")
+  tags        String[]
+  pinned      Boolean  @default(false)
+  isJournal   Boolean  @default(false)
+  journalDate String?
+  prompt      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isJournal, journalDate])
+}
+
+model Workout {
+  id          String   @id @default(cuid())
+  date        String
+  type        String
+  durationMin Int
+  intensity   Int?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+}
+
+model SleepLog {
+  id        String @id @default(cuid())
+  date      String @unique
+  hours     Float
+  quality   Int?
+  notes     String?
+}
+
+model WaterLog {
+  id     String @id @default(cuid())
+  date   String @unique
+  ounces Int
+}
+
+model BudgetCategory {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  monthlyLimit Float
+  color        String?
+  transactions Transaction[]
+}
+
+model Transaction {
+  id         String          @id @default(cuid())
+  date       String
+  amount     Float
+  merchant   String
+  categoryId String?
+  category   BudgetCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  notes      String?
+  /// Reserved for Plaid import.
+  externalId String?         @unique
+  createdAt  DateTime        @default(now())
+
+  @@index([date])
+}
+
+model Bill {
+  id          String   @id @default(cuid())
+  name        String
+  amount      Float
+  /// Day of month the bill is due (1–31; clamps to month end)
+  dueDay      Int
+  autopay     Boolean  @default(false)
+  /// Phoenix-local YYYY-MM of the last paid cycle
+  paidThrough String?
+  notes       String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Person {
+  id              String        @id @default(cuid())
+  name            String
+  relation        String?
+  company         String?
+  phone           String?
+  email           String?
+  notes           String?
+  birthday        String?
+  lastContactedAt DateTime?
+  followUpDays    Int?
+  nextFollowUpAt  DateTime?
+  interactions    Interaction[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Interaction {
+  id       String   @id @default(cuid())
+  personId String
+  person   Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  date     DateTime
+  channel  String
+  summary  String
+}
+
+// ─────────────────────────── Projects ───────────────────────────
+
+enum ProjectSource {
+  GITHUB
+  MANUAL
+  LOCAL
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  DONE
+  IDEA
+}
+
+model Project {
+  id              String        @id @default(cuid())
+  source          ProjectSource
+  repoFullName    String?       @unique
+  name            String
+  description     String?
+  stack           String[]
+  repoUrl         String?
+  defaultBranch   String?
+  lastCommitAt    DateTime?
+  lastCommitMsg   String?
+  openIssues      Int?
+  isPrivate       Boolean?
+  vercelProjectId String?
+  deployUrl       String?
+  deployState     String?
+  deployedAt      DateTime?
+  launchUrl       String?
+  localPath       String?
+  status          ProjectStatus @default(ACTIVE)
+  nextStep        String?
+  notes           String?
+  syncedAt        DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}

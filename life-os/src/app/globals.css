@@ -1,0 +1,118 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource/poppins/400.css";
+@import "@fontsource/poppins/500.css";
+@import "@fontsource/poppins/600.css";
+@import "@fontsource/poppins/700.css";
+@import "@fontsource/bebas-neue/400.css";
+@import "@fontsource/anton/400.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Brand: Azure Blue #007ACE, Cyan #66DDFA, Carbon Black #303030.
+ * Dark is the default theme (see ThemeProvider defaultTheme="dark").
+ */
+:root {
+  --radius: 0.65rem;
+  --brand-azure: #007ace;
+  --brand-cyan: #66ddfa;
+  --brand-carbon: #303030;
+
+  --background: #f7f8fa;
+  --foreground: #16181d;
+  --card: #ffffff;
+  --card-foreground: #16181d;
+  --popover: #ffffff;
+  --popover-foreground: #16181d;
+  --primary: #007ace;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f5;
+  --secondary-foreground: #16181d;
+  --muted: #eef1f5;
+  --muted-foreground: #5b6472;
+  --accent: #e6f3fb;
+  --accent-foreground: #00548e;
+  --destructive: #dc2626;
+  --border: #dde2e9;
+  --input: #d3d9e1;
+  --ring: #007ace;
+}
+
+.dark {
+  --background: #1b1b1c;
+  --foreground: #ececec;
+  --card: #242425;
+  --card-foreground: #ececec;
+  --popover: #2a2a2b;
+  --popover-foreground: #ececec;
+  --primary: #1a8fe0;
+  --primary-foreground: #ffffff;
+  --secondary: #303030;
+  --secondary-foreground: #ececec;
+  --muted: #2e2e2f;
+  --muted-foreground: #9a9ea6;
+  --accent: #2b3a47;
+  --accent-foreground: #66ddfa;
+  --destructive: #ef4444;
+  --border: #363638;
+  --input: #3d3d40;
+  --ring: #66ddfa;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand-azure: var(--brand-azure);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-brand-carbon: var(--brand-carbon);
+
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Bebas Neue", "Anton", "Poppins", sans-serif;
+  --font-display: "Anton", "Bebas Neue", sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1,
+  h2 {
+    @apply font-heading tracking-wide;
+  }
+  kbd {
+    @apply inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1 font-sans text-[10px] font-medium text-muted-foreground;
+  }
+}
+
+/* Safe-area padding for the installed PWA on iOS. */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
