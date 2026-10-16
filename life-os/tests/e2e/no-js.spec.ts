@@ -9,7 +9,8 @@ test.describe("server-rendered without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
   for (const path of PAGES) {
     test(path, async ({ page }) => {
-      await page.goto(path);
+      const res = await page.goto(path);
+      expect(res?.status(), `${path} status`).toBe(200);
       await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
       expect(await page.locator("div[hidden][id^='S:']").count(), "content left in a hidden streamed boundary").toBe(0);
     });

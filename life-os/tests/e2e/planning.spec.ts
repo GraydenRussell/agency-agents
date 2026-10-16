@@ -75,13 +75,6 @@ test("goals: create a weekly goal", async ({ page, isMobile }) => {
 
 test("notes: create, autosave, and find via search", async ({ page, isMobile }) => {
   test.skip(isMobile, "desktop only");
-  // Diagnostics: report any failed request so CI logs show where a 404 comes from.
-  page.on("response", (r) => {
-    if (r.status() >= 400) console.log(`[notes] ${r.request().method()} ${r.url()} -> ${r.status()}`);
-  });
-  page.on("framenavigated", (f) => {
-    if (f === page.mainFrame()) console.log(`[notes] navigated to ${f.url()}`);
-  });
   await gotoReady(page, "/notes");
   await page.getByRole("button", { name: "New note" }).click();
   await expect(page).toHaveURL(/\/notes\/.+/);

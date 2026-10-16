@@ -81,3 +81,6 @@ integrations/kimi/*/
 
 # Life OS pins its dependencies (CI + Vercel use npm ci)
 !life-os/package-lock.json
+# The repo-wide notes/ rule must not hide Life OS's Notes feature
+!life-os/src/app/(app)/notes/
+!life-os/src/components/notes/

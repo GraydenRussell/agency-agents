@@ -13,6 +13,10 @@ All notable changes to Life OS. Dates are America/Phoenix.
   (missing buttons, duplicate elements, a 404 after pressing "New note" too early), and without JavaScript the
   page body never showed. Pages now arrive fully rendered; a Playwright test checks them with JavaScript off.
 - Tests wait for hydration (`<html data-hydrated>`) instead of network idle, which newer Chrome never reaches.
+- **The Notes feature was never committed.** The `agency-agents` repo-wide `.gitignore` has a `notes/` rule that
+  silently excluded `src/app/(app)/notes/` and `src/components/notes/`; a fresh clone (CI, Vercel) had no `/notes`
+  route. Both folders are now explicitly un-ignored and committed, and page checks require HTTP 200 so a 404 page
+  can't pass them.
 ### Added
 - GitHub Actions workflow `.github/workflows/life-os.yml`: Postgres service, typecheck, lint, unit tests, build,
   Playwright (desktop + mobile, axe). Runs only when `life-os/**` changes.
