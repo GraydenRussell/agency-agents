@@ -2,6 +2,30 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Phase 4] Gmail + AI triage — 2026-10-16
+### Added
+- Gmail REST adapter (threads, history, modify, trash, send, labels) with MIME parsing (multipart, HTML→text,
+  quoted-history stripping) and RFC 2822 threaded replies (In-Reply-To/References, UTF-8 headers); mock Gmail with
+  10 realistic window-cleaning fixtures.
+- Inbox sync: first sync of the last 30 days of inbox threads, then incremental via Gmail history IDs (auto full
+  resync when history expires). Runs when the inbox is opened (stale >5 min) or via Sync.
+- AI triage per thread: category (customer / lead / vendor / personal / newsletter / spam / other), 0–100 priority,
+  one-line summary, needs-reply. Uses structured outputs (`messages.parse` + Zod) on `ANTHROPIC_FAST_MODEL`
+  (default `claude-opus-5-5`, low effort), cached system prompt, batched 15 at a time. Deterministic rule-based
+  fallback when AI is off, the spend cap is hit, or the model refuses.
+- AI-drafted replies in your voice (style + business facts from the memory table), optional instructions,
+  never invents prices/dates (uses [placeholders]); template fallback offline.
+- Inbox UI: Needs-reply queue (sorted by priority), Inbox, All, category chips, search, thread view with triage
+  summary, archive (undo), snooze (Gmail has no snooze API: archive now, return to inbox when due), labels
+  (create on the fly), mark unread, trash (undo), draft + edit + send (confirm).
+- AI client: usage + cost recorded per call (`ApiUsage`), daily spend cap (default $5) enforced before every call.
+- Typed settings store (`Setting` table) for spend cap, rate limits, approval policies, notifications, quick links.
+- Email results in the ⌘K search.
+
+### Fixed
+- Today page overflowed horizontally on phones (grid columns sized to content), which zoomed the page out and
+  made the bottom nav hard to tap. Added a Playwright check for horizontal overflow on every page.
+
 ## [Phase 3] Google Calendar two-way sync — 2026-10-16
 ### Added
 - Google OAuth (offline access, consent requests Calendar + Gmail scopes up front), CSRF state cookie, encrypted

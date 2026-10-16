@@ -37,8 +37,8 @@ export default async function TodayPage() {
         <CaptureBox />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -107,7 +107,7 @@ export default async function TodayPage() {
           )}
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <WeatherCard weather={d.weather} />
 
           <Card>
@@ -142,7 +142,7 @@ export default async function TodayPage() {
                   </span>
                 </Link>
               ))}
-              {d.inbox.unread === 0 && d.inbox.needsReply === 0 && <p className="text-xs text-muted-foreground">Gmail sync + AI triage arrive in Phase 4.</p>}
+              {d.inbox.unread === 0 && d.inbox.needsReply === 0 && <p className="text-xs text-muted-foreground">All caught up.</p>}
             </CardContent>
           </Card>
 

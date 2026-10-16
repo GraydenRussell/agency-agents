@@ -24,7 +24,8 @@ export default defineConfig({
   webServer: {
     command: `npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}/api/health`,
-    reuseExistingServer: !process.env.CI,
+    // Always a fresh server: mock integrations keep in-memory state between requests.
+    reuseExistingServer: false,
     timeout: 120_000,
     env: {
       DATABASE_URL: process.env.E2E_DATABASE_URL ?? "postgresql://postgres@localhost:5432/lifeos_e2e",

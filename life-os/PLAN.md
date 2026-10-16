@@ -23,7 +23,7 @@ boundaries computed in Phoenix time via one helper (`lib/time.ts`).
 | D8 | SMS | Twilio. Number + A2P/toll-free registration are on you; SMS stays off until env vars exist (email/push still work). | Assumed |
 | D9 | Outgoing email (briefs) | Sent through your own Gmail (no extra service). | Assumed |
 | D10 | Brief delivery | Dashboard + email by default; SMS toggle in Settings. Quiet hours 21:30–06:00 (high-priority only). | Assumed |
-| D11 | AI | Anthropic `claude-opus-5-5` (current default per Anthropic docs), adaptive thinking, streaming, tool use, server-side `web_search_20260209`, prompt caching, `fallbacks: "default"`. Cheap bulk triage on `claude-haiku-5-5` (configurable). Daily spend cap default **$5**. | Assumed (cap) |
+| D11 | AI | Anthropic `claude-opus-5-5` (current default per Anthropic docs), adaptive thinking, streaming, tool use, server-side `web_search_20260209`, prompt caching, `fallbacks: "default"`. Triage uses the same model at low effort; `ANTHROPIC_FAST_MODEL` can point it at `claude-haiku-5-5` to cut cost. Daily spend cap default **$5**. | Assumed (cap) |
 | D12 | Weather | Open-Meteo (free, no key), Chandler 33.3062, -111.8413. | Assumed |
 | D13 | Auth | Supabase email + password, **TOTP MFA required** (aal2 enforced in middleware), single allowed email via `ALLOWED_EMAIL`. | Assumed |
 | D14 | Tyce | No access. Single user. | Assumed |
@@ -195,7 +195,7 @@ Each phase ends with: typecheck, lint, unit tests, Playwright smoke, app boots, 
 
 ### Phase 4 — Gmail + AI triage
 - [ ] Inbox list/thread view, history-based incremental sync
-- [ ] Triage (category, priority, one-line summary, needsReply) via Haiku, batched, cached by message
+- [ ] Triage (category, priority, one-line summary, needsReply) via ANTHROPIC_FAST_MODEL, batched, cached by message
 - [ ] Needs-reply queue with drafts in your voice; send/reply/archive/label/snooze
 
 ### Phase 5 — Assistant

@@ -3,7 +3,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Command } from "cmdk";
-import { Bot, CheckSquare, FileText, FolderGit2, Keyboard, LogOut, Moon, Plus, Search, User, Zap } from "lucide-react";
+import { Bot, CheckSquare, FileText, FolderGit2, Keyboard, LogOut, Mail, Moon, Plus, Search, User, Zap } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { NAV } from "@/lib/nav";
 import { useShell } from "./shell-context";
@@ -14,6 +14,7 @@ const HIT_ICON: Record<SearchHit["type"], React.ComponentType<{ className?: stri
   note: FileText,
   person: User,
   project: FolderGit2,
+  email: Mail,
 };
 
 export function CommandPalette() {

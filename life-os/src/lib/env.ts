@@ -29,7 +29,7 @@ const schema = z.object({
 
   ANTHROPIC_API_KEY: optional,
   ANTHROPIC_MODEL: z.string().default("claude-opus-5-5"),
-  ANTHROPIC_FAST_MODEL: z.string().default("claude-haiku-5-5"),
+  ANTHROPIC_FAST_MODEL: z.string().default("claude-opus-5-5"),
 
   GOOGLE_CLIENT_ID: optional,
   GOOGLE_CLIENT_SECRET: optional,
