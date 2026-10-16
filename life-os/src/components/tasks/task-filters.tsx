@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Columns3, List, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Segmented } from "@/components/ui/segmented";
 import { AREAS, AREA_META } from "@/lib/labels";
 
 export function TaskFilters() {
@@ -62,16 +62,15 @@ export function TaskFilters() {
         <option value="DONE">Done</option>
         <option value="ALL">All</option>
       </NativeSelect>
-      <Tabs value={params.get("view") ?? "list"} onValueChange={(v) => set("view", v === "list" ? null : v)}>
-        <TabsList>
-          <TabsTrigger value="list" aria-label="List view">
-            <List className="size-4" /> List
-          </TabsTrigger>
-          <TabsTrigger value="board" aria-label="Board view">
-            <Columns3 className="size-4" /> Board
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <Segmented
+        label="View"
+        value={(params.get("view") ?? "list") as "list" | "board"}
+        onChange={(v) => set("view", v === "list" ? null : v)}
+        options={[
+          { value: "list", label: <><List className="size-4" /> List</>, ariaLabel: "List view" },
+          { value: "board", label: <><Columns3 className="size-4" /> Board</>, ariaLabel: "Board view" },
+        ]}
+      />
     </div>
   );
 }

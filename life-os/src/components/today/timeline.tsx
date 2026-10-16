@@ -26,7 +26,7 @@ export function Timeline({ items, now = new Date() }: { items: TimelineItem[]; n
       {timed.map((i, idx) => {
         const current = i.start <= now && i.end > now;
         const body = (
-          <div className={cn("flex gap-3 rounded-md border-l-4 px-3 py-1.5 text-sm", KIND_STYLE[i.kind], current && "ring-1 ring-brand-cyan", i.end <= now && "opacity-50")}>
+          <div className={cn("flex gap-3 rounded-md border-l-4 px-3 py-1.5 text-sm", KIND_STYLE[i.kind], current && "ring-1 ring-brand-cyan", i.end <= now && "text-muted-foreground [&_*]:text-muted-foreground")}>
             <span className="w-16 shrink-0 text-xs text-muted-foreground tabular-nums">{formatTime(i.start)}</span>
             <span className="min-w-0 flex-1">
               <span className="block truncate">{i.title}</span>

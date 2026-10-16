@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAction } from "@/components/ui/use-action";
 import { cancelReminderAction, runJobAction, saveSettingAction, sendTestNotificationAction } from "@/app/(app)/settings/actions";
 import { PushToggle } from "./push-toggle";
+import { InstallButton } from "@/components/shell/pwa";
 
 type Channel = "SMS" | "PUSH" | "EMAIL";
 
@@ -47,7 +48,10 @@ export function NotificationSettings(p: {
             </li>
           ))}
         </ul>
-        <PushToggle />
+        <div className="flex flex-wrap items-center gap-3">
+          <PushToggle />
+          <InstallButton />
+        </div>
         <div>
           <p className="mb-2 text-sm font-medium">Send briefs via</p>
           <div className="flex flex-wrap gap-4">

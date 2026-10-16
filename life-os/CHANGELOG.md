@@ -2,6 +2,20 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Phase 10] PWA, polish, accessibility, deployment — 2026-10-16
+### Added
+- Installable PWA: generated icons (any + maskable, Apple touch icon), manifest with shortcuts, service worker that
+  caches the app shell and static assets, `/offline` fallback, install button in the sidebar.
+- `docs/DEPLOY.md`: step-by-step Supabase, Google, Anthropic, Twilio, VAPID, Vercel, pg_cron, first login, and
+  how to split Life OS into its own repo.
+- Startup env validation (`instrumentation.ts`) that names the missing variable; security headers (frame deny,
+  nosniff, referrer policy, permissions policy, HSTS); `DB_POOL_MAX` for serverless pool sizing.
+- Playwright: axe WCAG AA scan of every page (desktop + mobile), PWA manifest/service worker checks, mobile
+  overflow checks on every page.
+### Fixed
+- Contrast of primary buttons/links in both themes, unlabeled progress bars and selects, tab lists without panels,
+  chart group labels, faded timeline items, and rounding of sleep hours.
+
 ## [Phase 9] Health, money, people — 2026-10-16
 ### Added
 - **Health:** water tracker (+8/16/32 oz, 100 oz Phoenix-heat target), sleep log (hours + quality), workout log,

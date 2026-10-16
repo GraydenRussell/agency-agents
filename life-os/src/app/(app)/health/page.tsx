@@ -56,7 +56,7 @@ export default async function HealthPage() {
             <CardTitle>Sleep, last 14 days (hours)</CardTitle>
           </CardHeader>
           <CardContent>
-            <BarChart ariaLabel="Hours of sleep per night, last 14 days" unit="h" target={SLEEP_TARGET_H} targetLabel={`${SLEEP_TARGET_H} h goal`} data={s.sleep.map((d) => ({ key: d.date, label: formatLocalDate(d.date), value: d.hours, display: d.hours === null ? "not logged" : `${d.hours} h` }))} />
+            <BarChart ariaLabel="Hours of sleep per night, last 14 days" unit="h" target={SLEEP_TARGET_H} targetLabel={`${SLEEP_TARGET_H} h goal`} data={s.sleep.map((d) => ({ key: d.date, label: formatLocalDate(d.date), value: d.hours, display: d.hours === null ? "not logged" : `${Math.round(d.hours * 10) / 10} h` }))} />
           </CardContent>
         </Card>
         <Card>

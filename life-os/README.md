@@ -62,14 +62,23 @@ All variables are documented in [`.env.example`](./.env.example). Highlights:
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Phase 6 | Web push |
 | `GITHUB_TOKEN`, `VERCEL_TOKEN` | Phase 7 | Projects hub |
 | `ADMIN_DASH_URL`, `LIFE_OS_API_TOKEN` | Phase 8 | Business hub |
+| `DB_POOL_MAX` | optional | Postgres pool size per server instance (default 5) |
 
-## Production setup (summary — full guide lands in Phase 10)
+## Production setup
+
+Full step-by-step guide: **[docs/DEPLOY.md](docs/DEPLOY.md)**. Summary:
 
 1. **Supabase**: create a new project. Copy URL + anon key, and the pooled/direct DB URLs.
    Auth → Providers: enable Email; disable sign-ups after creating your user. Auth → MFA: enable TOTP.
 2. Run `npm run db:deploy` with the production `DIRECT_URL`, then run `prisma/sql/rls.sql` in the SQL editor.
 3. **Vercel**: import the repo, set the env vars above (`AUTH_MODE=supabase`), deploy.
-4. First visit: sign in → scan the 2FA QR code → done.
+4. `npm run cron:sql` → run the output in Supabase to schedule jobs.
+5. First visit: sign in → scan the 2FA QR code → connect Google → install as an app on your phone.
+
+## PWA & mobile
+
+Installable (manifest + icons), offline fallback page, cached app shell, web push. Every page is checked at
+Pixel 7 width for horizontal overflow and with axe for WCAG AA in both desktop and mobile Playwright projects.
 
 ## The assistant
 

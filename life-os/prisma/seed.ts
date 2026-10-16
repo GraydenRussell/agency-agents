@@ -193,7 +193,7 @@ async function seedPeopleMoneyHealth() {
   });
 
   for (let d = 1; d <= 14; d++) {
-    await db.sleepLog.create({ data: { date: addDays(T, -d), hours: 6.2 + ((d * 7) % 20) / 10, quality: 3 + (d % 3) } });
+    await db.sleepLog.create({ data: { date: addDays(T, -d), hours: Math.round((6.2 + ((d * 7) % 20) / 10) * 10) / 10, quality: 3 + (d % 3) } });
     await db.waterLog.create({ data: { date: addDays(T, -d), ounces: 60 + ((d * 13) % 50) } });
     if (d % 2 === 0 || d % 5 === 0) {
       await db.workout.create({ data: { date: addDays(T, -d), type: d % 4 === 0 ? "Run" : "Strength", durationMin: d % 4 === 0 ? 50 : 60, intensity: 3 + (d % 3) } });

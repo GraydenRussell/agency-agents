@@ -5,7 +5,8 @@ export type Bar = { key: string; label: string; value: number | null; display: s
 
 /**
  * Single-series bar chart (dataviz rules: one hue, thin bars with 4px rounded tops anchored to the
- * baseline, 2px gaps, recessive grid, optional dashed target line, hover tooltip, table for screen readers).
+ * baseline, 2px gaps, recessive grid, optional dashed target line, hover tooltip; values are exposed to
+ * assistive tech through the visually hidden table, so individual bars are aria-hidden).
  * No legend: the card title names the series.
  */
 export function BarChart({ data, target, targetLabel, height = 120, ariaLabel, unit }: { data: Bar[]; target?: number; targetLabel?: string; height?: number; ariaLabel: string; unit?: string }) {
@@ -26,7 +27,7 @@ export function BarChart({ data, target, targetLabel, height = 120, ariaLabel, u
           const barW = Math.max(0.5, w - Math.min(w * 0.35, 2.4));
           const x = i * w + (w - barW) / 2;
           return (
-            <g key={d.key} onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} tabIndex={0} aria-label={`${d.label}: ${d.display}`}>
+            <g key={d.key} onMouseEnter={() => setHover(i)} aria-hidden="true">
               {/* Hit target larger than the mark */}
               <rect x={i * w} y={0} width={w} height={height} fill="transparent" />
               {d.value !== null && v > 0 && <path d={roundedTop(x, top, barW, height - top, Math.min(4, barW / 2))} className={hover === i ? "fill-brand-cyan" : "fill-primary"} />}

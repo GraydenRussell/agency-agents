@@ -93,8 +93,8 @@ export function AssistantSettings(p: Props) {
         </form>
 
         <div className="space-y-1.5">
-          <Label>Reasoning effort</Label>
-          <NativeSelect defaultValue={p.effort} onChange={(e) => run(() => saveSettingAction("ai.effort", e.target.value as Props["effort"]), { success: "Saved" })} className="max-w-56">
+          <Label htmlFor="effort">Reasoning effort</Label>
+          <NativeSelect id="effort" defaultValue={p.effort} onChange={(e) => run(() => saveSettingAction("ai.effort", e.target.value as Props["effort"]), { success: "Saved" })} className="max-w-56">
             <option value="low">Low (fastest, cheapest)</option>
             <option value="medium">Medium (default)</option>
             <option value="high">High</option>

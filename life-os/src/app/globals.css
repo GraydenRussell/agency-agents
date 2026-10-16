@@ -25,8 +25,9 @@
   --card-foreground: #16181d;
   --popover: #ffffff;
   --popover-foreground: #16181d;
-  --primary: #007ace;
+  --primary: #0070c0; /* Azure, nudged darker for 4.5:1 with white text */
   --primary-foreground: #ffffff;
+  --primary-text: #00579a;
   --secondary: #eef1f5;
   --secondary-foreground: #16181d;
   --muted: #eef1f5;
@@ -46,8 +47,9 @@
   --card-foreground: #ececec;
   --popover: #2a2a2b;
   --popover-foreground: #ececec;
-  --primary: #1a8fe0;
+  --primary: #0f74c4; /* 4.87:1 with white text, 3.5:1 against the surface for charts */
   --primary-foreground: #ffffff;
+  --primary-text: #4db3ff;
   --secondary: #303030;
   --secondary-foreground: #ececec;
   --muted: #2e2e2f;
@@ -69,6 +71,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-text: var(--primary-text);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);

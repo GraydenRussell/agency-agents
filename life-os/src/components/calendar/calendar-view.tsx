@@ -6,7 +6,7 @@ import { DndContext, DragOverlay, PointerSensor, useDraggable, useDroppable, use
 import { ChevronLeft, ChevronRight, GripVertical, Plus, RefreshCw, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Segmented } from "@/components/ui/segmented";
 import { useAction } from "@/components/ui/use-action";
 import { atLocalMinutes, formatLocalDate, formatTime, localDateOf, localMinutes, minutesToLabel, today } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -110,13 +110,16 @@ export function CalendarView(props: {
         </div>
         <h2 className="font-heading text-2xl tracking-wide">{title}</h2>
         <div className="flex-1" />
-        <Tabs value={props.view} onValueChange={(v) => go({ view: v })}>
-          <TabsList>
-            <TabsTrigger value="day">Day</TabsTrigger>
-            <TabsTrigger value="week">Week</TabsTrigger>
-            <TabsTrigger value="month">Month</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <Segmented
+          label="Calendar view"
+          value={props.view}
+          onChange={(v) => go({ view: v })}
+          options={[
+            { value: "day", label: "Day" },
+            { value: "week", label: "Week" },
+            { value: "month", label: "Month" },
+          ]}
+        />
         <Button variant="outline" size="sm" disabled={pending} onClick={() => run(() => syncNowAction(), { success: (m) => m })} title={props.lastSyncAt ? `Last synced ${new Date(props.lastSyncAt).toLocaleTimeString()}` : "Never synced"}>
           <RefreshCw className={cn(pending && "animate-spin")} /> Sync
         </Button>
@@ -364,12 +367,14 @@ function TaskTray({ tasks }: { tasks: UnscheduledTask[] }) {
 function TrayTask({ task }: { task: UnscheduledTask }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `task:${task.id}`, data: { type: "task", id: task.id, durationMin: task.estimateMinutes ?? 30, title: task.title } });
   return (
-    <li ref={setNodeRef} {...attributes} {...listeners} data-testid="tray-task" className={cn("flex cursor-grab items-center gap-2 rounded-md border border-border bg-card px-2 py-1.5 text-sm active:cursor-grabbing", isDragging && "opacity-40")}>
-      <GripVertical className="size-3.5 shrink-0 text-muted-foreground" />
-      <span className="min-w-0 flex-1 truncate">{task.title}</span>
-      <Badge variant="outline" className="px-1 text-[10px]">
-        {task.estimateMinutes ?? 30}m
-      </Badge>
+    <li>
+      <div ref={setNodeRef} {...attributes} {...listeners} data-testid="tray-task" className={cn("flex cursor-grab items-center gap-2 rounded-md border border-border bg-card px-2 py-1.5 text-sm active:cursor-grabbing", isDragging && "opacity-40")}>
+        <GripVertical className="size-3.5 shrink-0 text-muted-foreground" />
+        <span className="min-w-0 flex-1 truncate">{task.title}</span>
+        <Badge variant="outline" className="px-1 text-[10px]">
+          {task.estimateMinutes ?? 30}m
+        </Badge>
+      </div>
     </li>
   );
 }

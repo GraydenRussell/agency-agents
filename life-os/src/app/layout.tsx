@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/shell/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ServiceWorkerRegistrar } from "@/components/shell/pwa";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <TooltipProvider delayDuration={300}>
             {children}
             <Toaster theme="dark" position="top-center" richColors closeButton />
+            <ServiceWorkerRegistrar />
           </TooltipProvider>
         </ThemeProvider>
       </body>
