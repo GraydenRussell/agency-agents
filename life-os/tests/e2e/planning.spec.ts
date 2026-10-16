@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { gotoReady } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -25,16 +26,18 @@ test("completing a Top 3 task updates Today with undo", async ({ page }) => {
   await expect(page.getByTestId("task-row").filter({ hasText: "Approve Meta ad creative" }).first().getByRole("checkbox")).not.toBeChecked();
 });
 
-test("task sheet edits persist", async ({ page }) => {
+test("task sheet edits persist", async ({ page }, info) => {
+  // Desktop and mobile share one database, so each run adds its own subtask.
+  const sub = `Find in-network dentist (${info.project.name} ${Date.now().toString(36)})`;
   await page.goto("/tasks");
   await page.getByTestId("task-row").filter({ hasText: "Book dentist appointment" }).getByText("Book dentist appointment").first().click();
   const sheet = page.getByRole("dialog");
   await expect(sheet.getByLabel("Title")).toHaveValue("Book dentist appointment");
   await sheet.locator("select").nth(1).selectOption("1");
   await expect(sheet.getByText("Saving…")).toHaveCount(0, { timeout: 5000 });
-  await sheet.getByPlaceholder("Add a subtask").fill("Find in-network dentist");
+  await sheet.getByPlaceholder("Add a subtask").fill(sub);
   await sheet.getByRole("button", { name: "Add subtask" }).click();
-  await expect(sheet.getByText("Find in-network dentist")).toBeVisible();
+  await expect(sheet.getByText(sub)).toBeVisible();
   await page.keyboard.press("Escape");
   await page.reload();
   await expect(page.getByTestId("task-row").filter({ hasText: "Book dentist appointment" }).getByText("P1", { exact: true }).first()).toBeVisible();
@@ -72,7 +75,14 @@ test("goals: create a weekly goal", async ({ page, isMobile }) => {
 
 test("notes: create, autosave, and find via search", async ({ page, isMobile }) => {
   test.skip(isMobile, "desktop only");
-  await page.goto("/notes");
+  // Diagnostics: report any failed request so CI logs show where a 404 comes from.
+  page.on("response", (r) => {
+    if (r.status() >= 400) console.log(`[notes] ${r.request().method()} ${r.url()} -> ${r.status()}`);
+  });
+  page.on("framenavigated", (f) => {
+    if (f === page.mainFrame()) console.log(`[notes] navigated to ${f.url()}`);
+  });
+  await gotoReady(page, "/notes");
   await page.getByRole("button", { name: "New note" }).click();
   await expect(page).toHaveURL(/\/notes\/.+/);
   await page.getByLabel("Note title").fill("Gutter add-on pricing");

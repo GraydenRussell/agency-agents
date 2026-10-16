@@ -26,6 +26,8 @@ export default defineConfig({
     url: `http://localhost:${PORT}/api/health`,
     // Always a fresh server: mock integrations keep in-memory state between requests.
     reuseExistingServer: false,
+    // Server logs in CI help diagnose failures that only reproduce there.
+    stdout: process.env.CI ? "pipe" : "ignore",
     timeout: 120_000,
     env: {
       DATABASE_URL: process.env.E2E_DATABASE_URL ?? "postgresql://postgres@localhost:5432/lifeos_e2e",
