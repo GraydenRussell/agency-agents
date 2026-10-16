@@ -8,6 +8,11 @@ All notable changes to Life OS. Dates are America/Phoenix.
   (`memory.delete`, auto-approve toggle default OFF) and can be undone.
 - Undo is claimed atomically, so a double tap can't run the inverse operation twice; a failed undo releases the claim.
 - E2E tests no longer depend on leftover seed data or grab a hidden streamed copy of a form (repeat-safe).
+- Pages could stay invisible: the app-wide `loading.tsx` and a few `<Suspense>` wrappers made Next.js stream page
+  content into a hidden container that a script reveals later. Newer Chrome sometimes didn't reveal it in time
+  (missing buttons, duplicate elements, a 404 after pressing "New note" too early), and without JavaScript the
+  page body never showed. Pages now arrive fully rendered; a Playwright test checks them with JavaScript off.
+- Tests wait for hydration (`<html data-hydrated>`) instead of network idle, which newer Chrome never reaches.
 ### Added
 - GitHub Actions workflow `.github/workflows/life-os.yml`: Postgres service, typecheck, lint, unit tests, build,
   Playwright (desktop + mobile, axe). Runs only when `life-os/**` changes.

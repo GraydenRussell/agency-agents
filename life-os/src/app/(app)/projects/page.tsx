@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { PageHeader } from "@/components/shell/page-header";
 import { ProjectBoard } from "@/components/projects/project-board";
 import { db } from "@/lib/db";
@@ -13,13 +12,11 @@ export default async function ProjectsPage() {
   return (
     <>
       <PageHeader title="Projects" description="Everything you're building with Claude Code: GitHub, Vercel, and local folders." />
-      <Suspense>
-        <ProjectBoard
-          githubReady={isMock() || Boolean(process.env.GITHUB_TOKEN)}
-          lastSync={iso(last?.syncedAt ?? null)}
-          projects={projects.map((p) => ({ ...p, lastCommitAt: iso(p.lastCommitAt), deployedAt: iso(p.deployedAt) }))}
-        />
-      </Suspense>
+      <ProjectBoard
+        githubReady={isMock() || Boolean(process.env.GITHUB_TOKEN)}
+        lastSync={iso(last?.syncedAt ?? null)}
+        projects={projects.map((p) => ({ ...p, lastCommitAt: iso(p.lastCommitAt), deployedAt: iso(p.deployedAt) }))}
+      />
     </>
   );
 }

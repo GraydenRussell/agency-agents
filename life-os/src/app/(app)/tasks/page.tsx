@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { PageHeader } from "@/components/shell/page-header";
 import { Kanban } from "@/components/tasks/kanban";
 import { NewTaskForm } from "@/components/tasks/new-task-form";
@@ -23,9 +22,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
       <div className="mb-4">
         <NewTaskForm />
       </div>
-      <Suspense>
-        <TaskFilters />
-      </Suspense>
+      <TaskFilters />
       {view === "board" ? <Kanban tasks={boardTasks} /> : <TaskList tasks={tasks} emptyTitle="No tasks match" emptyDescription="Try clearing filters, or add one above." />}
     </>
   );

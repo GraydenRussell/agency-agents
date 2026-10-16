@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { PageHeader } from "@/components/shell/page-header";
 import { CalendarView, type CalEvent, type RoutineBlockView, type View } from "@/components/calendar/calendar-view";
 import { db } from "@/lib/db";
@@ -60,9 +59,7 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
   return (
     <>
       <PageHeader title="Calendar" />
-      <Suspense>
-        <CalendarView view={view} date={date} days={r.days} events={cal} routines={routines} tasks={tasks.map((t) => ({ id: t.id, title: t.title, priority: t.priority, estimateMinutes: t.estimateMinutes }))} nav={{ prev: r.prev, next: r.next }} connected={connected} lastSyncAt={latest?.lastSyncAt?.toISOString() ?? null} />
-      </Suspense>
+      <CalendarView view={view} date={date} days={r.days} events={cal} routines={routines} tasks={tasks.map((t) => ({ id: t.id, title: t.title, priority: t.priority, estimateMinutes: t.estimateMinutes }))} nav={{ prev: r.prev, next: r.next }} connected={connected} lastSyncAt={latest?.lastSyncAt?.toISOString() ?? null} />
     </>
   );
 }

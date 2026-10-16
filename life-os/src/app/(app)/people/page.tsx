@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { PageHeader } from "@/components/shell/page-header";
 import { PeopleBoard } from "@/components/life/people-board";
 import { dueFollowUps, listPeople } from "@/lib/services/people";
@@ -11,9 +10,7 @@ export default async function PeoplePage() {
   return (
     <>
       <PageHeader title="People" description={`${people.length} people · ${due.length} follow-up${due.length === 1 ? "" : "s"} due`} />
-      <Suspense>
-        <PeopleBoard people={people.map((p) => ({ ...p, lastContactedAt: iso(p.lastContactedAt), nextFollowUpAt: iso(p.nextFollowUpAt), interactions: p.interactions.map((i) => ({ ...i, date: i.date.toISOString() })) }))} />
-      </Suspense>
+      <PeopleBoard people={people.map((p) => ({ ...p, lastContactedAt: iso(p.lastContactedAt), nextFollowUpAt: iso(p.nextFollowUpAt), interactions: p.interactions.map((i) => ({ ...i, date: i.date.toISOString() })) }))} />
     </>
   );
 }
