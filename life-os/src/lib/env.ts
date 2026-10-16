@@ -46,6 +46,7 @@ const schema = z.object({
   GITHUB_TOKEN: optional,
   GITHUB_OWNERS: z.string().default("GraydenRussell"),
   VERCEL_TOKEN: optional,
+  PROJECTS_SYNC_TOKEN: optional,
   VERCEL_TEAM_ID: optional,
 
   ADMIN_DASH_URL: optional,

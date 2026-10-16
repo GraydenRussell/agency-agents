@@ -9,13 +9,14 @@ test("assistant creates a task via a tool and logs it with undo", async ({ page 
   await page.getByLabel("Message the assistant").press("Enter");
   await expect(page.getByTestId("assistant-message").last()).toContainText("Done");
   await page.goto("/tasks");
-  await expect(page.getByText("order resin filters", { exact: true })).toBeVisible();
+  // Role locators ignore hidden copies Next.js keeps for preserved UI state.
+  await expect(page.getByRole("button", { name: /^order resin filters/ })).toBeVisible();
   await page.goto("/activity");
   const row = page.getByTestId("activity-list").locator("li").filter({ hasText: 'Create task "order resin filters"' });
   await row.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByText("Undone", { exact: true }).first()).toBeVisible();
   await page.goto("/tasks");
-  await expect(page.getByText("order resin filters", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^order resin filters/ })).toHaveCount(0);
 });
 
 test("sending email via the assistant waits for one-tap approval", async ({ page }) => {

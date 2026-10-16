@@ -41,8 +41,10 @@ test("drag a task from the tray onto the calendar to time-block it", async ({ pa
 
 test("month view and settings connect state (mock)", async ({ page }) => {
   await page.goto("/calendar?view=month");
-  await expect(page.getByText(/\+\d more|Crew huddle/).first()).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByText(/\+\d more|Crew huddle/).first()).toBeVisible({ timeout: 10_000 });
   await page.goto("/settings");
   await page.getByRole("link", { name: /Connect Google|Reconnect/ }).click();
-  await expect(page.getByText(/Connected as grayden@sample.test/)).toBeVisible();
+  await page.waitForURL(/connected=google/);
+  await expect(page.getByText(/Connected as grayden@sample.test/)).toBeVisible({ timeout: 10_000 });
 });

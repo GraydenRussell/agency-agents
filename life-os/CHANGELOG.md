@@ -2,6 +2,22 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Phase 7] Projects hub — 2026-10-16
+### Added
+- GitHub discovery (fine-grained token): all repos you own/collaborate on for `GITHUB_OWNERS`, with description,
+  privacy, open issues, last commit, and a detected stack (package.json frameworks + languages + topics) for repos
+  active in the last 180 days.
+- Vercel: production URL and latest deploy state matched to repos.
+- Local projects: `npm run sync:local -- ~/Projects` CLI posts folder metadata to a token-protected endpoint; matches
+  existing repos by git remote or creates local projects.
+- Projects page: status filter (active / paused / idea / done) + search, cards with stack, last commit, issues, deploy
+  state, inline next step, status select, Launch (launch URL → deploy URL → repo) and repo buttons; detail sheet with
+  links, launch URL override, notes; manual add/delete.
+- Sync preserves your status/next step/notes; new repos get an initial status from activity. Hourly `projects` job.
+- Assistant `project_status` / `project_add_next_step` now operate on synced data.
+- Tests: stack detection, remote parsing, Vercel mapping, sync preserving user fields, live GitHub pagination/owner
+  filter/enrichment (stubbed fetch), local upsert + token auth; Playwright projects flow.
+
 ## [Phase 6] Reminders & automations — 2026-10-16
 ### Added
 - Notification layer: SMS via Twilio REST, web push (VAPID, service worker with click-through), email to yourself

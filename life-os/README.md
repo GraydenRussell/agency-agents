@@ -113,6 +113,18 @@ Vercel Cron instead: the same endpoints accept `GET` with `Authorization: Bearer
 - Quiet hours (default 9:30 PM–6:00 AM) hold SMS/push; reminders you set always go through. Use **Test** buttons in
   Settings to verify each channel.
 
+## Projects hub
+
+- **GitHub:** create a fine-grained token (Settings → Developer settings → Fine-grained tokens) with access to all
+  your repositories and read-only *Metadata*, *Contents*, and *Issues*. Set `GITHUB_TOKEN` and `GITHUB_OWNERS`
+  (comma-separated users/orgs, default `GraydenRussell`). Repos sync hourly and via **Sync GitHub**; status, next step,
+  notes, and launch URL are yours and are never overwritten by sync.
+- **Vercel:** create a token (Account → Tokens) as `VERCEL_TOKEN` (+ `VERCEL_TEAM_ID` for a team). Projects linked to a
+  GitHub repo show production URL and latest deploy state.
+- **Local folders:** set `PROJECTS_SYNC_TOKEN` in Vercel, then on your computer run
+  `LIFE_OS_URL=https://<your-domain> PROJECTS_SYNC_TOKEN=… npm run sync:local -- ~/Projects`. Only metadata (name,
+  path, remote, last commit, stack) is sent.
+
 ## Google OAuth (Gmail + Calendar)
 
 1. Google Cloud Console → create a project → **APIs & Services → Library**: enable *Google Calendar API* and *Gmail API*.

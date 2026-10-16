@@ -17,7 +17,8 @@
     "db:reset": "prisma migrate reset --force",
     "postinstall": "prisma generate",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "cron:sql": "tsx scripts/cron-sql.ts"
+    "cron:sql": "tsx scripts/cron-sql.ts",
+    "sync:local": "tsx scripts/sync-local-projects.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",
