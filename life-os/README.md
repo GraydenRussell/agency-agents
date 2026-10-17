@@ -40,6 +40,8 @@ Vercel, Anthropic, admin dashboard, weather) for deterministic fakes so you can 
 | `npm run test:e2e` | Playwright against a production build (uses `lifeos_e2e`; override with `E2E_DATABASE_URL`). Run `npm run build` first. Set `PLAYWRIGHT_CHROMIUM_PATH` to use a preinstalled Chromium. |
 | `npm run db:migrate` | Create/apply migrations (dev) |
 | `npm run db:deploy` | Apply migrations (prod) |
+| `npm run doctor` | Setup checklist; `-- --live` tests each configured service |
+| `npm run setup:secrets` | Generate encryption key, cron secret, tokens, VAPID keys (`-- --write` fills .env.local) |
 | `npm run db:seed` | Wipe + reseed sample data (never point this at production) |
 | `npm run check` | typecheck + lint + unit tests |
 
@@ -66,7 +68,9 @@ All variables are documented in [`.env.example`](./.env.example). Highlights:
 
 ## Production setup
 
-Full step-by-step guide: **[docs/DEPLOY.md](docs/DEPLOY.md)**. Summary:
+Full step-by-step guide: **[docs/DEPLOY.md](docs/DEPLOY.md)**. In the app, **/setup** shows every account in order
+with status, missing variables, steps, and a live **Test** button; `npm run doctor -- --live` does the same from a terminal,
+and `npm run setup:secrets` generates the secrets you don't need an account for. Summary:
 
 1. **Supabase**: create a new project. Copy URL + anon key, and the pooled/direct DB URLs.
    Auth → Providers: enable Email; disable sign-ups after creating your user. Auth → MFA: enable TOTP.

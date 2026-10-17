@@ -2,6 +2,20 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Setup] Guided account setup — 2026-10-17
+### Added
+- **/setup** page (sidebar → System, or `g u`): every external account in setup order with what it powers,
+  status (connected / not set up / needs a fix), the exact missing variables, numbered steps, a console link, and a
+  live read-only **Test** button (Supabase Auth settings, Anthropic model access, Twilio account status, GitHub,
+  Vercel, admin-dashboard endpoint, database migrations). Format checks catch dev placeholders, malformed keys,
+  non-E.164 phone numbers, and mock mode before you deploy. Results never include secret values.
+- `npm run doctor` (add `-- --live` for network tests): the same checklist in a terminal; exits non-zero until
+  everything required for production is ready.
+- `npm run setup:secrets`: generates ENCRYPTION_KEY, CRON_SECRET, PROJECTS_SYNC_TOKEN, LIFE_OS_API_TOKEN and a
+  VAPID key pair; `-- --write` appends only the missing ones to .env.local.
+- Tests: checklist statuses, validators, live-test interpretation with a fake network, secret redaction,
+  secret generation and safe .env merging; Playwright for /setup (incl. axe and phone width).
+
 ## [Hardening] Security review and CI — 2026-10-16
 ### Fixed
 - The assistant's `memory_forget` deleted without approval; it now goes through the Approvals queue

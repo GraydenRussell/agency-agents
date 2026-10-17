@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { gotoReady } from "./helpers";
 
-const PAGES = ["/today", "/tasks", "/calendar", "/inbox", "/assistant", "/goals", "/routines", "/notes", "/health", "/money", "/people", "/projects", "/business", "/approvals", "/activity", "/settings"];
+const PAGES = ["/today", "/tasks", "/calendar", "/inbox", "/assistant", "/goals", "/routines", "/notes", "/health", "/money", "/people", "/projects", "/business", "/approvals", "/activity", "/settings", "/setup"];
 
 test.describe("accessibility (axe, serious + critical)", () => {
   test.skip(({ isMobile }) => isMobile, "run once on desktop");

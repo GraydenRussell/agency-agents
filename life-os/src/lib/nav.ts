@@ -9,6 +9,7 @@ import {
   Inbox,
   Repeat,
   NotebookPen,
+  PlugZap,
   Settings,
   ShieldCheck,
   Sun,
@@ -46,6 +47,7 @@ export const NAV: NavItem[] = [
   { href: "/approvals", label: "Approvals", icon: ShieldCheck, chord: "v", group: "system" },
   { href: "/activity", label: "Activity Log", icon: Activity, chord: "l", group: "system" },
   { href: "/settings", label: "Settings", icon: Settings, chord: "s", group: "system" },
+  { href: "/setup", label: "Setup", icon: PlugZap, chord: "u", group: "system" },
 ];
 
 export const NAV_GROUP_LABELS: Record<NavItem["group"], string> = {

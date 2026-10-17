@@ -3,6 +3,16 @@
 Target: **Vercel** (app) + **Supabase** (Postgres, Auth, pg_cron). About 45 minutes end to end, most of it waiting on
 Google/Twilio consoles. Every step says what to copy where. Secrets only ever go into Vercel env vars or `.env.local`.
 
+**Two helpers do most of the checking for you:**
+
+- `npm run setup:secrets` generates every secret you don't need an account for (encryption key, cron secret,
+  sync/API tokens, web-push keys). `-- --write` adds any missing ones to `.env.local` without touching existing values.
+- `npm run doctor -- --live` lists each account in order (✔ connected, ○ not set up, ✖ needs a fix), says exactly
+  which variable is missing and what to do, and makes a read-only test call to every configured service.
+  The same checklist is in the app at **/setup**, with a **Test** button per service.
+
+> Start Twilio registration (step 4) first if you want SMS: carriers take days to weeks to approve it.
+
 > Life OS currently lives in the `life-os/` folder of the `agency-agents` repo. To give it its own repo first:
 > create an empty `GraydenRussell/life-os` on GitHub, then from the `agency-agents` checkout run
 > `git subtree split --prefix=life-os -b life-os-only && git push git@github.com:GraydenRussell/life-os.git life-os-only:main`.
