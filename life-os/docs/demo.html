@@ -1,0 +1,855 @@
+<title>Life OS Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600&display=swap">
+<style>
+/* Layout: app shell — fixed sidebar on desktop, top bar + bottom tab bar on phones; one scrolling main pane. */
+:root {
+  --bg: #1c1d1f; --surface: #242628; --surface-2: #2c2f32; --border: #383b3f; --fg: #ececec; --muted: #a2a6ab;
+  --primary: #0f74c4; --primary-text: #4db3ff; --on-primary: #ffffff; --cyan: #66ddfa;
+  --warn: #f5b301; --warn-bg: rgba(245,179,1,.12); --danger: #f26464; --danger-bg: rgba(242,100,100,.12);
+  --ok: #3fd39a; --ok-bg: rgba(63,211,154,.12); --sel: rgba(15,116,196,.22); --shadow: 0 10px 30px rgba(0,0,0,.45);
+  --display: "Bebas Neue", "Oswald", Impact, "Arial Narrow", sans-serif;
+  --body: "Poppins", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #f5f7f9; --surface: #ffffff; --surface-2: #eef1f4; --border: #dde2e7; --fg: #1d2125; --muted: #5a636d;
+  --primary: #0070c0; --primary-text: #00579a; --on-primary: #ffffff; --cyan: #0b7c99;
+  --warn: #9a6a00; --warn-bg: rgba(245,179,1,.16); --danger: #c03030; --danger-bg: rgba(220,60,60,.10);
+  --ok: #117a52; --ok-bg: rgba(30,170,110,.12); --sel: rgba(0,112,192,.12); --shadow: 0 10px 30px rgba(20,30,40,.14);
+  color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #f5f7f9; --surface: #ffffff; --surface-2: #eef1f4; --border: #dde2e7; --fg: #1d2125; --muted: #5a636d;
+  --primary: #0070c0; --primary-text: #00579a; --on-primary: #ffffff; --cyan: #0b7c99;
+  --warn: #9a6a00; --warn-bg: rgba(245,179,1,.16); --danger: #c03030; --danger-bg: rgba(220,60,60,.10);
+  --ok: #117a52; --ok-bg: rgba(30,170,110,.12); --sel: rgba(0,112,192,.12); --shadow: 0 10px 30px rgba(20,30,40,.14);
+  color-scheme: light; }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 14px; line-height: 1.45; }
+* { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 2px; border-radius: 6px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+.app { display: grid; grid-template-columns: 232px minmax(0,1fr); height: 100%; }
+.side { border-right: 1px solid var(--border); padding: 18px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+.logo { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; font-family: var(--display); font-size: 20px; }
+.brand b { font-family: var(--display); font-size: 24px; letter-spacing: .04em; font-weight: 400; }
+.search { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; background: transparent; border: 1px solid var(--border); border-radius: 9px; padding: 7px 10px; color: var(--muted); text-align: left; }
+kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; color: var(--muted); background: var(--surface-2); }
+.navg { display: flex; flex-direction: column; gap: 2px; }
+.navg p { margin: 6px 8px 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.nav { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; border: 0; background: transparent; text-align: left; width: 100%; }
+.nav:hover { background: var(--surface-2); }
+.nav[aria-current="page"] { background: var(--sel); color: var(--fg); font-weight: 500; }
+.nav svg { width: 17px; height: 17px; flex: none; }
+.nav .ct { margin-left: auto; min-width: 20px; height: 18px; border-radius: 9px; background: var(--primary); color: var(--on-primary); font-size: 11px; display: grid; place-items: center; padding: 0 6px; }
+.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--muted); }
+.main { overflow-y: auto; min-width: 0; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 22px 96px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+.demo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; background: var(--warn-bg); color: var(--fg); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); border-radius: 10px; padding: 8px 12px; font-size: 13px; margin-bottom: 18px; }
+.demo-bar b { color: var(--warn); font-weight: 600; }
+.demo-bar .sp { flex: 1; }
+.topbar { display: none; }
+.tabbar { display: none; }
+.ph { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.eyebrow { color: var(--muted); font-size: 13px; }
+.title { font-family: var(--display); font-weight: 400; font-size: clamp(38px, 5vw, 54px); line-height: .95; letter-spacing: .02em; }
+.sub { color: var(--muted); margin-top: 6px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 16px; }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; min-width: 0; }
+.card h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.card h2 svg { width: 16px; height: 16px; }
+.ch { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--border); background: transparent; border-radius: 8px; padding: 6px 11px; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.btn:hover { background: var(--surface-2); }
+.btn.pri { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.btn.pri:hover { filter: brightness(1.1); }
+.btn.ghost { border-color: transparent; }
+.btn.sm { padding: 4px 8px; font-size: 12px; }
+.btn svg { width: 15px; height: 15px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; padding: 1px 6px; font-size: 11px; font-weight: 600; border: 1px solid transparent; }
+.p1 { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+.p2 { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 55%, transparent); }
+.p3 { color: var(--primary-text); border-color: color-mix(in srgb, var(--primary-text) 45%, transparent); }
+.p4 { color: var(--muted); border-color: var(--border); }
+.tag { font-size: 11px; color: var(--muted); display: inline-flex; align-items: center; gap: 5px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; background: var(--muted); }
+.a-business { background: #2f8fe0; } .a-personal { background: #b58cf0; } .a-health { background: #3fd39a; } .a-money { background: #f5b301; } .a-learning { background: #66ddfa; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.capture { width: 100%; display: flex; align-items: center; gap: 10px; border: 1px dashed var(--border); background: transparent; border-radius: 12px; padding: 12px 14px; color: var(--muted); text-align: left; margin-bottom: 16px; }
+.capture svg { width: 18px; height: 18px; color: var(--cyan); }
+.capture span { flex: 1; }
+.task { display: flex; align-items: flex-start; gap: 12px; padding: 10px 2px; border-top: 1px solid var(--border); }
+.task:first-child { border-top: 0; }
+.chk { width: 20px; height: 20px; flex: none; border-radius: 50%; border: 2px solid var(--muted); background: transparent; display: grid; place-items: center; margin-top: 1px; padding: 0; }
+.chk.on { background: var(--ok); border-color: var(--ok); color: #08261a; }
+.chk svg { width: 12px; height: 12px; }
+.task .t { flex: 1; min-width: 0; }
+.task .tt { display: block; }
+.task.done .tt { text-decoration: line-through; color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 3px; align-items: center; }
+.star { border: 0; background: transparent; color: var(--muted); padding: 2px; }
+.star.on { color: var(--warn); }
+.star svg { width: 17px; height: 17px; }
+.sched { display: flex; flex-direction: column; gap: 6px; }
+.blk { display: grid; grid-template-columns: 70px minmax(0,1fr) auto; gap: 10px; align-items: center; background: var(--surface-2); border-radius: 8px; padding: 8px 10px; border-left: 3px solid var(--border); font-size: 13px; }
+.blk.ev { border-left-color: var(--primary); }
+.blk.job { border-left-color: var(--cyan); }
+.blk.task-b { border-left-color: var(--warn); }
+.blk.now { outline: 1px solid var(--danger); }
+.blk .w { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+.kpi { background: var(--surface-2); border-radius: 10px; padding: 10px 8px; text-align: center; }
+.kpi b { display: block; font-family: var(--display); font-weight: 400; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
+.kpi.c b { color: var(--cyan); }
+.kpi span { font-size: 11px; color: var(--muted); }
+.wx { display: flex; align-items: center; gap: 12px; }
+.wx b { font-family: var(--display); font-size: 46px; font-weight: 400; line-height: 1; }
+.hours { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 4px; margin-top: 10px; }
+.hours div { background: var(--surface-2); border-radius: 7px; text-align: center; padding: 5px 0; font-size: 11px; font-variant-numeric: tabular-nums; }
+.hours i { display: block; color: var(--muted); font-style: normal; }
+.water { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bar { height: 8px; border-radius: 6px; background: var(--surface-2); overflow: hidden; flex: 1; min-width: 120px; }
+.bar > i { display: block; height: 100%; background: var(--primary); border-radius: 6px; transition: width .3s; }
+.habit { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; }
+.habit .streak { color: var(--warn); font-size: 12px; }
+.list { display: flex; flex-direction: column; }
+.row { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.row:first-child { border-top: 0; }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 9px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; padding: 5px 12px; border-radius: 7px; font-size: 13px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
+.filters input, .filters select { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; min-width: 0; }
+.filters input { flex: 1; min-width: 160px; }
+.board { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+.lane { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; min-height: 260px; display: flex; flex-direction: column; gap: 8px; transition: background .15s, border-color .15s; }
+.lane.over { border-color: var(--primary-text); background: var(--sel); }
+.lane h3 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; display: flex; justify-content: space-between; }
+.kcard { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; cursor: grab; display: flex; flex-direction: column; gap: 6px; }
+.kcard.dragging { opacity: .45; }
+.kcard .mv { display: flex; gap: 4px; justify-content: flex-end; }
+.cal { display: grid; grid-template-columns: minmax(0,1fr) 230px; gap: 14px; }
+.week { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow-x: auto; }
+.wgrid { display: grid; grid-template-columns: 52px repeat(7, minmax(92px, 1fr)); min-width: 720px; position: relative; }
+.whead { position: sticky; top: 0; background: var(--surface); text-align: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--muted); z-index: 2; }
+.whead b { display: block; font-family: var(--display); font-size: 22px; font-weight: 400; color: var(--fg); line-height: 1.1; }
+.whead.today b { color: var(--on-primary); background: var(--primary); border-radius: 50%; width: 32px; height: 32px; display: grid; place-items: center; margin: 2px auto 0; }
+.hr { height: 44px; border-bottom: 1px solid var(--border); border-left: 1px solid var(--border); position: relative; }
+.hr.slot:hover, .hr.slot.target { background: var(--sel); }
+.hl { font-size: 10px; color: var(--muted); text-align: right; padding-right: 6px; height: 44px; transform: translateY(-6px); font-variant-numeric: tabular-nums; }
+.cev { position: absolute; left: 3px; right: 3px; border-radius: 7px; padding: 3px 6px; font-size: 11px; line-height: 1.25; overflow: hidden; z-index: 1; border-left: 3px solid var(--primary); background: color-mix(in srgb, var(--primary) 28%, var(--surface)); }
+.cev.job { border-left-color: var(--cyan); background: color-mix(in srgb, var(--cyan) 18%, var(--surface)); }
+.cev.routine { border-left-color: var(--border); background: var(--surface-2); color: var(--muted); }
+.cev.task-b { border-left-color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, var(--surface)); }
+.tray { display: flex; flex-direction: column; gap: 6px; }
+.titem { display: flex; justify-content: space-between; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--surface); border-radius: 9px; padding: 7px 9px; font-size: 12px; cursor: grab; text-align: left; width: 100%; }
+.titem.picked { border-color: var(--primary-text); background: var(--sel); }
+.titem span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inbox { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 14px; }
+.thread { width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 0; border-top: 0; padding: 11px 13px; display: flex; flex-direction: column; gap: 2px; }
+.thread:first-child { border-top: 1px solid var(--border); border-radius: 12px 12px 0 0; }
+.thread:last-child { border-radius: 0 0 12px 12px; }
+.thread:only-child { border-radius: 12px; }
+.thread[aria-current="true"] { background: var(--sel); }
+.thread .top { display: flex; justify-content: space-between; gap: 8px; }
+.thread .from { font-weight: 600; display: flex; align-items: center; gap: 7px; }
+.thread .subj { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prio { width: 8px; height: 8px; border-radius: 50%; }
+.cat { font-size: 10px; border-radius: 4px; padding: 0 5px; font-weight: 600; }
+.c-customer { color: var(--primary-text); background: var(--sel); } .c-lead { color: var(--ok); background: var(--ok-bg); }
+.c-vendor { color: var(--warn); background: var(--warn-bg); } .c-personal { color: #c79bff; background: rgba(181,140,240,.14); }
+.c-newsletter, .c-spam { color: var(--muted); background: var(--surface-2); }
+.mail { white-space: pre-wrap; background: var(--surface-2); border-radius: 10px; padding: 12px; font-size: 13px; }
+.ai { border: 1px solid color-mix(in srgb, var(--cyan) 35%, transparent); background: color-mix(in srgb, var(--cyan) 7%, transparent); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+.ai b { color: var(--cyan); }
+textarea { width: 100%; min-height: 120px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; resize: vertical; }
+.chat { display: flex; flex-direction: column; height: calc(100vh - 210px); min-height: 420px; }
+.msgs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 2px 12px; }
+.me { align-self: flex-end; background: var(--primary); color: var(--on-primary); border-radius: 16px 16px 4px 16px; padding: 8px 13px; max-width: 80%; }
+.bot { align-self: flex-start; max-width: 88%; display: flex; flex-direction: column; gap: 6px; }
+.tool { font-size: 12px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.tool svg { width: 13px; height: 13px; color: var(--ok); }
+.appr { border: 1px solid color-mix(in srgb, var(--warn) 50%, transparent); background: var(--warn-bg); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.appr h4 { margin: 0; color: var(--warn); font-size: 13px; display: flex; gap: 6px; align-items: center; }
+.appr pre { margin: 0; white-space: pre-wrap; font-family: var(--body); font-size: 13px; }
+.appr .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.chip { border: 1px solid var(--border); background: transparent; border-radius: 999px; padding: 5px 11px; font-size: 12px; }
+.chip:hover { background: var(--surface-2); }
+.composer { display: flex; gap: 8px; align-items: flex-end; }
+.composer textarea { min-height: 46px; max-height: 140px; }
+.typing span { display: inline-block; width: 6px; height: 6px; margin-right: 3px; border-radius: 50%; background: var(--muted); animation: blink 1s infinite; }
+.typing span:nth-child(2) { animation-delay: .15s; } .typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25 } 40% { opacity: 1 } }
+.empty { border: 1px dashed var(--border); border-radius: 14px; padding: 32px 16px; text-align: center; color: var(--muted); }
+.empty b { display: block; color: var(--fg); margin-bottom: 4px; }
+.setup-item { display: flex; flex-direction: column; gap: 8px; }
+.setup-item .hd { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.setup-item h3 { font-size: 15px; font-weight: 600; }
+.st { font-size: 11px; font-weight: 600; border-radius: 6px; padding: 1px 7px; }
+.st.ok { color: var(--ok); background: var(--ok-bg); } .st.no { color: var(--muted); border: 1px solid var(--border); } .st.req { color: var(--fg); background: var(--surface-2); }
+.setup-item ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; }
+.prog { height: 8px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--primary); transition: width .4s; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: start center; padding: 12vh 16px 16px; z-index: 50; }
+.dialog { width: min(600px, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+.dialog input { width: 100%; border: 0; border-bottom: 1px solid var(--border); background: transparent; padding: 14px 16px; font-size: 15px; outline: none; }
+.plist { max-height: 340px; overflow-y: auto; padding: 6px; }
+.pitem { width: 100%; display: flex; align-items: center; gap: 10px; border: 0; background: transparent; border-radius: 8px; padding: 9px 10px; text-align: left; }
+.pitem[aria-selected="true"] { background: var(--sel); }
+.pitem kbd { margin-left: auto; }
+.pitem svg { width: 16px; height: 16px; color: var(--muted); }
+.parse { padding: 10px 16px 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.toasts { position: fixed; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; z-index: 60; max-width: min(380px, calc(100vw - 32px)); }
+.toast { background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); border-radius: 11px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; animation: up .2s ease-out; }
+.toast span { flex: 1; }
+@keyframes up { from { transform: translateY(8px); opacity: 0 } to { transform: none; opacity: 1 } }
+.act { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--border); }
+.act:first-child { border-top: 0; }
+.act .when { color: var(--muted); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.act.undone .what { text-decoration: line-through; color: var(--muted); }
+.who { font-size: 10px; font-weight: 600; border-radius: 4px; padding: 0 5px; background: var(--surface-2); color: var(--muted); }
+.who.ai { color: var(--cyan); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); }
+  .side { display: none; }
+  .topbar { display: flex; align-items: center; gap: 8px; padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--border); background: var(--bg); }
+  .topbar .brand { padding: 0; flex: 1; }
+  .icon-btn { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: transparent; display: grid; place-items: center; }
+  .icon-btn.pri { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); z-index: 40; }
+  .tabbar button { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--muted); padding: 4px 0; position: relative; }
+  .tabbar button[aria-current="page"] { color: var(--cyan); }
+  .tabbar svg { width: 20px; height: 20px; }
+  .tabbar .badge { position: absolute; top: 0; right: 28%; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-text); }
+  .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: 110px; }
+  .grid, .cal, .inbox { grid-template-columns: minmax(0,1fr); }
+  .board { grid-template-columns: repeat(3, minmax(240px, 82vw)); }
+  .chat { height: calc(100vh - 260px); }
+  .more-sheet { position: fixed; inset: auto 0 0 0; background: var(--surface); border-top: 1px solid var(--border); border-radius: 16px 16px 0 0; padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(84px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); z-index: 39; box-shadow: var(--shadow); display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 4px; }
+}
+</style>
+
+<div class="app" id="app">
+  <aside class="side" aria-label="Sidebar">
+    <div class="brand"><div class="logo">L</div><b>LIFE OS</b></div>
+    <button class="search" data-act="palette"><span>Search or jump…</span><kbd>⌘K</kbd></button>
+    <nav id="nav" aria-label="Primary"></nav>
+    <div class="side-foot">
+      <button class="btn sm" data-act="theme" id="themeBtn">Theme: system</button>
+      <span>Keys: <kbd>C</kbd> capture · <kbd>⌘K</kbd> palette · <kbd>G</kbd> then a letter to jump</span>
+    </div>
+  </aside>
+  <header class="topbar">
+    <div class="brand"><div class="logo">L</div><b>LIFE OS</b></div>
+    <button class="icon-btn" data-act="palette" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+    <button class="icon-btn" data-nav="assistant" aria-label="Assistant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/></svg></button>
+    <button class="icon-btn pri" data-act="capture" aria-label="Quick capture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button>
+  </header>
+  <main class="main" id="main"><div class="wrap" id="view"></div></main>
+</div>
+<nav class="tabbar" id="tabbar" aria-label="Primary (phone)"></nav>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div id="layer"></div>
+
+<script>
+(() => {
+"use strict";
+// ---------- tiny helpers ----------
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const I = {
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  check: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="m8 12 3 3 5-6"/>',
+  inbox: '<path d="M3 13h5l2 3h4l2-3h5"/><path d="M5 5h14l2 8v6H3v-6z"/>',
+  bot: '<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/>',
+  brief: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+  pulse: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+  plug: '<path d="M9 7V3M15 7V3M7 7h10v4a5 5 0 0 1-10 0z"/><path d="M12 16v5"/>',
+  heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  tick: '<path d="m5 12 5 5 9-10"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/>',
+  send: '<path d="m4 12 16-8-6 16-2-7z"/>',
+  spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+  sync: '<path d="M20 11a8 8 0 0 0-14-5l-2 2M4 13a8 8 0 0 0 14 5l2-2"/><path d="M4 4v4h4M20 20v-4h-4"/>',
+};
+const ico = (n, sw = 2) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+
+// ---------- Phoenix time (UTC-7, no DST) ----------
+const phx = () => new Date(Date.now() - 7 * 3600e3);
+const hourNow = () => { const d = phx(); return d.getUTCHours() + d.getUTCMinutes() / 60; };
+const fmtH = (h) => { const hh = Math.floor(h), mm = Math.round((h - hh) * 60); const ap = hh >= 12 ? "PM" : "AM"; const h12 = ((hh + 11) % 12) + 1; return mm ? `${h12}:${String(mm).padStart(2, "0")} ${ap}` : `${h12} ${ap}`; };
+const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const todayIdx = () => (phx().getUTCDay() + 6) % 7; // Mon=0
+const weekDays = () => { const d = phx(); const off = todayIdx(); return [...Array(7)].map((_, i) => { const x = new Date(d.getTime() + (i - off) * 864e5); return { dow: DOW[x.getUTCDay()], d: x.getUTCDate(), m: MON[x.getUTCMonth()] }; }); };
+const stamp = () => { const d = phx(); return fmtH(d.getUTCHours() + d.getUTCMinutes() / 60); };
+
+// ---------- sample state ----------
+const AREAS = ["business", "personal", "health", "money", "learning"];
+function seed() {
+  const t = (title, o = {}) => ({ id: uid(), title, area: "business", pri: 3, due: "", status: "todo", top3: false, est: 30, ...o });
+  return {
+    v: 3,
+    tasks: [
+      t("Approve Meta ad creative for solar-screen promo", { pri: 1, due: "Today 12 PM", top3: true, goal: "Launch fall solar-screen promo" }),
+      t("Call back Mesa HOA about quarterly contract", { pri: 1, due: "Today 3 PM", top3: true, est: 20 }),
+      t("Long run: 8 miles easy", { area: "health", pri: 2, due: "Today 6 PM", top3: true, est: 75, goal: "Q4: build to 25 miles/week" }),
+      t("Send Q3 numbers to accountant", { area: "money", pri: 1, due: "Overdue", status: "doing" }),
+      t("Review crew lead applications", { pri: 2, due: "Tomorrow", status: "doing" }),
+      t("Renew truck registration", { area: "personal", pri: 2, due: "Oct 24" }),
+      t("Order 2 new water-fed poles", { pri: 3, due: "This week" }),
+      t("Draft SOP: first-time customer walkthrough", { pri: 3 }),
+      t("Update Google Business Profile photos", { pri: 3 }),
+      t("Book dentist appointment", { area: "personal", pri: 3 }),
+      t("Read: The E-Myth Revisited (ch. 6)", { area: "learning", pri: 4 }),
+      t("Pay credit card", { area: "money", pri: 2, due: "Oct 22" }),
+      t("Weekly invoice follow-ups", { pri: 2, due: "Fri", status: "done" }),
+    ],
+    blocks: [
+      { id: uid(), d: null, s: 5, e: 5.75, title: "Wake + morning routine", kind: "routine" },
+      { id: uid(), d: null, s: 5.75, e: 7, title: "Gym", kind: "routine" },
+      { id: uid(), d: null, s: 7.5, e: 10.5, title: "Deep work: business", kind: "routine" },
+      { id: uid(), d: 0, s: 8, e: 8.5, title: "Crew huddle", kind: "ev", where: "Shop" },
+      { id: uid(), d: 0, s: 8, e: 10, title: "Job: Patel residence", kind: "job", where: "Ocotillo, Chandler" },
+      { id: uid(), d: 0, s: 10.5, e: 13, title: "Job: Sun Lakes HOA clubhouse", kind: "job", where: "Sun Lakes" },
+      { id: uid(), d: 0, s: 15, e: 15.5, title: "Call Mesa HOA", kind: "task-b" },
+      { id: uid(), d: 0, s: 16, e: 16.5, title: "Call w/ Desert Pure Water", kind: "ev" },
+      { id: uid(), d: -1, s: 15, e: 16, title: "Accountant check-in", kind: "ev" },
+      { id: uid(), d: 1, s: 9, e: 12, title: "Commercial: Chandler Fashion Center", kind: "job" },
+      { id: uid(), d: 2, s: 7, e: 8, title: "Long run", kind: "ev" },
+      { id: uid(), d: 2, s: 17, e: 18, title: "Weekly review", kind: "routine" },
+    ],
+    threads: [
+      { id: "t1", from: "Linda Park", email: "linda@mesaverdehoa.org", subject: "Re: Quarterly contract for Mesa Verde HOA", cat: "customer", pri: 92, needs: true, unread: true, when: "1:38 PM",
+        body: "Hi Grayden,\n\nThe board reviewed your proposal and we'd like to move forward with quarterly service for all 14 buildings. One question before we sign: does the price include the clubhouse skylights?\n\nThanks,\nLinda Park\nMesa Verde HOA",
+        summary: "Board approved quarterly service for 14 buildings; asking if the clubhouse skylights are included before signing." },
+      { id: "t2", from: "Jennifer Alvarez", email: "jen.alvarez@gmail.com", subject: "Quote request: 2-story home in Ocotillo", cat: "lead", pri: 85, needs: true, unread: true, when: "11:02 AM",
+        body: "Hi! We just moved into a 2-story home in Ocotillo (about 3,200 sq ft) and we're looking for inside + outside window cleaning and screens. Do you have anything open next week?\n\nJennifer", summary: "New lead: 3,200 sq ft 2-story in Ocotillo, wants inside/outside + screens next week." },
+      { id: "t3", from: "Mom", email: "mom@example.org", subject: "Dinner Sunday?", cat: "personal", pri: 60, needs: true, unread: false, when: "10:38 AM", body: "Are you and the crew coming Sunday? I'm making the green chile stew.", summary: "Asking if you're coming to dinner Sunday." },
+      { id: "t4", from: "Marcus Reyes", email: "billing@desertpurewater.com", subject: "Invoice #4471: Desert Pure Water Supply", cat: "vendor", pri: 55, needs: true, unread: false, when: "Yesterday", body: "Attached is invoice #4471 for 6 resin cartridges and 2 TDS meters. Net 15.\n\nMarcus", summary: "Invoice #4471 for resin cartridges + TDS meters, net 15." },
+      { id: "t5", from: "Chandler Chamber", email: "news@chandlerchamber.com", subject: "October mixer: Thursday 5:30 PM", cat: "newsletter", pri: 20, needs: false, unread: true, when: "Yesterday", body: "Join fellow business owners at our October mixer...", summary: "Chamber mixer Thursday 5:30 PM." },
+    ],
+    chat: [],
+    approvals: [],
+    activity: [
+      { id: uid(), at: "7:02 AM", who: "AI", what: "Generated your daily brief (sent by email)" },
+      { id: uid(), at: "6:30 AM", who: "AI", what: "Triaged 5 new emails; drafted 1 reply" },
+    ],
+    memory: [{ k: "preference.calls", v: "Customer calls after 10am, never during jobs" }, { k: "person.tyce", v: "Tyce: business partner, runs field ops" }],
+    water: 40, habits: { stretch: true, read: false, noSugar: true },
+    setup: {},
+    brief: false,
+  };
+}
+let S;
+try { const raw = localStorage.getItem("lifeos-demo"); S = raw ? JSON.parse(raw) : null; } catch { S = null; }
+if (!S || S.v !== 3) S = seed();
+const save = () => { try { localStorage.setItem("lifeos-demo", JSON.stringify(S)); } catch { /* storage unavailable: demo still works */ } };
+
+// ---------- navigation ----------
+const NAV = [
+  { id: "today", label: "Today", icon: "sun", key: "h", group: "Run the day", tab: true },
+  { id: "calendar", label: "Calendar", icon: "cal", key: "c", group: "Run the day", tab: true },
+  { id: "tasks", label: "Tasks", icon: "check", key: "t", group: "Run the day", tab: true },
+  { id: "inbox", label: "Inbox", icon: "inbox", key: "i", group: "Run the day", tab: true },
+  { id: "assistant", label: "Assistant", icon: "bot", key: "a", group: "Run the day" },
+  { id: "business", label: "Business", icon: "brief", key: "b", group: "Run the day" },
+  { id: "health", label: "Health", icon: "heart", key: "e", group: "Life" },
+  { id: "approvals", label: "Approvals", icon: "shield", key: "v", group: "System" },
+  { id: "activity", label: "Activity Log", icon: "pulse", key: "l", group: "System" },
+  { id: "setup", label: "Setup", icon: "plug", key: "u", group: "System" },
+];
+let view = (location.hash.replace("#", "") || "today");
+if (!NAV.some((n) => n.id === view)) view = "today";
+const ui = { taskView: "list", taskQ: "", taskArea: "", thread: "t1", picked: null, more: false, draft: {} };
+
+function counts() { return { inbox: S.threads.filter((t) => t.needs).length, approvals: S.approvals.filter((a) => a.status === "pending").length }; }
+function renderNav() {
+  const c = counts();
+  const groups = [...new Set(NAV.map((n) => n.group))];
+  $("#nav").innerHTML = groups.map((g) => `<div class="navg"><p>${g}</p>${NAV.filter((n) => n.group === g).map((n) => {
+    const ct = n.id === "inbox" ? c.inbox : n.id === "approvals" ? c.approvals : 0;
+    return `<button class="nav" data-nav="${n.id}" ${view === n.id ? 'aria-current="page"' : ""}>${ico(n.icon)}<span>${n.label}</span>${ct ? `<span class="ct">${ct}</span>` : ""}</button>`;
+  }).join("")}</div>`).join("");
+  const tabs = NAV.filter((n) => n.tab);
+  $("#tabbar").innerHTML = tabs.map((n) => `<button data-nav="${n.id}" ${view === n.id ? 'aria-current="page"' : ""}>${ico(n.icon)}${n.label}${n.id === "inbox" && c.inbox ? '<i class="badge"></i>' : ""}</button>`).join("")
+    + `<button data-act="more" ${tabs.some((t) => t.id === view) ? "" : 'aria-current="page"'}>${ico("menu")}More${c.approvals ? '<i class="badge"></i>' : ""}</button>`;
+}
+function go(id) { view = id; ui.more = false; try { history.replaceState(null, "", "#" + id); } catch { /* sandboxed */ } render(); $("#main").scrollTop = 0; }
+
+// ---------- toasts & activity ----------
+function toast(msg, undo) {
+  const el = document.createElement("div"); el.className = "toast";
+  el.innerHTML = `<span>${esc(msg)}</span>${undo ? `<button class="btn sm">${ico("undo")}Undo</button>` : ""}`;
+  if (undo) el.querySelector("button").onclick = () => { undo(); el.remove(); };
+  $("#toasts").appendChild(el); setTimeout(() => el.remove(), 5000);
+}
+function log(what, who = "You", undo = null) { const a = { id: uid(), at: stamp(), who, what, undo, undone: false }; S.activity.unshift(a); return a; }
+const UNDO = {
+  restoreTask: (u) => { const t = S.tasks.find((x) => x.id === u.id); if (t) Object.assign(t, u.prev); },
+  deleteTask: (u) => { S.tasks = S.tasks.filter((x) => x.id !== u.id); },
+  removeBlock: (u) => { S.blocks = S.blocks.filter((b) => b.id !== u.id); },
+  unsend: (u) => { const t = S.threads.find((x) => x.id === u.id); if (t) { t.needs = true; t.replied = false; } },
+  forget: (u) => { S.memory = S.memory.filter((m) => m.k !== u.k); },
+};
+function runUndo(a) { if (!a || a.undone || !a.undo) return; UNDO[a.undo.type]?.(a.undo); a.undone = true; log(`Undid: ${a.what}`); save(); render(); }
+
+// ---------- capture parsing (mirrors the app's rule-based parser) ----------
+function parseCapture(text) {
+  let s = " " + text + " "; const out = { title: "", pri: 3, area: "business", due: "", time: null };
+  const p = s.match(/\s!([1-4])\s/); if (p) { out.pri = +p[1]; s = s.replace(p[0], " "); }
+  const a = s.match(/\s#(\w+)\s/); if (a && AREAS.includes(a[1].toLowerCase())) { out.area = a[1].toLowerCase(); s = s.replace(a[0], " "); }
+  const tm = s.match(/\s(?:at\s)?(\d{1,2})(?::(\d{2}))?\s?(am|pm)\s/i);
+  if (tm) { let h = +tm[1] % 12 + (tm[3].toLowerCase() === "pm" ? 12 : 0); out.time = h + (tm[2] ? +tm[2] / 60 : 0); s = s.replace(tm[0], " "); }
+  const d = s.match(/\s(today|tonight|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|next week)\s/i);
+  if (d) { out.due = d[1][0].toUpperCase() + d[1].slice(1).toLowerCase(); s = s.replace(d[0], " "); }
+  if (out.time != null) out.due = `${out.due || "Today"} ${fmtH(out.time)}`;
+  out.title = s.replace(/\s+/g, " ").trim();
+  out.title = out.title.charAt(0).toUpperCase() + out.title.slice(1);
+  return out;
+}
+function addTask(text, who = "You") {
+  const p = parseCapture(text); if (!p.title) return null;
+  const t = { id: uid(), title: p.title, area: p.area, pri: p.pri, due: p.due, status: "todo", top3: false, est: 30 };
+  S.tasks.unshift(t);
+  const a = log(`Created task "${t.title}"`, who, { type: "deleteTask", id: t.id });
+  save(); return { t, a };
+}
+
+// ---------- shared bits ----------
+const priPill = (p) => `<span class="pill p${p}">P${p}</span>`;
+const areaTag = (a) => `<span class="tag"><i class="dot a-${a}"></i>${a[0].toUpperCase() + a.slice(1)}</span>`;
+function taskRow(t, opts = {}) {
+  return `<div class="task ${t.status === "done" ? "done" : ""}">
+    <button class="chk ${t.status === "done" ? "on" : ""}" data-act="toggle" data-id="${t.id}" aria-label="${t.status === "done" ? "Mark not done" : "Complete"}: ${esc(t.title)}">${t.status === "done" ? ico("tick", 3) : ""}</button>
+    <div class="t"><span class="tt">${esc(t.title)}</span><div class="meta">${priPill(t.pri)}${areaTag(t.area)}${t.due ? `<span class="tag">${esc(t.due)}</span>` : ""}${t.goal ? `<span class="tag">↳ ${esc(t.goal)}</span>` : ""}</div></div>
+    ${opts.star !== false ? `<button class="star ${t.top3 ? "on" : ""}" data-act="star" data-id="${t.id}" aria-label="${t.top3 ? "Remove from" : "Add to"} Top 3">${ico("star", t.top3 ? 0 : 2).replace('fill="none"', t.top3 ? 'fill="currentColor"' : 'fill="none"')}</button>` : ""}
+  </div>`;
+}
+const demoBar = () => `<div class="demo-bar"><b>Interactive demo</b><span>Sample data in your browser. Nothing here touches your real email, calendar, or accounts.</span><span class="sp"></span><button class="btn sm" data-act="reset">Reset demo</button></div>`;
+
+// ---------- views ----------
+function vToday() {
+  const h = hourNow(); const greet = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  const d = phx(); const top = S.tasks.filter((t) => t.top3); const doneToday = S.tasks.filter((t) => t.status === "done").length;
+  const sched = S.blocks.filter((b) => b.d === 0 || b.d === null).sort((a, b) => a.s - b.s);
+  const left = top.filter((t) => t.status !== "done").length;
+  const c = counts();
+  return `${demoBar()}
+  <div class="ph"><div><div class="eyebrow">${DOW[d.getUTCDay()]}, ${MON[d.getUTCMonth()]} ${d.getUTCDate()} · Chandler, AZ</div><h1 class="title">${greet}, Grayden</h1>
+  <div class="sub">${doneToday} done · ${left} of your Top 3 to go · ${c.approvals ? `${c.approvals} waiting for approval` : "nothing waiting for approval"}</div></div></div>
+  <button class="capture" data-act="capture">${ico("bolt")}<span>Capture anything: task, note, event, reminder…</span><kbd>C</kbd></button>
+  <div class="grid"><div class="col">
+    <section class="card"><div class="ch"><h2>${ico("spark")}Daily brief</h2><button class="btn sm" data-act="brief">${S.brief ? "Hide" : "Generate now"}</button></div>
+    ${S.brief ? `<div class="small" style="display:flex;flex-direction:column;gap:6px">
+      <div><b>Weather:</b> 84°, partly cloudy, high 96°. Good for exterior work; hydrate the crew after 2 PM.</div>
+      <div><b>Focus:</b> ${top.map((t) => esc(t.title)).join(" · ")}</div>
+      <div><b>Business:</b> $1,180 booked today, 3 jobs, 3 new leads. Month is 8% ahead of last October.</div>
+      <div><b>Inbox:</b> ${c.inbox} need a reply. Linda (Mesa Verde HOA) is ready to sign once you confirm the skylights.</div>
+      <div><b>Heads up:</b> Rent $1,850 on the 1st · SRP $180 Thu · follow up with Linda Park.</div></div>` : `<p class="muted small" style="margin:0">Your brief arrives at 6:00 AM by email and text. Tap Generate to see today's.</p>`}</section>
+    <section class="card"><div class="ch"><h2>${ico("star")}Top 3 priorities</h2><span class="pill p4">${top.length}/3</span></div>
+      ${top.length ? top.map((t) => taskRow(t)).join("") : `<div class="empty"><b>No Top 3 yet</b>Star up to three tasks on the Tasks page.</div>`}</section>
+    <section class="card"><div class="ch"><h2>${ico("cal")}Schedule</h2><button class="btn sm ghost" data-nav="calendar">Calendar</button></div>
+      <div class="sched">${sched.map((b) => `<div class="blk ${b.kind} ${h >= b.s && h < b.e ? "now" : ""}"><span class="w">${fmtH(b.s)}</span><span>${esc(b.title)}${b.where ? `<br><span class="muted small">${esc(b.where)}</span>` : ""}</span><span class="w">${fmtH(b.e)}</span></div>`).join("")}</div></section>
+  </div><div class="col">
+    <section class="card"><div class="ch"><h2>Chandler weather</h2><span class="muted small">sample</span></div>
+      <div class="wx"><b>84°</b><div><div>Partly cloudy · feels 83°</div><div class="muted small">H 96° / L 71° · UV 7 · wind 16 mph</div></div></div>
+      <div class="hours">${[[6, 78], [8, 85], [10, 91], [12, 95], [14, 96], [16, 95], [18, 91]].map(([hh, t]) => `<div><i>${fmtH(hh).replace(" ", "").toLowerCase()}</i>${t}°</div>`).join("")}</div></section>
+    <section class="card"><div class="ch"><h2>Rapid Window Cleaning</h2><button class="btn sm ghost" data-nav="business">Open</button></div>
+      <div class="kpis"><div class="kpi"><b>$1,180</b><span>today</span></div><div class="kpi"><b>3</b><span>jobs</span></div><div class="kpi c"><b>3</b><span>new leads</span></div></div></section>
+    <section class="card"><div class="ch"><h2>Water &amp; habits</h2><span class="muted small">${S.water} / 100 oz</span></div>
+      <div class="water"><div class="bar"><i style="width:${Math.min(100, S.water)}%"></i></div>${[8, 16, 32].map((o) => `<button class="btn sm" data-act="water" data-oz="${o}">+${o} oz</button>`).join("")}</div>
+      <div style="margin-top:10px">${[["stretch", "Stretch 10 min", 12], ["read", "Read 20 pages", 4], ["noSugar", "No sugar after 8", 9]].map(([k, l, st]) => `<div class="habit"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="h-${k}" data-act="habit" data-k="${k}" ${S.habits[k] ? "checked" : ""}> ${l}</label><span class="streak">${st + (S.habits[k] ? 1 : 0)}-day streak</span></div>`).join("")}</div></section>
+    <section class="card"><div class="ch"><h2>${ico("inbox")}Inbox</h2><button class="btn sm ghost" data-nav="inbox">Open</button></div>
+      <div class="kpis" style="grid-template-columns:1fr 1fr"><div class="kpi"><b>${S.threads.filter((t) => t.unread).length}</b><span>unread</span></div><div class="kpi c"><b>${c.inbox}</b><span>need a reply</span></div></div></section>
+  </div></div>`;
+}
+
+function vTasks() {
+  const q = ui.taskQ.toLowerCase();
+  const list = S.tasks.filter((t) => (!q || t.title.toLowerCase().includes(q)) && (!ui.taskArea || t.area === ui.taskArea));
+  const head = `${demoBar()}<div class="ph"><div><h1 class="title">Tasks</h1><div class="sub">${S.tasks.filter((t) => t.status !== "done").length} open · drag cards on the board, or tap the arrows</div></div>
+    <div class="seg" role="group" aria-label="View"><button data-act="tview" data-v="list" aria-pressed="${ui.taskView === "list"}">List</button><button data-act="tview" data-v="board" aria-pressed="${ui.taskView === "board"}">Board</button></div></div>
+    <form id="newTask" class="filters"><input id="newTaskInput" placeholder="Add a task… try: call Linda tomorrow 3pm !1 #business" aria-label="New task"><button class="btn pri" type="submit">Add</button></form>
+    <div class="filters"><input id="taskQ" placeholder="Search tasks" aria-label="Search tasks" value="${esc(ui.taskQ)}">
+    <select id="taskArea" aria-label="Area"><option value="">All areas</option>${AREAS.map((a) => `<option value="${a}" ${ui.taskArea === a ? "selected" : ""}>${a[0].toUpperCase() + a.slice(1)}</option>`).join("")}</select></div>`;
+  if (ui.taskView === "list") {
+    const open = list.filter((t) => t.status !== "done").sort((a, b) => a.pri - b.pri), done = list.filter((t) => t.status === "done");
+    return head + `<section class="card">${open.length ? open.map((t) => taskRow(t)).join("") : `<div class="empty"><b>No tasks match</b>Clear the search or add one above.</div>`}</section>
+      ${done.length ? `<section class="card" style="margin-top:14px"><div class="ch"><h2>Done</h2></div>${done.map((t) => taskRow(t)).join("")}</section>` : ""}`;
+  }
+  const lanes = [["todo", "To do"], ["doing", "Doing"], ["done", "Done"]];
+  return head + `<div class="board">${lanes.map(([st, label], li) => {
+    const items = list.filter((t) => t.status === st);
+    return `<section class="lane" data-lane="${st}" aria-label="${label}"><h3><span>${label}</span><span class="muted">${items.length}</span></h3>
+    ${items.map((t) => `<div class="kcard" draggable="true" data-card="${t.id}"><span>${esc(t.title)}</span><div class="meta">${priPill(t.pri)}${areaTag(t.area)}</div>
+      <div class="mv">${li > 0 ? `<button class="btn sm" data-act="move" data-id="${t.id}" data-to="${lanes[li - 1][0]}" aria-label="Move to ${lanes[li - 1][1]}">←</button>` : ""}${li < 2 ? `<button class="btn sm" data-act="move" data-id="${t.id}" data-to="${lanes[li + 1][0]}" aria-label="Move to ${lanes[li + 1][1]}">→</button>` : ""}</div></div>`).join("")}
+    ${items.length ? "" : `<div class="empty small">Drop a card here</div>`}</section>`;
+  }).join("")}</div>`;
+}
+
+function vCalendar() {
+  const days = weekDays(), ti = todayIdx(), H0 = 5, H1 = 20, PX = 44;
+  const tray = S.tasks.filter((t) => t.status !== "done" && !S.blocks.some((b) => b.taskId === t.id)).slice(0, 10);
+  let cols = `<div class="whead"></div>` + days.map((d, i) => `<div class="whead ${i === ti ? "today" : ""}">${d.dow.toUpperCase()}<b>${d.d}</b></div>`).join("");
+  let body = `<div>${[...Array(H1 - H0)].map((_, i) => `<div class="hl">${fmtH(H0 + i)}</div>`).join("")}</div>`;
+  days.forEach((_, di) => {
+    const rel = di - ti;
+    const evs = S.blocks.filter((b) => (b.d === null && di < 5 && b.kind === "routine") || b.d === rel);
+    body += `<div style="position:relative">${[...Array(H1 - H0)].map((_, i) => `<div class="hr slot" data-act="slot" data-d="${rel}" data-h="${H0 + i}" data-drop="1"></div>`).join("")}
+      ${evs.map((b) => `<div class="cev ${b.kind}" style="top:${(b.s - H0) * PX}px;height:${Math.max(18, (b.e - b.s) * PX - 2)}px" title="${esc(b.title)} · ${fmtH(b.s)}–${fmtH(b.e)}">${esc(b.title)}${(b.e - b.s) >= 1 ? `<br><span class="muted">${fmtH(b.s)}</span>` : ""}</div>`).join("")}
+      ${rel === 0 && hourNow() > H0 && hourNow() < H1 ? `<div style="position:absolute;left:0;right:0;top:${(hourNow() - H0) * PX}px;border-top:2px solid var(--danger);z-index:3"></div>` : ""}</div>`;
+  });
+  return `${demoBar()}<div class="ph"><div><h1 class="title">Calendar</h1><div class="sub">${days[0].m} ${days[0].d} – ${days[6].m} ${days[6].d} · drag a task onto the week (on a phone: tap a task, then tap a time)</div></div>
+    <button class="btn pri" data-act="capture">+ Event</button></div>
+    <div class="cal"><div class="week"><div class="wgrid">${cols}${body}</div></div>
+    <aside><div class="card"><div class="ch"><h2>Drag to time-block</h2></div><div class="tray">${tray.map((t) => `<button class="titem ${ui.picked === t.id ? "picked" : ""}" draggable="true" data-tray="${t.id}" data-act="pick" data-id="${t.id}"><span>${esc(t.title)}</span><span class="muted">${t.est}m</span></button>`).join("") || `<div class="empty small">Everything is scheduled.</div>`}</div></div></aside></div>`;
+}
+
+function vInbox() {
+  const th = S.threads.find((t) => t.id === ui.thread) || S.threads[0];
+  const draft = ui.draft[th.id];
+  return `${demoBar()}<div class="ph"><div><h1 class="title">Inbox</h1><div class="sub">${S.threads.filter((t) => t.unread).length} unread · ${counts().inbox} need a reply · sorted by AI priority</div></div><button class="btn" data-act="synced">${ico("sync")}Sync</button></div>
+  <div class="inbox"><div>${S.threads.slice().sort((a, b) => (b.needs - a.needs) || (b.pri - a.pri)).map((t) => `<button class="thread" data-act="thread" data-id="${t.id}" aria-current="${t.id === th.id}">
+    <span class="top"><span class="from"><i class="prio" style="background:${t.pri >= 80 ? "var(--danger)" : t.pri >= 50 ? "var(--primary-text)" : "var(--border)"}"></i>${esc(t.from)}${t.replied ? ' <span class="cat c-lead">replied</span>' : ""}</span><span class="muted small">${t.when}</span></span>
+    <span class="subj">${esc(t.subject)}</span><span class="small muted"><span class="cat c-${t.cat}">${t.cat}</span> ${esc(t.summary)}</span></button>`).join("")}</div>
+  <section class="card" style="display:flex;flex-direction:column;gap:12px">
+    <div><h2 style="text-transform:none;letter-spacing:0;font-size:17px">${esc(th.subject)}</h2><div class="muted small">${esc(th.from)} · ${esc(th.email)} · ${th.when}</div></div>
+    <div class="ai"><b>AI summary:</b> ${esc(th.summary)}</div>
+    <div class="mail">${esc(th.body)}</div>
+    ${th.replied ? `<div class="ai"><b>Sent.</b> Your reply went out after you approved it. Undo from the Activity Log.</div>` : th.needs ? `
+      ${draft != null ? `<label class="small muted" for="draftBox">Reply (AI draft in your voice; edit freely)</label><textarea id="draftBox">${esc(draft)}</textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-act="send" data-id="${th.id}">${ico("send")}Send (needs approval)</button><button class="btn" data-act="draft" data-id="${th.id}">Redraft</button></div>`
+      : `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-act="draft" data-id="${th.id}">${ico("spark")}Draft reply with AI</button><button class="btn" data-act="archive" data-id="${th.id}">Archive</button></div>`}` : `<div class="muted small">No reply needed.</div>`}
+  </section></div>`;
+}
+const DRAFTS = {
+  t1: "Hi Linda,\n\nGreat news, thank you. Yes, the quarterly price includes the clubhouse skylights (interior and exterior). I'll send the agreement over today, and we can start the first week of November.\n\nThanks,\nGrayden\nRapid Window Cleaning",
+  t2: "Hi Jennifer,\n\nWelcome to Ocotillo! For a 3,200 sq ft 2-story with inside, outside and screens, you're looking at about $[price]. I have Tuesday or Thursday morning open next week. Which works better?\n\nThanks,\nGrayden\nRapid Window Cleaning",
+  t3: "We'll be there! I'll bring the tortillas.",
+  t4: "Hi Marcus,\n\nGot it, thanks. We'll pay #4471 by the 30th.\n\nGrayden",
+};
+
+function vAssistant() {
+  const msgs = S.chat.map((m) => {
+    if (m.role === "me") return `<div class="me">${esc(m.text)}</div>`;
+    const ap = m.approvalId ? S.approvals.find((a) => a.id === m.approvalId) : null;
+    return `<div class="bot">${(m.tools || []).map((t) => `<span class="tool">${ico("tick", 3)}${esc(t)}</span>`).join("")}
+      ${ap ? approvalCard(ap) : ""}${m.html || ""}</div>`;
+  }).join("");
+  return `${demoBar()}<div class="ph"><div><h1 class="title">Assistant</h1><div class="sub">Reads and acts on your email, calendar, tasks, reminders, notes, and business numbers. Risky actions wait for your OK.</div></div>
+    <button class="btn" data-act="newchat">New chat</button></div>
+  <section class="card chat"><div class="msgs" id="msgs">${msgs || `<div class="empty" style="margin:auto 0"><b>Ask anything, or tell it what to do</b>Try one of these:</div>`}
+    ${S.chat.length ? "" : `<div class="chips">${["Plan my day", "What needs a reply?", "Reply to Linda saying yes, the skylights are included", "Add task order squeegee rubbers friday !2", "How's the business doing?", "Find 2 hours for admin this week", "Remember I don't do calls before 10am"].map((c) => `<button class="chip" data-act="ask" data-q="${esc(c)}">${esc(c)}</button>`).join("")}</div>`}</div>
+    <form class="composer" id="composer"><textarea id="askBox" placeholder="Message your assistant…" aria-label="Message the assistant"></textarea><button class="btn pri" type="submit" aria-label="Send">${ico("send")}</button></form></section>`;
+}
+function approvalCard(a) {
+  const done = a.status !== "pending";
+  return `<div class="appr"><h4>${ico("shield")}${done ? (a.status === "approved" ? "Approved" : "Rejected") : "Needs your approval"}: ${esc(a.kind)}</h4><pre>${esc(a.summary)}</pre>
+    ${done ? "" : `<div class="acts"><button class="btn pri sm" data-act="approve" data-id="${a.id}">${ico("tick")}Approve</button><button class="btn sm" data-act="reject" data-id="${a.id}">${ico("x")}Reject</button></div>`}</div>`;
+}
+
+function vApprovals() {
+  const pend = S.approvals.filter((a) => a.status === "pending"), hist = S.approvals.filter((a) => a.status !== "pending");
+  return `${demoBar()}<div class="ph"><div><h1 class="title">Approvals</h1><div class="sub">Sending email, deleting anything, and inviting people always wait for one tap here. Auto-approve per type is in Settings, off by default.</div></div></div>
+  ${pend.length ? `<div class="col">${pend.map(approvalCard).join("")}</div>` : `<div class="empty"><b>Nothing waiting</b>Ask the assistant to reply to an email, or press Send in the Inbox, and it lands here.</div>`}
+  ${hist.length ? `<section class="card" style="margin-top:16px"><div class="ch"><h2>History</h2></div>${hist.map((a) => `<div class="row"><span>${esc(a.kind)}: ${esc(a.short)}</span><span class="st ${a.status === "approved" ? "ok" : "no"}">${a.status}</span></div>`).join("")}</section>` : ""}`;
+}
+function vActivity() {
+  return `${demoBar()}<div class="ph"><div><h1 class="title">Activity Log</h1><div class="sub">Everything you and the assistant did, newest first. Undo where possible.</div></div></div>
+  <section class="card">${S.activity.map((a) => `<div class="act ${a.undone ? "undone" : ""}"><span class="when">${a.at}</span><span class="who ${a.who === "AI" ? "ai" : ""}">${a.who}</span><span class="what" style="flex:1">${esc(a.what)}</span>${a.undo && !a.undone ? `<button class="btn sm" data-act="undo" data-id="${a.id}">${ico("undo")}Undo</button>` : ""}</div>`).join("")}</section>`;
+}
+function vBusiness() {
+  const bars = [["May", 21.4], ["Jun", 26.8], ["Jul", 24.1], ["Aug", 22.9], ["Sep", 27.6], ["Oct", 18.2]], max = 30;
+  return `${demoBar()}<div class="ph"><div><h1 class="title">Business</h1><div class="sub">From your admin dashboard (sample numbers until it's connected)</div></div></div>
+  <div class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px"><div class="kpi"><b>$1,180</b><span>today</span></div><div class="kpi"><b>$6,940</b><span>this week</span></div><div class="kpi"><b>$18.2k</b><span>October so far</span></div><div class="kpi c"><b>$31.4k</b><span>October pace</span></div></div>
+  <div class="grid"><section class="card"><div class="ch"><h2>Monthly revenue ($k)</h2><span class="muted small">Oct is month-to-date</span></div>
+    <svg viewBox="0 0 360 170" role="img" aria-label="Monthly revenue in thousands: ${bars.map(([m, v]) => `${m} ${v}`).join(", ")}" style="width:100%;height:auto">
+      ${[0, 10, 20, 30].map((v) => `<line x1="34" x2="352" y1="${140 - v / max * 120}" y2="${140 - v / max * 120}" stroke="var(--border)"/><text x="28" y="${144 - v / max * 120}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`).join("")}
+      ${bars.map(([m, v], i) => `<rect x="${46 + i * 51}" y="${140 - v / max * 120}" width="34" height="${v / max * 120}" rx="4" fill="${i === 5 ? "var(--cyan)" : "var(--primary)"}"><title>${m}: $${v}k</title></rect><text x="${63 + i * 51}" y="156" text-anchor="middle" font-size="10" fill="var(--muted)">${m}</text>`).join("")}
+    </svg></section>
+  <section class="card"><div class="ch"><h2>Today's jobs</h2></div><div class="list">
+    ${[["8–10 AM", "Patel residence", "Ocotillo · $340"], ["10:30–1", "Sun Lakes HOA clubhouse", "Sun Lakes · $620"], ["2–3:30 PM", "Nguyen storefront", "Downtown Chandler · $220"]].map(([w, n, d]) => `<div class="row"><span><b>${n}</b><br><span class="muted small">${d}</span></span><span class="muted small">${w}</span></div>`).join("")}
+  </div><div class="ch" style="margin-top:14px"><h2>New leads</h2></div><div class="list">
+    ${[["Jennifer Alvarez", "2-story, Ocotillo · Google"], ["Desert Ridge Dental", "Storefront, monthly · Referral"], ["Tom Becker", "Solar screens · Meta ad"]].map(([n, d]) => `<div class="row"><span>${n}<br><span class="muted small">${d}</span></span><button class="btn sm" data-act="ask-go" data-q="Add task call ${esc(n)} tomorrow 10am !2">Call task</button></div>`).join("")}
+  </div></section></div>`;
+}
+function vHealth() {
+  const sleep = [7.1, 6.4, 7.8, 6.9, 7.3, 5.9, 8.2, 7.0, 6.6, 7.5, 7.9, 6.8, 7.2, 7.4];
+  return `${demoBar()}<div class="ph"><div><h1 class="title">Health</h1><div class="sub">Water, sleep, workouts, habits. Built for Phoenix heat.</div></div></div>
+  <div class="grid"><section class="card"><div class="ch"><h2>Sleep, last 14 nights (hours)</h2><span class="muted small">target 7.5</span></div>
+    <svg viewBox="0 0 360 160" role="img" aria-label="Hours of sleep per night" style="width:100%;height:auto">
+      ${[0, 4, 8].map((v) => `<line x1="26" x2="354" y1="${130 - v / 9 * 115}" y2="${130 - v / 9 * 115}" stroke="var(--border)"/><text x="20" y="${134 - v / 9 * 115}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`).join("")}
+      <line x1="26" x2="354" y1="${130 - 7.5 / 9 * 115}" y2="${130 - 7.5 / 9 * 115}" stroke="var(--cyan)" stroke-dasharray="4 4"/>
+      ${sleep.map((v, i) => `<rect x="${32 + i * 23}" y="${130 - v / 9 * 115}" width="16" height="${v / 9 * 115}" rx="3" fill="var(--primary)"><title>${v} h</title></rect>`).join("")}
+    </svg></section>
+  <section class="card"><div class="ch"><h2>Water today</h2><span class="muted small">${S.water} / 100 oz</span></div>
+    <div class="water"><div class="bar"><i style="width:${Math.min(100, S.water)}%"></i></div></div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${[8, 16, 32].map((o) => `<button class="btn" data-act="water" data-oz="${o}">+${o} oz</button>`).join("")}</div>
+    <p class="muted small">Field days above 100° need more; the assistant nudges you at 2 PM if you're behind.</p></section></div>`;
+}
+const SETUP = [
+  ["secrets", "App secrets", true, "Encrypts Google tokens and protects scheduled jobs.", ["Run <code>npm run setup:secrets</code> and paste the lines into Vercel."]],
+  ["database", "Database (Supabase Postgres)", true, "Stores everything.", ["Create a Supabase project (us-west-1).", "Copy the pooled + direct connection strings.", "Run <code>npm run db:deploy</code>, then rls.sql."]],
+  ["auth", "Login + 2FA (Supabase Auth)", true, "Your sign-in with an authenticator code.", ["Copy the Project URL + anon key.", "Add your user, enable TOTP, turn off sign-ups."]],
+  ["anthropic", "Claude (Anthropic API)", false, "The assistant, inbox triage, reply drafts, web search.", ["console.anthropic.com → API keys → create."]],
+  ["google", "Gmail + Google Calendar", false, "Calendar sync, inbox, sending approved replies.", ["Google Cloud: enable Gmail + Calendar APIs.", "OAuth client (Web); redirect <code>/api/google/callback</code>."]],
+  ["push", "Phone notifications", false, "Reminders and alerts as push notifications.", ["Generated by <code>setup:secrets</code>; enable on your phone in Settings."]],
+  ["twilio", "Text messages (Twilio)", false, "SMS briefs and urgent reminders.", ["Buy a 480 number and register it (start early: days to weeks)."]],
+  ["github", "GitHub", false, "Projects hub: repos, commits, issues.", ["Fine-grained read-only token."]],
+  ["business", "Admin dashboard", false, "Revenue, jobs, and leads in your briefs.", ["Add the summary route to Rapid-Windows-dash; share a token."]],
+  ["golive", "Go live", true, "Switch from sample data to your real accounts.", ["Set <code>INTEGRATION_MODE=live</code>; run <code>npm run cron:sql</code> in Supabase."]],
+];
+function vSetup() {
+  const done = SETUP.filter(([id]) => S.setup[id]).length;
+  return `${demoBar()}<div class="ph"><div><h1 class="title">Setup</h1><div class="sub">The last step: connect your accounts, in order. In the real app each card has a live Test button.</div></div></div>
+  <section class="card" style="margin-bottom:14px"><div class="ch"><h2>${done} of ${SETUP.length} connected</h2><span class="muted small">demo: tick cards to see progress</span></div><div class="prog"><i style="width:${done / SETUP.length * 100}%"></i></div></section>
+  <div class="col">${SETUP.map(([id, name, req, powers, steps], i) => `<section class="card setup-item"><div class="hd"><h3>${i + 1}. ${name}</h3><span class="st ${S.setup[id] ? "ok" : "no"}">${S.setup[id] ? "Connected" : "Not set up"}</span><span class="st req">${req ? "Required" : "Optional"}</span></div>
+    <span class="muted small">${powers}</span>${S.setup[id] ? "" : `<ol>${steps.map((s) => `<li>${s}</li>`).join("")}</ol>`}
+    <label class="small" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="su-${id}" data-act="setup" data-id="${id}" ${S.setup[id] ? "checked" : ""}> Mark as done (demo)</label></section>`).join("")}</div>`;
+}
+const VIEWS = { today: vToday, tasks: vTasks, calendar: vCalendar, inbox: vInbox, assistant: vAssistant, approvals: vApprovals, activity: vActivity, business: vBusiness, health: vHealth, setup: vSetup };
+
+function render() {
+  renderNav();
+  $("#view").innerHTML = VIEWS[view]();
+  if (ui.more) { const sheet = document.createElement("div"); sheet.className = "more-sheet"; sheet.innerHTML = NAV.filter((n) => !n.tab).map((n) => `<button class="nav" data-nav="${n.id}">${ico(n.icon)}${n.label}</button>`).join(""); $("#view").appendChild(sheet); }
+  if (view === "assistant") { const m = $("#msgs"); if (m) m.scrollTop = m.scrollHeight; }
+  if (view === "tasks") bindBoard();
+  if (view === "calendar") bindCalendar();
+}
+
+// ---------- drag & drop ----------
+function bindBoard() {
+  document.querySelectorAll(".kcard").forEach((c) => {
+    c.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", c.dataset.card); c.classList.add("dragging"); });
+    c.addEventListener("dragend", () => c.classList.remove("dragging"));
+  });
+  document.querySelectorAll(".lane").forEach((l) => {
+    l.addEventListener("dragover", (e) => { e.preventDefault(); l.classList.add("over"); });
+    l.addEventListener("dragleave", () => l.classList.remove("over"));
+    l.addEventListener("drop", (e) => { e.preventDefault(); l.classList.remove("over"); moveTask(e.dataTransfer.getData("text/plain"), l.dataset.lane); });
+  });
+}
+function moveTask(id, to) {
+  const t = S.tasks.find((x) => x.id === id); if (!t || t.status === to) return;
+  const prev = { status: t.status }; t.status = to;
+  const label = { todo: "To do", doing: "Doing", done: "Done" }[to];
+  const a = log(`Moved "${t.title}" to ${label}`, "You", { type: "restoreTask", id, prev });
+  save(); render(); toast(`Moved to ${label}`, () => runUndo(a));
+}
+function bindCalendar() {
+  document.querySelectorAll("[data-tray]").forEach((c) => c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", c.dataset.tray)));
+  document.querySelectorAll("[data-drop]").forEach((s) => {
+    s.addEventListener("dragover", (e) => { e.preventDefault(); s.classList.add("target"); });
+    s.addEventListener("dragleave", () => s.classList.remove("target"));
+    s.addEventListener("drop", (e) => { e.preventDefault(); s.classList.remove("target"); timeBlock(e.dataTransfer.getData("text/plain"), +s.dataset.d, +s.dataset.h); });
+  });
+}
+function timeBlock(id, d, h) {
+  const t = S.tasks.find((x) => x.id === id); if (!t) return;
+  const b = { id: uid(), d, s: h, e: h + Math.max(0.5, t.est / 60), title: t.title, kind: "task-b", taskId: t.id };
+  S.blocks.push(b); ui.picked = null;
+  const day = weekDays()[todayIdx() + d];
+  const a = log(`Time-blocked "${t.title}" ${day ? `${day.dow} ` : ""}${fmtH(h)}`, "You", { type: "removeBlock", id: b.id });
+  save(); render(); toast(`Blocked ${fmtH(h)} for "${t.title}"`, () => runUndo(a));
+}
+
+// ---------- approvals ----------
+function queueReply(threadId, text, from = "You") {
+  const th = S.threads.find((t) => t.id === threadId); if (!th) return null;
+  const a = { id: uid(), kind: "Send reply", short: `to ${th.from}`, summary: `Send reply to ${th.from} re: "${th.subject}":\n\n${text}`, threadId, status: "pending" };
+  S.approvals.unshift(a); log(`Queued reply to ${th.from} for approval`, from); save(); return a;
+}
+function decide(id, ok) {
+  const a = S.approvals.find((x) => x.id === id); if (!a || a.status !== "pending") return;
+  a.status = ok ? "approved" : "rejected";
+  if (ok && a.threadId) {
+    const th = S.threads.find((t) => t.id === a.threadId); th.needs = false; th.replied = true; th.unread = false;
+    const act = log(`Sent reply to ${th.email}`, "AI", { type: "unsend", id: th.id });
+    toast(`Sent to ${th.from}`, () => runUndo(act));
+  } else { log(`Rejected: ${a.kind} ${a.short}`); toast("Rejected. Nothing was sent."); }
+  save(); render();
+}
+
+// ---------- assistant (scripted, offline) ----------
+let busy = false;
+function ask(q) {
+  q = q.trim(); if (!q || busy) return;
+  S.chat.push({ role: "me", text: q }); save(); busy = true; render();
+  const m = $("#msgs"); if (m) { m.insertAdjacentHTML("beforeend", `<div class="bot typing" id="typing"><span></span><span></span><span></span></div>`); m.scrollTop = m.scrollHeight; }
+  setTimeout(() => { busy = false; S.chat.push(reply(q)); save(); render(); }, 700 + Math.random() * 500);
+}
+function reply(q) {
+  const s = q.toLowerCase();
+  if (/plan (my )?day|what should i do/.test(s)) {
+    const top = S.tasks.filter((t) => t.top3 && t.status !== "done");
+    return { role: "bot", tools: ["Reading your calendar", "Reading tasks", "Checking weather"], html: `<p>Here's a plan around your jobs and the heat:</p><ul>
+      <li><b>10:30–11:00</b> ${esc(top[0]?.title || "Inbox zero")} (before the clubhouse job)</li>
+      <li><b>1:30–2:00</b> Reply to Linda and Jennifer (both are waiting on you)</li>
+      <li><b>3:00</b> ${esc(top[1]?.title || "Calls")} (after 10am, per your preference)</li>
+      <li><b>6:00</b> ${esc(top[2]?.title || "Workout")}: 91° by then, so bring water</li></ul><p class="muted small">Say "block those" in the real app and it adds them to your calendar.</p>` };
+  }
+  if (/^(add|create) (a )?task|^remind me to|^todo/.test(s)) {
+    const text = q.replace(/^(add|create) (a )?task|^remind me to|^todo/i, "").trim();
+    const r = addTask(text, "AI");
+    return r ? { role: "bot", tools: ["Creating task"], html: `<p>Added <b>${esc(r.t.title)}</b> ${priPill(r.t.pri)} ${areaTag(r.t.area)}${r.t.due ? ` · ${esc(r.t.due)}` : ""}. Undo is in the Activity Log.</p>` }
+      : { role: "bot", html: "<p>What should the task say?</p>" };
+  }
+  if (/reply to|respond to|email (back )?to|tell (linda|jennifer|mom|marcus)/.test(s)) {
+    const who = /linda/.test(s) ? "t1" : /jennifer|jen\b|lead|ocotillo/.test(s) ? "t2" : /mom/.test(s) ? "t3" : /marcus|invoice|vendor/.test(s) ? "t4" : "t1";
+    const th = S.threads.find((t) => t.id === who);
+    if (th.replied) return { role: "bot", html: `<p>You already replied to ${esc(th.from)}.</p>` };
+    const said = q.match(/saying (.+)$/i);
+    const text = said ? `Hi ${th.from.split(" ")[0]},\n\n${said[1].charAt(0).toUpperCase() + said[1].slice(1)}${/[.!?]$/.test(said[1]) ? "" : "."}\n\nThanks,\nGrayden` : DRAFTS[who];
+    const a = queueReply(who, text, "AI");
+    return { role: "bot", tools: ["Reading the thread", "Drafting in your voice"], approvalId: a.id, html: `<p>Here's the reply to ${esc(th.from)}. It won't send until you tap <b>Approve</b> (here or on the Approvals page).</p>` };
+  }
+  if (/needs? (a )?repl|what.*inbox|important email|unread/.test(s)) {
+    const n = S.threads.filter((t) => t.needs);
+    return { role: "bot", tools: ["Searching email"], html: n.length ? `<p>${n.length} need a reply, most important first:</p><ul>${n.sort((a, b) => b.pri - a.pri).map((t) => `<li><b>${esc(t.from)}</b>: ${esc(t.summary)}</li>`).join("")}</ul><p>Want me to draft the one to Linda?</p>` : "<p>Inbox is clear. Nothing needs a reply.</p>" };
+  }
+  if (/business|revenue|numbers|money|how.*doing|leads/.test(s))
+    return { role: "bot", tools: ["Business numbers"], html: "<p><b>$1,180</b> booked today across 3 jobs; <b>$6,940</b> this week. October is on pace for <b>$31.4k</b>, about 8% ahead of last year. 3 new leads; Jennifer Alvarez (Ocotillo, 2-story) is the warmest and hasn't heard back yet.</p>" };
+  if (/free|find .*time|hours? for|when can i/.test(s))
+    return { role: "bot", tools: ["Finding free time"], html: "<p>Open 2-hour windows this week:</p><ul><li>Tomorrow 1:00–3:00 PM</li><li>Thursday 9:30–11:30 AM</li><li>Friday 1:00–3:00 PM</li></ul><p class=\"muted small\">The real assistant can book one for you; events with other people wait for your approval.</p>" };
+  if (/^remember|don'?t forget that|note that/.test(s)) {
+    const v = q.replace(/^(remember( that)?|don'?t forget that|note that)/i, "").trim();
+    const k = "preference." + (v.toLowerCase().match(/[a-z]+/g) || ["note"]).slice(0, 2).join("-");
+    S.memory.push({ k, v }); const a = log(`Remembered ${k}: ${v}`, "AI", { type: "forget", k });
+    return { role: "bot", tools: ["Saving to memory"], html: `<p>Got it. I'll remember: <i>${esc(v)}</i>. You can see and edit memories in Settings.</p>` };
+  }
+  if (/weather|hot|heat/.test(s)) return { role: "bot", tools: ["Checking weather"], html: "<p>84° now, high of 96° around 2 PM, UV 7. Fine for exterior work this morning; push ladder work before 1 PM.</p>" };
+  return { role: "bot", html: `<p>In this demo I can plan your day, add tasks, draft replies (they wait for your approval), check the inbox, give business numbers, find free time, and remember preferences. With your Anthropic key connected, the real assistant handles anything you'd ask.</p>` };
+}
+
+// ---------- palette & capture ----------
+function openPalette(mode = "palette") {
+  const isCap = mode === "capture";
+  $("#layer").innerHTML = `<div class="overlay" data-act="close"><div class="dialog" role="dialog" aria-modal="true" aria-label="${isCap ? "Quick capture" : "Command palette"}">
+    <input id="pin" autocomplete="off" placeholder="${isCap ? "Capture… e.g. call Linda tomorrow 3pm !1 #business" : "Jump to a page or run a command…"}" aria-label="${isCap ? "Capture text" : "Search"}">
+    <div id="pout"></div></div></div>`;
+  const inp = $("#pin"); let sel = 0;
+  const cmds = () => [...NAV.map((n) => ({ label: `Go to ${n.label}`, icon: n.icon, key: `G ${n.key.toUpperCase()}`, run: () => go(n.id) })),
+    { label: "Quick capture", icon: "bolt", key: "C", run: () => openPalette("capture") },
+    { label: "Ask the assistant: plan my day", icon: "bot", run: () => { go("assistant"); ask("Plan my day"); } },
+    { label: "Generate today's brief", icon: "spark", run: () => { S.brief = true; save(); go("today"); } },
+    { label: "Toggle light/dark theme", icon: "sun", run: () => cycleTheme() },
+    ...S.tasks.filter((t) => t.status !== "done").map((t) => ({ label: t.title, icon: "check", hint: "task", run: () => { go("tasks"); } }))];
+  const draw = () => {
+    const q = inp.value.trim();
+    if (isCap) {
+      const p = parseCapture(q);
+      $("#pout").innerHTML = q ? `<div class="parse">Creates task: <b style="color:var(--fg)">${esc(p.title || "…")}</b> ${priPill(p.pri)} ${areaTag(p.area)} ${p.due ? `<span class="tag">${esc(p.due)}</span>` : ""}<span style="margin-left:auto"><kbd>Enter</kbd></span></div>` : `<div class="parse">Understands <code>!1</code>–<code>!4</code> priority, <code>#business</code> <code>#health</code> areas, “tomorrow”, “friday”, “3pm”.</div>`;
+      return;
+    }
+    const list = cmds().filter((c) => !q || c.label.toLowerCase().includes(q.toLowerCase())).slice(0, 9);
+    sel = Math.min(sel, Math.max(0, list.length - 1));
+    $("#pout").innerHTML = `<div class="plist" role="listbox">${list.map((c, i) => `<button class="pitem" role="option" aria-selected="${i === sel}" data-i="${i}">${ico(c.icon)}<span>${esc(c.label)}</span>${c.key ? `<kbd>${c.key}</kbd>` : c.hint ? `<span class="muted small" style="margin-left:auto">${c.hint}</span>` : ""}</button>`).join("") || `<div class="parse">No matches. Press Enter to capture “${esc(q)}” as a task.</div>`}</div>`;
+    $("#pout").querySelectorAll(".pitem").forEach((b) => b.onclick = () => { closeLayer(); list[+b.dataset.i].run(); });
+    inp._list = list;
+  };
+  inp.addEventListener("input", () => { sel = 0; draw(); });
+  inp.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") return closeLayer();
+    if (!isCap && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); sel = Math.max(0, sel + (e.key === "ArrowDown" ? 1 : -1)); draw(); }
+    if (e.key === "Enter") {
+      e.preventDefault(); const q = inp.value.trim();
+      if (isCap || !(inp._list || []).length) { if (!q) return; const r = addTask(q); closeLayer(); render(); if (r) toast(`Task added: ${r.t.title}`, () => runUndo(r.a)); return; }
+      const c = inp._list[sel]; closeLayer(); c?.run();
+    }
+  });
+  draw(); setTimeout(() => inp.focus(), 0);
+}
+function closeLayer() { $("#layer").innerHTML = ""; }
+
+// ---------- theme ----------
+let theme = "system";
+try { theme = localStorage.getItem("lifeos-demo-theme") || "system"; } catch { /* default */ }
+function applyTheme() { if (theme === "system") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", theme); $("#themeBtn").textContent = `Theme: ${theme}`; }
+function cycleTheme() { theme = theme === "system" ? "dark" : theme === "dark" ? "light" : "system"; try { localStorage.setItem("lifeos-demo-theme", theme); } catch { /* ignore */ } applyTheme(); }
+
+// ---------- events ----------
+document.addEventListener("click", (e) => {
+  const n = e.target.closest("[data-nav]"); if (n) { go(n.dataset.nav); return; }
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  if (act === "close") { if (e.target === el) closeLayer(); return; }
+  if (act === "palette") return openPalette();
+  if (act === "capture") return openPalette("capture");
+  if (act === "theme") return cycleTheme();
+  if (act === "more") { ui.more = !ui.more; return render(); }
+  if (act === "reset") { S = seed(); ui.thread = "t1"; ui.draft = {}; save(); render(); return toast("Demo reset to sample data"); }
+  if (act === "toggle") {
+    const t = S.tasks.find((x) => x.id === id); const prev = { status: t.status }; t.status = t.status === "done" ? "todo" : "done";
+    const a = log(`${t.status === "done" ? "Completed" : "Reopened"} "${t.title}"`, "You", { type: "restoreTask", id, prev });
+    save(); render(); return toast(t.status === "done" ? "Done" : "Reopened", () => runUndo(a));
+  }
+  if (act === "star") {
+    const t = S.tasks.find((x) => x.id === id);
+    if (!t.top3 && S.tasks.filter((x) => x.top3).length >= 3) return toast("Top 3 is full. Unstar one first.");
+    t.top3 = !t.top3; save(); return render();
+  }
+  if (act === "brief") { S.brief = !S.brief; if (S.brief) log("Generated today's brief", "AI"); save(); return render(); }
+  if (act === "water") { S.water = Math.min(160, S.water + +el.dataset.oz); log(`Logged ${el.dataset.oz} oz water`); save(); render(); return toast(`+${el.dataset.oz} oz · ${S.water} oz today`); }
+  if (act === "tview") { ui.taskView = el.dataset.v; return render(); }
+  if (act === "move") return moveTask(id, el.dataset.to);
+  if (act === "pick") { ui.picked = ui.picked === id ? null : id; render(); if (ui.picked) toast("Now tap a time on the calendar"); return; }
+  if (act === "slot") { if (ui.picked) timeBlock(ui.picked, +el.dataset.d, +el.dataset.h); return; }
+  if (act === "thread") { ui.thread = id; const t = S.threads.find((x) => x.id === id); t.unread = false; save(); return render(); }
+  if (act === "draft") { ui.draft[id] = DRAFTS[id] || "Thanks, got it.\n\nGrayden"; log(`AI drafted a reply to ${S.threads.find((t) => t.id === id).from}`, "AI"); save(); return render(); }
+  if (act === "send") { const text = $("#draftBox")?.value || ""; queueReply(id, text); delete ui.draft[id]; render(); return toast("Waiting for your approval (Approvals)"); }
+  if (act === "archive") { const t = S.threads.find((x) => x.id === id); t.needs = false; log(`Archived "${t.subject}"`); save(); render(); return toast("Archived"); }
+  if (act === "synced") return toast("Inbox synced (sample)");
+  if (act === "approve") return decide(id, true);
+  if (act === "reject") return decide(id, false);
+  if (act === "undo") return runUndo(S.activity.find((a) => a.id === id));
+  if (act === "ask") return ask(el.dataset.q);
+  if (act === "ask-go") { go("assistant"); return ask(el.dataset.q); }
+  if (act === "newchat") { S.chat = []; save(); return render(); }
+});
+document.addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.dataset.act === "habit") { S.habits[el.dataset.k] = el.checked; save(); render(); }
+  if (el.dataset.act === "setup") { S.setup[el.dataset.id] = el.checked; save(); render(); }
+  if (el.id === "taskArea") { ui.taskArea = el.value; render(); }
+});
+document.addEventListener("input", (e) => { if (e.target.id === "taskQ") { ui.taskQ = e.target.value; const pos = e.target.selectionStart; render(); const i = $("#taskQ"); i.focus(); i.setSelectionRange(pos, pos); } });
+document.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (e.target.id === "newTask") { const v = $("#newTaskInput").value; const r = addTask(v); render(); if (r) toast(`Task added: ${r.t.title}`, () => runUndo(r.a)); setTimeout(() => $("#newTaskInput")?.focus(), 0); }
+  if (e.target.id === "composer") { const v = $("#askBox").value; ask(v); }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.target.id === "askBox" && e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(e.target.value); return; }
+  const typing = /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); return openPalette(); }
+  if (typing || $("#layer").innerHTML) return;
+  if (e.key === "c") { e.preventDefault(); return openPalette("capture"); }
+  if (e.key === "g") { window._g = Date.now(); return; }
+  if (window._g && Date.now() - window._g < 1200) { const n = NAV.find((x) => x.key === e.key.toLowerCase()); window._g = 0; if (n) go(n.id); }
+});
+
+applyTheme();
+render();
+})();
+</script>
