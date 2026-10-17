@@ -397,7 +397,7 @@ const nextDueDate = (dueDay) => { const t = today(), m = monthKey(t); const d = 
 const DOCS = {
   plan: ["tasks", "events", "lists"],
   goals: ["goals"],
-  habits: ["habits", "habitLog"],
+  habits: ["habits", "habitLog", "dayLog"],
   track: ["trackers", "entries"],
   money: ["txns", "bills", "budget"],
   biz: ["jobs", "leads"],
@@ -416,7 +416,7 @@ function fresh() {
       { id: uid(), name: "Workout", icon: "💪", target: 5 }, { id: uid(), name: "Read 20 pages", target: 7 },
       { id: uid(), name: "No phone first 30 min", target: 7 }, { id: uid(), name: "Stretch 10 min", target: 7 },
     ],
-    habitLog: {},
+    habitLog: {}, dayLog: {},
     trackers: [
       { id: "water", name: "Water", unit: "oz", kind: "sum", target: 100, dir: "up" },
       { id: "sleep", name: "Sleep", unit: "h", kind: "last", target: 7.5, dir: "up" },
@@ -468,7 +468,7 @@ async function connect() {
   try {
     const [db, user] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
     uidMe = user ? await user.id() : null;
-    if (!db || !uidMe) { setStatus("warn", "Saved on this device only"); return; }
+    if (!db || !uidMe) { setStatus("warn", "Saved on this device only"); maybeWelcome(); return; }
     store = db;
     let first = true; const seen = {};
     for (const d of Object.keys(DOCS)) {
@@ -478,11 +478,12 @@ async function connect() {
           const body = clone(snap.data()); for (const f of DOCS[d]) if (f in body) S[f] = f === "settings" ? { ...fresh().settings, ...body[f] } : body[f];
           saveLocal(); if (!busyTyping()) render();
         } else if (!snap.exists && first && local) { dirty.add(d); scheduleSave(); }
-        if (Object.keys(seen).length === Object.keys(DOCS).length && first) { first = false; setStatus("ok", "Synced to your account"); }
+        if (Object.keys(seen).length === Object.keys(DOCS).length && first) { first = false; setStatus("ok", "Synced to your account"); maybeWelcome(); }
       }, () => setStatus("warn", "Sync paused: saved on this device"));
     }
-  } catch { setStatus("warn", "Saved on this device only"); }
+  } catch { setStatus("warn", "Saved on this device only"); maybeWelcome(); }
 }
+function maybeWelcome() { if (!S.settings.onboarded && !S.tasks.length && !S.goals.length && !S.entries.length && !$("#layer").innerHTML) welcomeDialog(); }
 const busyTyping = () => { const a = document.activeElement; return a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && !$("#layer").innerHTML; };
 
 // ---------- Claude (sample capability) ----------
@@ -569,6 +570,7 @@ const NAV = [
   { id: "health", label: "Health", icon: "heart", key: "e", group: "Track" },
   { id: "money", label: "Money", icon: "wallet", key: "m", group: "Track" },
   { id: "business", label: "Business", icon: "brief", key: "b", group: "Track" },
+  { id: "insights", label: "Insights", icon: "chart", key: "x", group: "Track" },
   { id: "school", label: "School", icon: "school", key: "y", group: "Life" },
   { id: "people", label: "People", icon: "users", key: "o", group: "Life" },
   { id: "notes", label: "Notes & Journal", icon: "note", key: "n", group: "Life" },
@@ -643,13 +645,14 @@ function vToday() {
   <button class="capture" data-act="capture">${ico("bolt")}<span>Capture anything: task, expense, note, number… (try “spent 42 gas”, “water 16”, “call Linda tomorrow 3pm !1”)</span><kbd>C</kbd></button>
   ${vBrief()}
   <div class="grid" style="margin-top:16px"><div class="col">
-    <section class="card"><div class="ch"><h2>${ico("star")}Top 3</h2><span class="pill p4">${top.length}/3</span></div>
+    <section class="card"><div class="ch"><h2>${ico("star")}Top 3</h2><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="pill p4">${top.length}/3</span><button class="btn sm" data-act="planDay">Plan my day</button><button class="btn sm" data-act="focus">${focus ? "Focusing…" : "▶ Focus"}</button></div></div>
       ${top.length ? top.map(taskRow).join("") : empty("Pick your Top 3", "Star up to three tasks that would make today a win.", `<button class="btn sm" data-nav="tasks">Open tasks</button>`)}</section>
     <section class="card"><div class="ch"><h2>${ico("check")}Due &amp; overdue</h2><button class="btn sm" data-act="newTask">${ico("plus")}Task</button></div>
       ${[...overdue(), ...dueToday().filter((x) => !x.top3)].slice(0, 8).map(taskRow).join("") || `<p class="muted small" style="margin:0">Nothing due today. Nice.</p>`}</section>
     <section class="card"><div class="ch"><h2>${ico("cal")}Today</h2><button class="btn sm" data-act="newEvent">${ico("plus")}Event</button></div>
       ${agenda.length ? `<div class="sched">${agenda.map((a) => `<div class="blk" style="border-left-color:${itemColor(a)}"><span class="w">${a.time ? fmtTime(a.time) : "All day"}</span><span>${esc(a.title)}${a.where ? `<br><span class="muted small">${esc(a.where)}</span>` : ""}</span><span class="w">${a.end ? fmtTime(a.end) : ""}</span></div>`).join("")}</div>` : `<p class="muted small" style="margin:0">Nothing scheduled. Add events, classes, jobs, or timed tasks.</p>`}</section>
   </div><div class="col">
+    ${scoreCard()}
     <section class="card"><div class="ch"><h2>Quick log</h2><button class="btn sm ghost" data-nav="trackers">All trackers</button></div>
       <div class="quick">${S.trackers.slice(0, 6).map((tr) => { const now = trackerNow(tr); return `<button class="qbtn" data-act="logTracker" data-id="${tr.id}"><b>${esc(tr.name)}</b><span>${now == null ? "—" : round(now)}${tr.target ? ` / ${tr.target}` : ""} ${esc(tr.unit)}${tr.period === "week" ? " this wk" : ""}</span></button>`; }).join("")}
       <button class="qbtn" data-act="newTxn"><b>Expense</b><span>${money(spent(monthKey()))} this month</span></button><button class="qbtn" data-act="newJob"><b>Job / revenue</b><span>${money(revenue(t, t))} today</span></button></div>
@@ -804,6 +807,7 @@ function taskRow(t) {
     <div class="t"><button class="tt" data-act="editTask" data-id="${t.id}" style="all:unset;cursor:pointer">${esc(t.title)}</button><div class="meta">${priPill(t.pri)}${areaTag(t.area)}${t.project ? `<span class="tag">📁 ${esc(t.project)}</span>` : ""}${t.due ? `<span class="tag" ${late ? 'style="color:var(--danger)"' : ""}>${late ? "Overdue · " : ""}${nice(t.due)}${t.time ? " " + fmtTime(t.time) : ""}</span>` : ""}${t.est ? `<span class="tag">⏱ ${t.est}m</span>` : ""}${subBadge(t)}${t.goalId ? `<span class="tag">↳ ${esc((S.goals.find((g) => g.id === t.goalId) || {}).title || "")}</span>` : ""}${t.repeat ? `<span class="tag">↻ ${t.repeat}</span>` : ""}</div>
     ${(t.subtasks || []).length && !t.done ? `<div class="listbox" style="margin-top:4px">${t.subtasks.map((s, i) => `<label class="li small ${s.done ? "done" : ""}" for="st-${t.id}-${i}" style="padding:2px 0"><input type="checkbox" id="st-${t.id}-${i}" data-act="subtask" data-id="${t.id}" data-i="${i}" ${s.done ? "checked" : ""}><span>${esc(s.t)}</span></label>`).join("")}</div>` : ""}</div>
     ${!t.done && t.due && t.due <= today() ? `<button class="btn sm ghost" data-act="snooze" data-id="${t.id}" title="Move to tomorrow" aria-label="Snooze to tomorrow">→ Tmrw</button>` : ""}
+    ${!t.done && t.top3 && !focus ? `<button class="btn sm ghost" data-act="focusTask" data-id="${t.id}" aria-label="Focus on ${esc(t.title)}" title="Start a focus session">▶</button>` : ""}
     <button class="star ${t.top3 ? "on" : ""}" data-act="star" data-id="${t.id}" aria-label="${t.top3 ? "Remove from" : "Add to"} Top 3">${ico("star", t.top3 ? 0 : 2, t.top3 ? "currentColor" : "none")}</button></div>`;
 }
 const taskFields = () => [
@@ -831,7 +835,7 @@ function nextRepeat(due, rep) {
 }
 function toggleTask(t) {
   const u = snapshotUndo(["tasks", "goals"]);
-  t.done = !t.done; t.doneOn = t.done ? today() : null; t.status = t.done ? "done" : "todo"; if (t.done) t.top3 = false;
+  t.done = !t.done; t.doneOn = t.done ? today() : null; t.status = t.done ? "done" : "todo"; if (t.done) { t.wasTop3 = !!t.top3; t.top3 = false; }
   if (t.done && t.repeat) S.tasks.unshift({ ...clone(t), id: uid(), done: false, doneOn: null, status: "todo", due: nextRepeat(t.due, t.repeat), subtasks: (t.subtasks || []).map((s) => ({ ...s, done: false })) });
   touch("tasks"); toast(t.done ? (t.repeat ? "Done · next one scheduled" : "Done") : "Reopened", u);
 }
@@ -1297,7 +1301,161 @@ function exampleData() {
 // =====================================================================
 // RENDER + EVENTS
 // =====================================================================
-const VIEWS = { today: vToday, tasks: vTasks, calendar: vCalendar, goals: vGoals, habits: vHabits, trackers: vTrackers, health: vHealth, money: vMoney, business: vBusiness, people: vPeople, notes: vNotes, lists: vLists, school: vSchool, review: vReview, assistant: vAssistant, data: vData };
+// ---------- day score ----------
+function dayScore(k = today()) {
+  const top = S.tasks.filter((t) => t.top3 || (t.doneOn === k && t.wasTop3));
+  const topDone = S.tasks.filter((t) => t.doneOn === k && t.wasTop3).length, topTotal = topDone + S.tasks.filter((t) => t.top3 && !t.done).length;
+  const habits = S.habits.length ? S.habits.filter((h) => habitDone(h, k)).length / S.habits.length : 0;
+  const w = tracker("water"); const water = w && w.target ? Math.min(1, (dayValue("water", k) || 0) / w.target) : 0;
+  const tasksDone = Math.min(1, S.tasks.filter((t) => t.doneOn === k).length / 5);
+  const parts = [{ label: "Top 3", v: topTotal ? topDone / topTotal : tasksDone, w: 40 }, { label: "Habits", v: habits, w: 30 }, { label: "Water", v: water, w: 15 }, { label: "Tasks done", v: tasksDone, w: 15 }];
+  return { score: Math.round(sum(parts.map((p) => p.v * p.w))), parts, top };
+}
+function scoreCard() {
+  const d = dayScore(); const color = d.score >= 75 ? "var(--ok)" : d.score >= 40 ? "var(--warn)" : "var(--muted)";
+  const R = 34, C = 2 * Math.PI * R;
+  return `<section class="card"><div class="ch"><h2>Day score</h2><button class="btn sm" data-act="shutdown">Shut down the day</button></div>
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><svg width="88" height="88" viewBox="0 0 88 88" role="img" aria-label="Day score ${d.score} of 100"><circle cx="44" cy="44" r="${R}" fill="none" stroke="var(--surface-2)" stroke-width="9"/><circle cx="44" cy="44" r="${R}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - d.score / 100)}" transform="rotate(-90 44 44)"/><text x="44" y="50" text-anchor="middle" font-size="22" font-family="Bebas Neue, sans-serif" fill="var(--fg)">${d.score}</text></svg>
+    <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:5px">${d.parts.map((p) => `<div class="small" style="display:grid;grid-template-columns:80px 1fr 34px;gap:8px;align-items:center"><span class="muted">${p.label}</span><div class="goalbar" style="height:6px"><i style="width:${p.v * 100}%"></i></div><span class="muted" style="text-align:right">${Math.round(p.v * 100)}%</span></div>`).join("")}</div></div>
+    ${(S.dayLog || {})[addDays(today(), -1)] ? `<p class="muted small" style="margin:8px 0 0">Yesterday: ${S.dayLog[addDays(today(), -1)].score}</p>` : ""}</section>`;
+}
+function shutdownDialog() {
+  const t = today(), done = S.tasks.filter((x) => x.doneOn === t), left = S.tasks.filter((x) => !x.done && (x.due === t || (x.due && x.due < t) || x.top3));
+  const d = dayScore();
+  $("#layer").innerHTML = `<div class="overlay" data-act="close"><form class="dialog form" id="shutForm" role="dialog" aria-modal="true" aria-label="Shut down the day"><h3>Shut down the day · score ${d.score}</h3>
+    <div class="small"><b>Done today (${done.length})</b>${done.length ? `<ul style="margin:4px 0;padding-left:18px">${done.map((x) => `<li>${esc(x.title)}</li>`).join("")}</ul>` : `<p class="muted" style="margin:4px 0">Nothing checked off. Tomorrow's a new one.</p>`}</div>
+    ${left.length ? `<label for="sh-move" style="flex-direction:row;align-items:center;gap:8px;color:var(--fg)"><input type="checkbox" id="sh-move" checked> Move ${left.length} unfinished to tomorrow (${left.slice(0, 3).map((x) => esc(x.title)).join(", ")}${left.length > 3 ? "…" : ""})</label>` : ""}
+    <label for="sh-win">Today's win<input id="sh-win" placeholder="What went well?"></label>
+    <label for="sh-lesson">Lesson or annoyance<input id="sh-lesson" placeholder="What would you change?"></label>
+    <label for="sh-top">Tomorrow's #1 priority (added to tomorrow's Top 3)<input id="sh-top" placeholder="The one thing"></label>
+    <div class="acts"><button type="button" class="btn" data-act="close-sh">Cancel</button><button type="submit" class="btn pri">Close out the day</button></div></form></div>`;
+  $("[data-act='close-sh']").onclick = closeLayer;
+  $("#shutForm").onsubmit = (e) => { e.preventDefault(); const u = snapshotUndo(["tasks", "journal", "dayLog"]); const tm = addDays(t, 1);
+    if ($("#sh-move")?.checked) left.forEach((x) => { x.due = tm; });
+    const win = $("#sh-win").value.trim(), lesson = $("#sh-lesson").value.trim(), top = $("#sh-top").value.trim();
+    if (top) { S.tasks.forEach((x) => { if (x.top3 && !x.done) x.top3 = x.due === tm; }); S.tasks.unshift({ id: uid(), title: top, pri: 1, area: "business", due: tm, top3: true, done: false, status: "todo", created: t }); }
+    const j = (S.journal[t] = S.journal[t] || {}); const add = [win && `Win: ${win}`, lesson && `Lesson: ${lesson}`, top && `Tomorrow: ${top}`].filter(Boolean).join("\n"); if (add) j.text = (j.text ? j.text + "\n\n" : "") + add;
+    (S.dayLog = S.dayLog || {})[t] = { score: d.score, done: done.length }; const keys = Object.keys(S.dayLog).sort(); while (keys.length > 400) delete S.dayLog[keys.shift()];
+    touch("tasks", "journal", "dayLog"); closeLayer(); render(); toast(`Day closed with a score of ${d.score}. Rest up.`, u); };
+}
+
+// ---------- plan my day (time blocking) ----------
+function freeSlots(k, from = "07:00", to = "19:00") {
+  const busy = itemsOn(k).filter((it) => it.time && !it.allDay && it.kind !== "task").map((it) => [toH(it.time), toH(it.end || addMin(it.time, 60))]).sort((a, b) => a[0] - b[0]);
+  const start = Math.max(toH(from), k === today() ? Math.ceil(toH(nowHM()) * 4) / 4 : 0), end = toH(to); const out = []; let cur = start;
+  for (const [s, e] of busy) { if (s > cur) out.push([cur, Math.min(s, end)]); cur = Math.max(cur, e); if (cur >= end) break; }
+  if (cur < end) out.push([cur, end]); return out.filter(([s, e]) => e - s >= 0.25);
+}
+const hToT = (h) => `${String(Math.floor(h)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
+function planDay() {
+  const late = !freeSlots(today()).length; const k = late ? addDays(today(), 1) : today(); const slots = freeSlots(k);
+  const queue = S.tasks.filter((t) => !t.done && !t.time && (t.top3 || t.due === k || (t.due && t.due < k))).sort((a, b) => (b.top3 - a.top3) || a.pri - b.pri);
+  const plan = []; const sl = slots.map((s) => [...s]);
+  for (const t of queue) { const dur = Math.max(0.25, (+t.est || 30) / 60); const i = sl.findIndex(([s, e]) => e - s >= dur); if (i < 0) continue; plan.push({ id: t.id, title: t.title, start: sl[i][0], end: sl[i][0] + dur }); sl[i][0] += dur + 0.083; }
+  const left = queue.filter((t) => !plan.some((p) => p.id === t.id));
+  $("#layer").innerHTML = `<div class="overlay" data-act="close"><div class="dialog form" role="dialog" aria-modal="true" aria-label="Plan my day"><h3>${late ? "Plan tomorrow" : "Plan my day"}</h3>${late ? `<p class="small" style="margin:0">Today's open time is used up, so this plans tomorrow.</p>` : ""}
+    <p class="muted small" style="margin:0">Fits your Top 3 and today's tasks into the open time around events, classes, and jobs (7 AM to 7 PM, using each task's estimate, 30 min if none).</p>
+    ${plan.length ? `<div class="sched">${plan.map((p) => `<div class="blk task-b"><span class="w">${fmtTime(hToT(p.start))}</span><span>${esc(p.title)}</span><span class="w">${fmtTime(hToT(p.end))}</span></div>`).join("")}</div>` : `<div class="empty small">Nothing to schedule, or no open time left today.</div>`}
+    ${left.length ? `<p class="small muted" style="margin:0">Didn't fit: ${left.map((t) => esc(t.title)).join(", ")}</p>` : ""}
+    <p class="small muted" style="margin:0">Open time ${late ? "tomorrow" : "today"}: ${slots.map(([s, e]) => `${fmtTime(hToT(s))}–${fmtTime(hToT(e))}`).join(", ") || "none"}</p>
+    <div class="acts"><button class="btn" data-act="close-pl">Cancel</button>${plan.length ? `<button class="btn pri" data-act="planAccept">Block it on my calendar</button>` : ""}</div></div></div>`;
+  $("[data-act='close-pl']").onclick = closeLayer;
+  const acc = $("[data-act='planAccept']"); if (acc) acc.onclick = () => { const u = snapshotUndo(["tasks"]); for (const p of plan) { const t = byId(S.tasks, p.id); t.due = k; t.time = hToT(p.start); t.est = Math.round((p.end - p.start) * 60); } touch("tasks"); closeLayer(); render(); toast(`${plan.length} tasks blocked on ${late ? "tomorrow's" : "today's"} calendar`, u); };
+}
+
+// ---------- focus timer ----------
+let focus = null; // {taskId, title, startedAt, mins}
+try { focus = JSON.parse(localStorage.getItem("lifeos-focus") || "null"); } catch { focus = null; }
+const saveFocus = () => { try { localStorage.setItem("lifeos-focus", JSON.stringify(focus)); } catch { /* ignore */ } };
+function startFocus(mins, task) {
+  focus = { taskId: task?.id || null, title: task?.title || "Focus session", startedAt: Date.now(), mins }; saveFocus(); drawFocus();
+  if (!S.trackers.some((t) => t.id === "focus")) { S.trackers.push({ id: "focus", name: "Focus", unit: "min", kind: "sum", target: 120, dir: "up" }); touch("trackers"); }
+  toast(`Focus: ${mins} min${task ? " on " + task.title : ""}. Go.`);
+}
+function endFocus(completed) {
+  if (!focus) return; const mins = Math.round(Math.min(focus.mins, (Date.now() - focus.startedAt) / 60000));
+  if (mins >= 1) logEntry("focus", mins, today(), true);
+  if (completed) { chime(); toast(`Session done: ${mins} min of focus logged${focus.taskId ? ". Check the task off?" : ""}`); } else if (mins >= 1) toast(`Stopped. ${mins} min logged.`);
+  focus = null; saveFocus(); drawFocus(); render();
+}
+function chime() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); [660, 880, 990].forEach((f, i) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f; o.connect(g); g.connect(ctx.destination); const t0 = ctx.currentTime + i * 0.18; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.2, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3); o.start(t0); o.stop(t0 + 0.32); }); } catch { /* audio unavailable */ } }
+function drawFocus() {
+  let el = $("#focusPill");
+  if (!focus) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement("div"); el.id = "focusPill"; el.setAttribute("role", "status"); el.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:45;background:var(--surface);border:1px solid var(--primary-text);box-shadow:var(--shadow);border-radius:999px;padding:6px 8px 6px 14px;display:flex;gap:10px;align-items:center;max-width:calc(100vw - 32px)"; document.body.appendChild(el); }
+  const left = Math.max(0, focus.mins * 60 - (Date.now() - focus.startedAt) / 1000);
+  el.innerHTML = `<span style="font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums">${String(Math.floor(left / 60)).padStart(2, "0")}:${String(Math.floor(left % 60)).padStart(2, "0")}</span><span class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">${esc(focus.title)}</span><button class="btn sm" data-act="focusStop">Stop</button>`;
+  if (left <= 0) endFocus(true);
+}
+setInterval(() => { if (focus) drawFocus(); }, 1000);
+function focusPicker(task) {
+  const opts = [["", "Just focus (no task)"], ...S.tasks.filter((t) => !t.done).sort((a, b) => (b.top3 - a.top3) || a.pri - b.pri).slice(0, 30).map((t) => [t.id, t.title])];
+  openForm({ title: task ? `Focus on: ${task.title}` : "Start a focus session", submit: "Start", values: { m: "25", t: task?.id || (S.tasks.find((t) => t.top3 && !t.done) || {}).id || "" }, fields: [...(task ? [] : [{ k: "t", label: "Working on", type: "select", options: opts }]), { k: "m", label: "Length", type: "select", options: [["15", "15 min"], ["25", "25 min (pomodoro)"], ["50", "50 min (deep work)"], ["90", "90 min"]] }], onSave: (v) => startFocus(+v.m, task || byId(S.tasks, v.t)) });
+}
+
+// ---------- insights ----------
+function pearson(xs, ys) { const n = xs.length; if (n < 5) return null; const mx = sum(xs) / n, my = sum(ys) / n; let a = 0, b = 0, c = 0; for (let i = 0; i < n; i++) { a += (xs[i] - mx) * (ys[i] - my); b += (xs[i] - mx) ** 2; c += (ys[i] - my) ** 2; } return b && c ? a / Math.sqrt(b * c) : null; }
+function pairs(aId, bId, days = 60, lag = 0) { const xs = [], ys = []; for (let i = 0; i < days; i++) { const k = addDays(today(), -i); const a = dayValue(aId, addDays(k, -lag)), b = dayValue(bId, k); if (a != null && b != null) { xs.push(a); ys.push(b); } } return [xs, ys]; }
+function corrText(r) { if (r == null) return null; const s = Math.abs(r); return `${s > 0.5 ? "strong" : s > 0.3 ? "moderate" : "weak"} ${r > 0 ? "positive" : "negative"} link (r = ${r.toFixed(2)})`; }
+function vInsights() {
+  const t = today();
+  const trends = S.trackers.map((tr) => { const a = [], b = []; for (let i = 0; i < 30; i++) { const v1 = dayValue(tr.id, addDays(t, -i)), v2 = dayValue(tr.id, addDays(t, -30 - i)); if (v1 != null) a.push(v1); if (v2 != null) b.push(v2); } const m1 = a.length ? sum(a) / a.length : null, m2 = b.length ? sum(b) / b.length : null; return { tr, m1, m2, n: a.length }; }).filter((x) => x.n);
+  const combos = [["sleep", "energy", 0, "Sleep → next-day energy"], ["water", "energy", 0, "Water → energy"], ["focus", "energy", 0, "Focus → energy"], ["sleep", "focus", 0, "Sleep → focus minutes"]];
+  const corr = combos.map(([a, b, lag, label]) => { if (!tracker(a) || !tracker(b)) return null; const [xs, ys] = pairs(a, b, 60, lag); const r = pearson(xs, ys); return r == null ? null : { label, r, n: xs.length }; }).filter(Boolean);
+  const best = S.habits.map((h) => { let bestRun = 0, run = 0; for (let i = 365; i >= 0; i--) { if (habitDone(h, addDays(t, -i))) { run++; bestRun = Math.max(bestRun, run); } else run = 0; } const total = Object.values(S.habitLog).filter((d) => d[h.id]).length; return { h, bestRun, cur: streak(h), total }; });
+  const m = monthKey(); const cats = [...new Set(S.txns.filter((x) => x.d.startsWith(m) && x.type === "expense").map((x) => x.cat || "Other"))].map((c) => ({ c, v: sum(S.txns.filter((x) => x.d.startsWith(m) && x.type === "expense" && (x.cat || "Other") === c).map((x) => num(x.amount))) })).sort((a, b) => b.v - a.v);
+  const byDow = [1, 2, 3, 4, 5, 6, 0].map((d) => { const js = S.jobs.filter((j) => dow(j.d) === d && dayDiff(j.d, t) <= 90); return sum(js.map((j) => num(j.amount))); });
+  const weeks = [...Array(8)].map((_, i) => weekStart(addDays(t, (i - 7) * 7)));
+  const doneByWeek = weeks.map((w) => S.tasks.filter((x) => x.doneOn && x.doneOn >= w && x.doneOn <= addDays(w, 6)).length);
+  const scoreDays = Object.entries(S.dayLog || {}).sort().slice(-14);
+  return header("Insights", "What your tracking says. The more you log, the sharper this gets.", sampleState !== "off" ? `<button class="btn" data-act="aiInsights" ${ui.insBusy ? "disabled" : ""}>${ico("spark")}${ui.insBusy ? "Looking for patterns…" : "Ask Claude to find patterns"}</button>` : "")
+  + (ui.insText ? `<section class="card" style="margin-bottom:16px"><div class="ch"><h2>${ico("spark")}Patterns Claude noticed</h2></div><div class="md small">${mdLite(ui.insText)}</div></section>` : "")
+  + `<div class="grid"><section class="card"><div class="ch"><h2>Connections</h2><span class="muted small">last 60 days</span></div>${corr.length ? corr.map((c) => `<div class="row"><span>${esc(c.label)}</span><span class="small ${c.r > 0.3 ? "money-pos" : c.r < -0.3 ? "money-neg" : "muted"}">${corrText(c.r)} · ${c.n} days</span></div>`).join("") : `<p class="muted small" style="margin:0">Log sleep, water, focus, and energy for a week or two and Life OS will show how they move together.</p>`}</section>
+  <section class="card"><div class="ch"><h2>30-day trends</h2><span class="muted small">vs the 30 days before</span></div>${trends.length ? trends.map(({ tr, m1, m2 }) => { const ch = m2 ? ((m1 - m2) / m2) * 100 : null; const good = ch == null ? null : (tr.dir === "down" ? ch < 0 : ch > 0); return `<div class="row"><span>${esc(tr.name)}</span><span class="small">${round(m1)} ${esc(tr.unit)}/day ${ch == null ? "" : `<span class="${good ? "money-pos" : "money-neg"}">${ch > 0 ? "▲" : "▼"} ${Math.abs(Math.round(ch))}%</span>`}</span></div>`; }).join("") : `<p class="muted small" style="margin:0">No tracker entries yet.</p>`}</section>
+  <section class="card"><div class="ch"><h2>Habit records</h2></div>${best.length ? best.map((b) => `<div class="row"><span>${esc(b.h.name)}</span><span class="small muted">now ${b.cur} · best ${b.bestRun} · ${b.total} total</span></div>`).join("") : `<p class="muted small" style="margin:0">No habits yet.</p>`}</section>
+  <section class="card"><div class="ch"><h2>Tasks done per week</h2></div>${!sum(doneByWeek) ? `<p class="muted small" style="margin:0">Check off tasks and this fills in week by week.</p>` : bars(doneByWeek, weeks.map((w) => `${MON[+w.slice(5, 7) - 1]} ${+w.slice(8, 10)}`), { h: 120, hi: 7 })}</section>
+  <section class="card"><div class="ch"><h2>Spending by category · ${monthName(m)}</h2></div>${cats.length ? cats.map((c) => `<div style="padding:5px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${esc(c.c)}</span><span>${money(c.v)}</span></div><div class="goalbar" style="height:6px"><i style="width:${(c.v / cats[0].v) * 100}%"></i></div></div>`).join("") : `<p class="muted small" style="margin:0">No expenses this month.</p>`}</section>
+  <section class="card"><div class="ch"><h2>Revenue by weekday</h2><span class="muted small">last 90 days</span></div>${S.jobs.length ? bars(byDow, ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], { h: 120, fmt: (v) => money(v), hi: byDow.indexOf(Math.max(...byDow)) }) : `<p class="muted small" style="margin:0">Log jobs to see your best days.</p>`}</section>
+  ${scoreDays.length ? `<section class="card"><div class="ch"><h2>Day scores</h2><span class="muted small">from “Shut down the day”</span></div>${bars(scoreDays.map(([, v]) => v.score), scoreDays.map(([k]) => shortDay(k)), { h: 120, target: 75 })}</section>` : ""}</div>`;
+}
+async function aiInsights() {
+  const sample = await getSample(); if (!sample) return toast("Claude isn't available here.");
+  ui.insBusy = true; ui.insText = ""; render();
+  const t = today();
+  const series = Object.fromEntries(S.trackers.map((tr) => [tr.name + " (" + tr.unit + ")", [...Array(30)].map((_, i) => dayValue(tr.id, addDays(t, i - 29)))]));
+  const data = { days: [...Array(30)].map((_, i) => addDays(t, i - 29)), trackers: series, habitsDonePerDay: [...Array(30)].map((_, i) => S.habits.filter((h) => habitDone(h, addDays(t, i - 29))).length), tasksDonePerDay: [...Array(30)].map((_, i) => S.tasks.filter((x) => x.doneOn === addDays(t, i - 29)).length), revenuePerDay: [...Array(30)].map((_, i) => revenue(addDays(t, i - 29), addDays(t, i - 29))), moods: [...Array(30)].map((_, i) => (S.journal[addDays(t, i - 29)] || {}).mood || null), dayScores: S.dayLog || {} };
+  try { await sample(`Look at ${S.settings.name}'s last 30 days of personal tracking (arrays line up with "days"; null = not logged). Find 3-5 genuinely useful patterns or links (e.g. what precedes his best days, what drops energy, which habits slip on which days, revenue vs habits). Be specific with numbers, honest about thin data, and end with 2 concrete experiments to try next week. Markdown bullets, short.\n\n${JSON.stringify(data)}`, { cache: false, onText: ({ text }) => { ui.insText = text; } }); }
+  catch (e) { const m = aiErr(e); if (m) toast(m); }
+  finally { ui.insBusy = false; render(); }
+}
+
+// ---------- first-run welcome ----------
+function welcomeDialog() {
+  const habitIdeas = ["Workout", "Read 20 pages", "Stretch 10 min", "No phone first 30 min", "Meditate 5 min", "Plan tomorrow", "No sugar after 8", "Walk 8k steps"];
+  const trackerIdeas = [["water", "Water (oz)"], ["sleep", "Sleep (h)"], ["weight", "Weight (lb)"], ["miles", "Miles run"], ["energy", "Energy (1-10)"], ["focus", "Focus minutes"], ["calls", "Sales calls made"], ["quotes", "Quotes sent"], ["screen", "Screen time (h)"]];
+  $("#layer").innerHTML = `<div class="overlay"><form class="dialog form" id="welcomeForm" role="dialog" aria-modal="true" aria-label="Welcome to Life OS" style="max-height:86vh;overflow-y:auto"><h3 style="font-family:var(--display);font-size:30px;font-weight:400">Welcome to Life OS</h3>
+    <p class="muted small" style="margin:0">Two minutes to set it up for you. Change anything later in Settings.</p>
+    <div class="two"><label for="w-name">Your name<input id="w-name" value="${esc(S.settings.name)}"></label><label for="w-rev">Monthly revenue goal ($)<input id="w-rev" type="number" value="${esc(S.settings.revenueGoal)}"></label></div>
+    <fieldset style="border:0;padding:0;margin:0"><legend class="small muted" style="margin-bottom:4px">Habits to build</legend><div class="chips" style="justify-content:flex-start">${habitIdeas.map((h, i) => `<label class="chip" for="wh-${i}" style="display:inline-flex;flex-direction:row;gap:6px;align-items:center;color:var(--fg);font-size:13px"><input type="checkbox" id="wh-${i}" data-h="${esc(h)}" ${S.habits.some((x) => x.name === h) ? "checked" : ""}>${esc(h)}</label>`).join("")}</div></fieldset>
+    <fieldset style="border:0;padding:0;margin:0"><legend class="small muted" style="margin-bottom:4px">Things to track</legend><div class="chips" style="justify-content:flex-start">${trackerIdeas.map(([id, l]) => `<label class="chip" for="wt-${id}" style="display:inline-flex;flex-direction:row;gap:6px;align-items:center;color:var(--fg);font-size:13px"><input type="checkbox" id="wt-${id}" data-t="${id}" data-l="${esc(l)}" ${S.trackers.some((x) => x.id === id) ? "checked" : ""}>${esc(l)}</label>`).join("")}</div></fieldset>
+    <label for="w-goal">One goal you want this year (the coach will sharpen it)<input id="w-goal" placeholder="e.g. hit $40k months and hire a second crew"></label>
+    <div class="acts"><button type="button" class="btn" data-act="welcomeSkip">Skip for now</button><button type="submit" class="btn pri">Set me up</button></div></form></div>`;
+  $("[data-act='welcomeSkip']").onclick = () => { S.settings.onboarded = true; touch("settings"); closeLayer(); };
+  $("#welcomeForm").onsubmit = (e) => { e.preventDefault(); const wGoal = $("#w-goal").value;
+    S.settings.name = $("#w-name").value.trim() || S.settings.name; S.settings.revenueGoal = num($("#w-rev").value) || S.settings.revenueGoal; S.settings.onboarded = true;
+    const wantH = $$("[data-h]").filter((x) => x.checked).map((x) => x.dataset.h);
+    S.habits = [...S.habits.filter((h) => wantH.includes(h.name)), ...wantH.filter((n) => !S.habits.some((h) => h.name === n)).map((n) => ({ id: uid(), name: n, target: /workout/i.test(n) ? 5 : 7 }))];
+    const wantT = $$("[data-t]").filter((x) => x.checked);
+    const UNITS = { water: ["oz", "sum", 100], sleep: ["h", "last", 7.5], weight: ["lb", "last", null], miles: ["mi", "sum", 25, "week"], energy: ["/10", "last", 7], focus: ["min", "sum", 120], calls: ["calls", "sum", 10], quotes: ["quotes", "sum", 3], screen: ["h", "last", 3] };
+    S.trackers = [...S.trackers.filter((t) => wantT.some((x) => x.dataset.t === t.id) || !UNITS[t.id]), ...wantT.filter((x) => !S.trackers.some((t) => t.id === x.dataset.t)).map((x) => { const [unit, kind, target, period] = UNITS[x.dataset.t]; return { id: x.dataset.t, name: x.dataset.l.replace(/\s*\(.*\)/, ""), unit, kind, target, period: period || null, dir: ["weight", "screen"].includes(x.dataset.t) ? "down" : "up" }; })];
+    touch("settings", "habits", "trackers"); closeLayer(); render();
+    const goalText = (wGoal || "").trim();
+    if (goalText) { ui.coach = { text: goalText, busy: false, plan: null }; coachDialog(); runCoach(); } else toast("You're set. Press C anytime to capture.");
+  };
+}
+
+
+const VIEWS = { today: vToday, tasks: vTasks, calendar: vCalendar, goals: vGoals, habits: vHabits, trackers: vTrackers, health: vHealth, money: vMoney, business: vBusiness, people: vPeople, notes: vNotes, lists: vLists, school: vSchool, review: vReview, assistant: vAssistant, data: vData, insights: vInsights };
 function render() {
   renderNav();
   const scroll = $("#main").scrollTop;
@@ -1327,7 +1485,7 @@ function smartCapture(text) {
 function openPalette(capture) {
   $("#layer").innerHTML = `<div class="overlay" data-act="close"><div class="dialog" role="dialog" aria-modal="true" aria-label="${capture ? "Quick capture" : "Command palette"}"><input id="pin" autocomplete="off" placeholder="${capture ? "spent 42 gas · water 16 · call Linda tomorrow 3pm !1 · note: gate code 4421" : "Jump to a page or run a command…"}" aria-label="${capture ? "Capture" : "Search"}"><div id="pout"></div></div></div>`;
   const inp = $("#pin"); let sel = 0, list = [];
-  const cmds = () => [...NAV.map((n) => ({ label: `Go to ${n.label}`, icon: n.icon, key: `G ${n.key.toUpperCase()}`, run: () => go(n.id) })), { label: "Quick capture", icon: "bolt", key: "C", run: () => openPalette(true) }, { label: "Write today's brief", icon: "spark", run: () => { go("today"); writeBrief(); } }, { label: "Goal coach", icon: "target", run: () => { go("goals"); coachDialog(); } }, { label: "New task", icon: "check", run: () => editTask(null) }, { label: "Log expense", icon: "wallet", run: () => editTxn(null) }, { label: "Log a job", icon: "brief", run: () => editJob(null) }, { label: "Toggle theme", icon: "sun", run: cycleTheme }, ...openTasks().slice(0, 40).map((t) => ({ label: t.title, icon: "check", hint: "task", run: () => editTask(t) })), ...S.people.map((p) => ({ label: p.name, icon: "users", hint: "person", run: () => editPerson(p) })), ...S.notes.map((n) => ({ label: n.title || n.body.slice(0, 40), icon: "note", hint: "note", run: () => editNote(n) }))];
+  const cmds = () => [...NAV.map((n) => ({ label: `Go to ${n.label}`, icon: n.icon, key: `G ${n.key.toUpperCase()}`, run: () => go(n.id) })), { label: "Quick capture", icon: "bolt", key: "C", run: () => openPalette(true) }, { label: "Write today's brief", icon: "spark", run: () => { go("today"); writeBrief(); } }, { label: "Goal coach", icon: "target", run: () => { go("goals"); coachDialog(); } }, { label: "New task", icon: "check", run: () => editTask(null) }, { label: "Plan my day (time-block tasks)", icon: "cal", run: () => { go("today"); planDay(); } }, { label: "Start a focus session", icon: "bolt", run: () => focusPicker(null) }, { label: "Shut down the day", icon: "sun", run: () => { go("today"); shutdownDialog(); } }, { label: "Ask Claude for insights", icon: "spark", run: () => { go("insights"); aiInsights(); } }, { label: "Show the welcome setup", icon: "gear", run: welcomeDialog }, { label: "Log expense", icon: "wallet", run: () => editTxn(null) }, { label: "Log a job", icon: "brief", run: () => editJob(null) }, { label: "Toggle theme", icon: "sun", run: cycleTheme }, ...openTasks().slice(0, 40).map((t) => ({ label: t.title, icon: "check", hint: "task", run: () => editTask(t) })), ...S.people.map((p) => ({ label: p.name, icon: "users", hint: "person", run: () => editPerson(p) })), ...S.notes.map((n) => ({ label: n.title || n.body.slice(0, 40), icon: "note", hint: "note", run: () => editNote(n) }))];
   const draw = () => { const q = inp.value.trim();
     if (capture) { $("#pout").innerHTML = `<div class="parse">${q ? "Press Enter to save" : "Tasks, expenses (“spent 42 gas”), tracker numbers (“water 16”, “sleep 7.5”), jobs (“job Patel 340”), workouts (“workout 45 legs”), notes (“note: …”)."}</div>`; return; }
     list = cmds().filter((c) => !q || c.label.toLowerCase().includes(q.toLowerCase())).slice(0, 10); sel = Math.min(sel, Math.max(0, list.length - 1));
@@ -1353,6 +1511,12 @@ document.addEventListener("click", async (e) => {
     case "palette": return openPalette(false);
     case "capture": return openPalette(true);
     case "theme": return cycleTheme();
+    case "shutdown": return shutdownDialog();
+    case "planDay": return planDay();
+    case "focus": return focus ? toast("A focus session is already running.") : focusPicker(null);
+    case "focusTask": return focusPicker(byId(S.tasks, id));
+    case "focusStop": return endFocus(false);
+    case "aiInsights": return aiInsights();
     case "more": ui.more = !ui.more; return render();
     case "toggleTask": toggleTask(byId(S.tasks, id)); return render();
     case "editTask": return editTask(byId(S.tasks, id));
@@ -1499,6 +1663,7 @@ async function exportData() {
 
 applyTheme();
 connect();
+drawFocus();
 getSample();
 })();
 </script>
