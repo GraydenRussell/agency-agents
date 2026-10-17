@@ -30,3 +30,17 @@ test("setup is reachable from the sidebar and with g u", async ({ page, isMobile
   await page.keyboard.press("u");
   await expect(page).toHaveURL(/\/setup$/);
 });
+
+test("export my data downloads one JSON file and is logged", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop flow");
+  await gotoReady(page, "/settings");
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "Export my data" }).click()]);
+  expect(download.suggestedFilename()).toMatch(/^life-os-export-\d{4}-\d{2}-\d{2}\.json$/);
+  const path = await download.path();
+  const { readFile } = await import("node:fs/promises");
+  const body = JSON.parse(await readFile(path, "utf8")) as { app: string; counts: Record<string, number> };
+  expect(body.app).toBe("life-os");
+  expect(body.counts.tasks).toBeGreaterThan(0);
+  await gotoReady(page, "/activity");
+  await expect(page.getByText(/Exported all data/).first()).toBeVisible();
+});

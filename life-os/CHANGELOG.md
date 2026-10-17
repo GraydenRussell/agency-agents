@@ -13,6 +13,10 @@ All notable changes to Life OS. Dates are America/Phoenix.
   everything required for production is ready.
 - `npm run setup:secrets`: generates ENCRYPTION_KEY, CRON_SECRET, PROJECTS_SYNC_TOKEN, LIFE_OS_API_TOKEN and a
   VAPID key pair; `-- --write` appends only the missing ones to .env.local.
+- **Export my data** (Settings → Your data): one JSON file with every table you own (tasks, goals, calendar, mail
+  cache, notes/journal, health, money, people, projects, assistant memory, approvals, activity log) and record
+  counts. OAuth tokens, push keys, rate-limit counters and job bookkeeping are excluded. Each export is logged.
+- A test that every sidebar entry has a page file in the repo (would have caught the hidden /notes folder).
 - Tests: checklist statuses, validators, live-test interpretation with a fake network, secret redaction,
   secret generation and safe .env merging; Playwright for /setup (incl. axe and phone width).
 

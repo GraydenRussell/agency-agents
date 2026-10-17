@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/shell/page-header";
+import { ExportCard } from "@/components/settings/export-card";
 import { GoogleCard } from "@/components/settings/google-card";
 import { AssistantSettings, MemoryEditor } from "@/components/settings/assistant-settings";
 import { AutomationsCard, NotificationSettings, RemindersCard } from "@/components/settings/notification-settings";
@@ -68,6 +69,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             return { name, label: j.label, schedule: j.schedule, last: last ? { at: formatDateTime(last.startedAt), ok: last.ok, summary: last.summary, error: last.error } : null };
           })}
         />
+        <ExportCard />
         <BusinessSettings links={links} adminConfigured={isMock() || Boolean(process.env.ADMIN_DASH_URL && process.env.LIFE_OS_API_TOKEN)} github={isMock() || Boolean(process.env.GITHUB_TOKEN)} vercel={isMock() || Boolean(process.env.VERCEL_TOKEN)} />
       </div>
     </>
