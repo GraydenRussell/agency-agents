@@ -283,6 +283,8 @@ code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); 
 .form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .form .acts { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
 .form .err { color: var(--danger); font-size: 12px; }
+.form input[type=checkbox] { width: auto; flex: none; padding: 0; margin: 0; }
+.form .two > label:has(> input[type=checkbox]) { align-self: end; padding-bottom: 10px; }
 .pipeline { display: grid; grid-template-columns: repeat(4, minmax(200px, 1fr)); gap: 10px; overflow-x: auto; padding-bottom: 6px; }
 .money-pos { color: var(--ok); } .money-neg { color: var(--danger); }
 .goalbar { height: 10px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
@@ -397,7 +399,7 @@ const nextDueDate = (dueDay) => { const t = today(), m = monthKey(t); const d = 
 const DOCS = {
   plan: ["tasks", "events", "lists"],
   goals: ["goals"],
-  habits: ["habits", "habitLog", "dayLog"],
+  habits: ["habits", "habitLog", "dayLog", "routines", "routineLog"],
   track: ["trackers", "entries"],
   money: ["txns", "bills", "budget"],
   biz: ["jobs", "leads"],
@@ -416,7 +418,7 @@ function fresh() {
       { id: uid(), name: "Workout", icon: "💪", target: 5 }, { id: uid(), name: "Read 20 pages", target: 7 },
       { id: uid(), name: "No phone first 30 min", target: 7 }, { id: uid(), name: "Stretch 10 min", target: 7 },
     ],
-    habitLog: {}, dayLog: {},
+    habitLog: {}, dayLog: {}, routines: DEFAULT_ROUTINES(), routineLog: {},
     trackers: [
       { id: "water", name: "Water", unit: "oz", kind: "sum", target: 100, dir: "up" },
       { id: "sleep", name: "Sleep", unit: "h", kind: "last", target: 7.5, dir: "up" },
@@ -653,6 +655,7 @@ function vToday() {
       ${agenda.length ? `<div class="sched">${agenda.map((a) => `<div class="blk" style="border-left-color:${itemColor(a)}"><span class="w">${a.time ? fmtTime(a.time) : "All day"}</span><span>${esc(a.title)}${a.where ? `<br><span class="muted small">${esc(a.where)}</span>` : ""}</span><span class="w">${a.end ? fmtTime(a.end) : ""}</span></div>`).join("")}</div>` : `<p class="muted small" style="margin:0">Nothing scheduled. Add events, classes, jobs, or timed tasks.</p>`}</section>
   </div><div class="col">
     ${scoreCard()}
+    ${routineCard()}
     <section class="card"><div class="ch"><h2>Quick log</h2><button class="btn sm ghost" data-nav="trackers">All trackers</button></div>
       <div class="quick">${S.trackers.slice(0, 6).map((tr) => { const now = trackerNow(tr); return `<button class="qbtn" data-act="logTracker" data-id="${tr.id}"><b>${esc(tr.name)}</b><span>${now == null ? "—" : round(now)}${tr.target ? ` / ${tr.target}` : ""} ${esc(tr.unit)}${tr.period === "week" ? " this wk" : ""}</span></button>`; }).join("")}
       <button class="qbtn" data-act="newTxn"><b>Expense</b><span>${money(spent(monthKey()))} this month</span></button><button class="qbtn" data-act="newJob"><b>Job / revenue</b><span>${money(revenue(t, t))} today</span></button></div>
@@ -668,6 +671,7 @@ function vToday() {
 function headsUp() {
   return [...billsDue(7).map((b) => `<div class="row"><span>💵 ${esc(b.name)}</span><span class="muted">${money(num(b.amount))} · ${nice(b.due)} <button class="btn sm" data-act="payBill" data-id="${b.id}">Paid</button></span></div>`),
     ...followUps().slice(0, 4).map((p) => `<div class="row"><span>👋 Follow up: ${esc(p.name)}</span><span class="muted">${nice(p.due)} <button class="btn sm" data-act="touched" data-id="${p.id}">Done</button></span></div>`),
+    ...unpaidJobs().filter((j) => dayDiff(j.d, today()) >= 7).slice(0, 3).map((j) => `<div class="row"><span>🧾 ${esc(j.client)} owes you</span><span class="muted">${money(num(j.amount))} · ${dayDiff(j.d, today())}d <button class="btn sm" data-act="jobPaid" data-id="${j.id}">Paid</button></span></div>`),
     ...birthdays(14).map((p) => `<div class="row"><span>🎂 ${esc(p.name)}</span><span class="muted">${nice(p.next)}</span></div>`)].join("");
 }
 
@@ -689,7 +693,7 @@ function digest() {
     habits: S.habits.map((h) => ({ name: h.name, streak: streak(h), thisWeek: `${weekCount(h)}/${h.target || 7}`, doneToday: habitDone(h, t), doneYesterday: habitDone(h, addDays(t, -1)) })),
     trackers: S.trackers.map((tr) => ({ name: tr.name, unit: tr.unit, today: dayValue(tr.id, t), avg7: avg(tr.id, 7) == null ? null : round(avg(tr.id, 7)), target: tr.target })),
     money: { spentThisMonth: spent(m), incomeThisMonth: income(m), overBudget: S.budget.filter((b) => spent(m, b.name) > num(b.limit)).map((b) => `${b.name} ${money(spent(m, b.name))}/${money(num(b.limit))}`), billsNext7Days: billsDue(7).map((b) => `${b.name} ${money(num(b.amount))} ${nice(b.due)}${b.autopay ? " (autopay)" : ""}`) },
-    business: { revenueToday: revenue(t, t), revenueThisWeek: revenue(weekStart(), t), monthToDate: pace.got, monthPace: Math.round(pace.pace), monthlyGoal: pace.goal, openLeads: S.leads.filter((l) => !["won", "lost"].includes(l.stage)).map((l) => `${l.name} (${l.stage}${l.value ? ", " + money(num(l.value)) : ""})`).slice(0, 8) },
+    business: { revenueToday: revenue(t, t), revenueThisWeek: revenue(weekStart(), t), monthToDate: pace.got, monthPace: Math.round(pace.pace), monthlyGoal: pace.goal, owedToYou: unpaidJobs().map((j) => `${j.client} ${money(num(j.amount))} (${dayDiff(j.d, t)} days)`).slice(0, 6), openLeads: S.leads.filter((l) => !["won", "lost"].includes(l.stage)).map((l) => `${l.name} (${l.stage}${l.value ? ", " + money(num(l.value)) : ""})`).slice(0, 8) },
     people: { followUpsDue: followUps().map((p) => p.name), birthdaysNext14: birthdays(14).map((p) => `${p.name} ${nice(p.next)}`) },
     journalYesterday: (S.journal[addDays(t, -1)] || {}).text?.slice(0, 400) || null,
     memory: S.memory.slice(-15).map((x) => x.text),
@@ -1072,7 +1076,7 @@ function vHabits() {
   return header("Habits", "Check off today, watch the streaks. Each row shows the last 14 days.", `<button class="btn pri" data-act="newHabit">${ico("plus")}Habit</button>`)
   + (S.habits.length ? `<section class="card">${S.habits.map((h) => `<div class="hrow"><div style="display:flex;align-items:center;gap:10px;min-width:0"><input type="checkbox" id="hh-${h.id}" data-act="habit" data-id="${h.id}" ${habitDone(h, t) ? "checked" : ""} aria-label="Done today: ${esc(h.name)}"><label for="hh-${h.id}" style="min-width:0"><b>${esc(h.name)}</b><br><span class="small muted">${streak(h)}-day streak · ${weekCount(h)}/${h.target || 7} this week · ${Object.values(S.habitLog).filter((d) => d[h.id]).length} total</span></label></div>
       <button class="btn sm ghost" data-act="editHabit" data-id="${h.id}" aria-label="Edit ${esc(h.name)}">${ico("edit")}</button>
-      <div class="heat" role="img" aria-label="${esc(h.name)}: last 14 days">${days.map((k) => `<i class="${habitDone(h, k) ? "on" : ""} ${k === t ? "today" : ""}" title="${nice(k)}"></i>`).join("")}</div></div>`).join("")}</section>` : empty("No habits yet", "Add the few things you want to do on repeat.", `<button class="btn pri" data-act="newHabit">Add a habit</button>`));
+      <div class="heat" role="img" aria-label="${esc(h.name)}: last 14 days">${days.map((k) => `<i class="${habitDone(h, k) ? "on" : ""} ${k === t ? "today" : ""}" title="${nice(k)}"></i>`).join("")}</div></div>`).join("")}</section>` : empty("No habits yet", "Add the few things you want to do on repeat.", `<button class="btn pri" data-act="newHabit">Add a habit</button>`)) + routinesSection();
 }
 function editHabit(h) {
   openForm({ title: h ? "Edit habit" : "New habit", values: h ? { ...h, target: String(h.target || 7) } : { target: "7" }, fields: [{ k: "name", label: "Habit", req: true, ph: "Workout, read, no sugar after 8…" }, { k: "target", label: "Times per week", type: "select", options: ["1", "2", "3", "4", "5", "6", "7"] }],
@@ -1148,12 +1152,12 @@ function vBusiness() {
   const months = [...Array(6)].map((_, i) => monthKey(addDays(`${monthKey()}-15`, (i - 5) * 30)));
   const revByMonth = months.map((m) => revenue(`${m}-01`, `${m}-31`));
   const jobs = S.jobs.slice().sort((a, b) => b.d.localeCompare(a.d)).slice(0, 25);
-  return header("Business", "Rapid Window Cleaning: jobs, revenue, and leads.", `${S.settings.dashUrl ? `<a class="btn" href="${esc(S.settings.dashUrl)}" target="_blank" rel="noreferrer">Open my dashboard ↗</a>` : `<button class="btn" data-nav="data">Link my dashboard</button>`}<button class="btn" data-act="newLead">${ico("plus")}Lead</button><button class="btn pri" data-act="newJob">${ico("plus")}Job</button>`)
+  return header("Business", "Rapid Window Cleaning: jobs, revenue, and leads.", `${S.settings.dashUrl ? `<a class="btn" href="${esc(S.settings.dashUrl)}" target="_blank" rel="noreferrer">Open my dashboard ↗</a>` : `<button class="btn" data-nav="data">Link my dashboard</button>`}<button class="btn" data-act="newLead">${ico("plus")}Lead</button><button class="btn" data-act="quote">${ico("plus")}Quote</button><button class="btn pri" data-act="newJob">${ico("plus")}Job</button>`)
   + `<div class="stat-row"><div class="stat"><span>Today</span><b class="big">${money(revenue(t, t))}</b></div><div class="stat"><span>This week</span><b class="big">${money(revenue(weekStart(), t))}</b></div><div class="stat"><span>Month to date</span><b class="big">${money(pace.got)}</b></div><div class="stat"><span>Month pace vs goal</span><b class="big ${pace.goal && pace.pace >= pace.goal ? "money-pos" : ""}">${money(Math.round(pace.pace))}</b> <span class="muted small">goal ${money(pace.goal)}</span></div></div>
-  <div class="grid"><section class="card"><div class="ch"><h2>Revenue by month</h2><button class="btn sm ghost" data-act="editRevGoal">Goal: ${money(pace.goal)}</button></div>${bars(revByMonth, months.map((m) => MON[+m.slice(5, 7) - 1]), { target: pace.goal, fmt: (v) => money(v), h: 150, hi: 5 })}</section>
+  ${arCard()}<div class="grid"><section class="card"><div class="ch"><h2>Revenue by month</h2><button class="btn sm ghost" data-act="editRevGoal">Goal: ${money(pace.goal)}</button></div>${bars(revByMonth, months.map((m) => MON[+m.slice(5, 7) - 1]), { target: pace.goal, fmt: (v) => money(v), h: 150, hi: 5 })}</section>
   <section class="card"><div class="ch"><h2>Recent jobs</h2></div>${jobs.length ? jobs.map((j) => `<div class="row"><span><button style="all:unset;cursor:pointer" data-act="editJob" data-id="${j.id}"><b>${esc(j.client)}</b></button><br><span class="muted small">${nice(j.d)}${j.time ? " " + fmtTime(j.time) : ""}${j.type ? " · " + esc(j.type) : ""}${j.crew ? " · " + esc(j.crew) : ""}</span></span><span>${money(num(j.amount))}${j.paid ? "" : ` <span class="st no">unpaid</span>`}</span></div>`).join("") : empty("No jobs logged", "Log jobs as you finish them to see revenue pace and feed your brief.")}</section></div>
   <h2 style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:18px 0 10px">Leads pipeline</h2>
-  <div class="pipeline">${STAGES.map(([s, label]) => { const ls = S.leads.filter((l) => l.stage === s); return `<section class="lane" data-stage="${s}"><h3><span>${label}</span><span class="muted">${ls.length}${ls.length ? " · " + money(sum(ls.map((l) => num(l.value)))) : ""}</span></h3>${ls.map((l) => `<div class="kcard"><button style="all:unset;cursor:pointer;font-weight:500" data-act="editLead" data-id="${l.id}">${esc(l.name)}</button><span class="small muted">${esc(l.source || "")}${l.value ? " · " + money(num(l.value)) : ""}${l.next ? " · next: " + nice(l.next) : ""}</span><div class="mv">${STAGES.findIndex((x) => x[0] === s) > 0 ? `<button class="btn sm" data-act="leadMove" data-id="${l.id}" data-d="-1" aria-label="Move back">←</button>` : ""}${s !== "won" ? `<button class="btn sm" data-act="leadMove" data-id="${l.id}" data-d="1" aria-label="Move forward">→</button><button class="btn sm ghost" data-act="leadLost" data-id="${l.id}">Lost</button>` : ""}</div></div>`).join("") || `<div class="empty small">None</div>`}</section>`; }).join("")}</div>`;
+  <div class="pipeline">${STAGES.map(([s, label]) => { const ls = S.leads.filter((l) => l.stage === s); return `<section class="lane" data-stage="${s}"><h3><span>${label}</span><span class="muted">${ls.length}${ls.length ? " · " + money(sum(ls.map((l) => num(l.value)))) : ""}</span></h3>${ls.map((l) => `<div class="kcard"><button style="all:unset;cursor:pointer;font-weight:500" data-act="editLead" data-id="${l.id}">${esc(l.name)}</button><span class="small muted">${esc(l.source || "")}${l.value ? " · " + money(num(l.value)) : ""}${l.next ? " · next: " + nice(l.next) : ""}</span><div class="mv"><button class="btn sm ghost" data-act="quoteLead" data-id="${l.id}">${l.quote ? "Quote ✓" : "Quote"}</button>${STAGES.findIndex((x) => x[0] === s) > 0 ? `<button class="btn sm" data-act="leadMove" data-id="${l.id}" data-d="-1" aria-label="Move back">←</button>` : ""}${s !== "won" ? `<button class="btn sm" data-act="leadMove" data-id="${l.id}" data-d="1" aria-label="Move forward">→</button><button class="btn sm ghost" data-act="leadLost" data-id="${l.id}">Lost</button>` : ""}</div></div>`).join("") || `<div class="empty small">None</div>`}</section>`; }).join("")}</div>`;
 }
 function editJob(j) { openForm({ title: j ? "Edit job" : "Log a job", values: j || { d: today(), paid: true }, fields: [{ k: "client", label: "Client / address", req: true }, { type: "row", items: [{ k: "amount", label: "Amount ($)", type: "number", step: "1", req: true }, { k: "d", label: "Date", type: "date" }] }, { type: "row", items: [{ k: "time", label: "Time", type: "time" }, { k: "type", label: "Type", type: "select", options: ["", "Residential", "Commercial", "Solar screens", "Gutters", "Pressure washing", "Other"] }] }, { k: "crew", label: "Crew / notes" }, { k: "paid", label: "Paid", type: "checkbox" }],
   onSave: (v) => { const body = { ...v, amount: num(v.amount), d: v.d || today() }; if (j) Object.assign(j, body); else S.jobs.push({ id: uid(), ...body }); if (S.jobs.length > 3000) S.jobs.shift(); touch("jobs"); toast(j ? "Saved" : `Job logged: ${money(body.amount)}`); },
@@ -1455,6 +1459,100 @@ function welcomeDialog() {
 }
 
 
+// ---------- window-cleaning quote calculator ----------
+const QUOTE_RATES = { pane: 6, inside: 4, screen: 3, track: 2, hardWater: 8, solar: 12, story2: 15, min: 150 };
+const rates = () => ({ ...QUOTE_RATES, ...(S.settings.rates || {}) });
+const QUOTE_LINES = [["panes", "Window panes (outside)", "pane"], ["inside", "Panes also done inside", "inside"], ["screens", "Screens cleaned", "screen"], ["tracks", "Tracks / sills", "track"], ["hardWater", "Hard-water treatment (panes)", "hardWater"], ["solar", "Solar screens installed/cleaned", "solar"]];
+function quoteCalc(q) {
+  const r = rates(); const lines = QUOTE_LINES.map(([k, label, rk]) => ({ label, qty: num(q[k]), rate: r[rk], amt: num(q[k]) * r[rk] })).filter((l) => l.qty);
+  let sub = sum(lines.map((l) => l.amt)); const story = q.story2 ? sub * (r.story2 / 100) : 0; sub += story;
+  const disc = sub * (num(q.discount) / 100); let total = sub - disc; const minApplied = total > 0 && total < r.min; if (minApplied) total = r.min;
+  return { lines, story, disc, total: Math.round(total), minApplied };
+}
+function quoteText(q, c) {
+  return `Hi ${(q.name || "there").split(" ")[0]}, here's your quote from Rapid Window Cleaning${q.addr ? ` for ${q.addr}` : ""}:\n\n${c.lines.map((l) => `• ${l.label}: ${l.qty} × ${money(l.rate, 2)} = ${money(l.amt, 2)}`).join("\n")}${c.story ? `\n• 2-story access: ${money(c.story, 2)}` : ""}${c.disc ? `\n• Discount: −${money(c.disc, 2)}` : ""}${c.minApplied ? `\n• (Minimum service charge applies)` : ""}\n\nTotal: ${money(c.total)}\n\nReply YES and we'll get you on the schedule. Thanks!\n– ${S.settings.name}, Rapid Window Cleaning`;
+}
+function quoteDialog(lead) {
+  const q = { name: lead?.name || "", addr: "", contact: lead?.contact || "", source: lead?.source || "", story2: false, discount: 0, ...(lead?.quote || {}) };
+  const r = rates();
+  $("#layer").innerHTML = `<div class="overlay" data-act="close"><form class="dialog form" id="quoteForm" role="dialog" aria-modal="true" aria-label="Quote calculator" style="max-height:88vh;overflow-y:auto"><h3>Quote calculator</h3>
+    <div class="two"><label for="q-name">Customer<input id="q-name" data-q="name" value="${esc(q.name)}" required></label><label for="q-addr">Address<input id="q-addr" data-q="addr" value="${esc(q.addr)}"></label></div>
+    <div class="two"><label for="q-contact">Phone / email<input id="q-contact" data-q="contact" value="${esc(q.contact)}"></label><label for="q-source">Source<select id="q-source" data-q="source">${["", "Google", "Referral", "Meta ad", "Nextdoor", "Door hanger", "Repeat customer", "Other"].map((s) => `<option ${s === q.source ? "selected" : ""}>${s}</option>`).join("")}</select></label></div>
+    <div class="two">${QUOTE_LINES.map(([k, label, rk]) => `<label for="q-${k}">${label} · ${money(r[rk], 2)} ea<input id="q-${k}" data-q="${k}" type="number" min="0" inputmode="numeric" value="${esc(q[k] || "")}"></label>`).join("")}</div>
+    <div class="two"><label for="q-story2" style="flex-direction:row;align-items:center;gap:8px;color:var(--fg)"><input type="checkbox" id="q-story2" data-q="story2" ${q.story2 ? "checked" : ""}> 2-story (+${r.story2}%)</label><label for="q-discount">Discount %<input id="q-discount" data-q="discount" type="number" min="0" max="100" value="${esc(q.discount || "")}"></label></div>
+    <div id="qOut"></div>
+    <div class="acts"><button type="button" class="btn ghost" data-act="quoteRates" style="margin-right:auto">Edit my rates</button><button type="button" class="btn" data-act="quoteCopy">Copy text for customer</button><button type="submit" class="btn pri">${lead ? "Update lead" : "Save as quoted lead"}</button></div></form></div>`;
+  const read = () => { for (const el of $$("[data-q]")) q[el.dataset.q] = el.type === "checkbox" ? el.checked : el.value; return quoteCalc(q); };
+  const draw = () => { const c = read(); $("#qOut").innerHTML = `<div class="bsec"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="small muted">${c.lines.length ? c.lines.map((l) => `${l.qty} ${l.label.toLowerCase()}`).join(" · ") : "Enter counts above"}${c.story ? " · 2-story" : ""}${c.disc ? ` · −${money(c.disc)}` : ""}${c.minApplied ? " · minimum applied" : ""}</span><b class="big">${money(c.total)}</b></div></div>`; };
+  $("#quoteForm").addEventListener("input", draw); draw();
+  $("[data-act='quoteCopy']").onclick = async () => { const txt = quoteText(q, read()); try { await navigator.clipboard.writeText(txt); toast("Quote text copied. Paste it into a text or email."); } catch { $("#qOut").insertAdjacentHTML("beforeend", `<textarea readonly style="margin-top:8px;min-height:160px">${esc(txt)}</textarea>`); } };
+  $("[data-act='quoteRates']").onclick = () => editRates(() => quoteDialog(lead));
+  $("#quoteForm").onsubmit = (e) => { e.preventDefault(); const c = read(); if (!q.name.trim()) return;
+    const quote = { ...q, total: c.total, d: today() }; const next = addDays(today(), 2);
+    if (lead) Object.assign(lead, { value: c.total, contact: q.contact, source: q.source, quote, stage: lead.stage === "new" ? "quoted" : lead.stage });
+    else { S.leads.push({ id: uid(), name: q.name.trim(), stage: "quoted", value: c.total, source: q.source, contact: q.contact, next, created: today(), quote, notes: q.addr });
+      S.tasks.unshift({ id: uid(), title: `Follow up on ${money(c.total)} quote: ${q.name.trim()}`, pri: 2, area: "business", due: next, done: false, top3: false, status: "todo", created: today() }); touch("tasks"); }
+    touch("leads"); closeLayer(); render(); toast(lead ? "Lead updated with the new quote" : `Quote saved: ${money(c.total)}. Follow-up set for ${nice(next)}.`); };
+}
+function editRates(after) {
+  const r = rates();
+  openForm({ title: "My pricing", values: r, submit: "Save rates", fields: [{ type: "row", items: [{ k: "pane", label: "Per pane outside ($)", type: "number", step: "0.25" }, { k: "inside", label: "Add for inside ($/pane)", type: "number", step: "0.25" }] }, { type: "row", items: [{ k: "screen", label: "Per screen ($)", type: "number", step: "0.25" }, { k: "track", label: "Per track/sill ($)", type: "number", step: "0.25" }] }, { type: "row", items: [{ k: "hardWater", label: "Hard water ($/pane)", type: "number", step: "0.25" }, { k: "solar", label: "Solar screen ($ each)", type: "number", step: "0.25" }] }, { type: "row", items: [{ k: "story2", label: "2-story surcharge (%)", type: "number" }, { k: "min", label: "Minimum charge ($)", type: "number" }] }],
+    onSave: (v) => { S.settings.rates = Object.fromEntries(Object.keys(QUOTE_RATES).map((k) => [k, num(v[k])])); touch("settings"); toast("Rates saved"); if (after) setTimeout(after, 0); } });
+}
+
+// ---------- money owed (unpaid jobs) ----------
+const unpaidJobs = () => S.jobs.filter((j) => !j.paid && num(j.amount) > 0).sort((a, b) => a.d.localeCompare(b.d));
+function arCard() {
+  const u = unpaidJobs(); if (!u.length) return "";
+  return `<section class="card" style="margin-bottom:16px;border-color:color-mix(in srgb, var(--warn) 45%, transparent)"><div class="ch"><h2>Money owed to you · ${money(sum(u.map((j) => num(j.amount))))}</h2><span class="muted small">${u.length} unpaid job${u.length > 1 ? "s" : ""}</span></div>
+    ${u.slice(0, 10).map((j) => { const age = dayDiff(j.d, today()); return `<div class="row"><span><button style="all:unset;cursor:pointer" data-act="editJob" data-id="${j.id}"><b>${esc(j.client)}</b></button><br><span class="small ${age > 14 ? "money-neg" : "muted"}">${nice(j.d)} · ${age} day${age === 1 ? "" : "s"} ago</span></span><span>${money(num(j.amount))} <button class="btn sm" data-act="jobPaid" data-id="${j.id}">Paid</button> <button class="btn sm ghost" data-act="jobRemind" data-id="${j.id}">Reminder text</button></span></div>`; }).join("")}</section>`;
+}
+function remindText(j) { return `Hi ${String(j.client).split(" ")[0]}, thanks again for choosing Rapid Window Cleaning on ${nice(j.d)}! Just a friendly reminder that the ${money(num(j.amount))} balance is still open. You can pay by card, Zelle, or check, whatever's easiest. Thank you! – ${S.settings.name}`; }
+
+// ---------- routines ----------
+function DEFAULT_ROUTINES() { return [
+  { id: "am", name: "Morning routine", when: "am", steps: ["16 oz of water", "No phone for 30 min", "Stretch 10 min", "Review Top 3 and today's schedule", "Check crew schedule and weather"] },
+  { id: "pm", name: "Evening routine", when: "pm", steps: ["Log today's jobs and expenses", "Shut down the day", "Lay out tomorrow's gear", "Phone on the charger outside the bedroom"] },
+]; }
+function routineFor(h) { const rs = S.routines || []; return rs.find((r) => r.when === (h < 14 ? "am" : "pm")) || null; }
+function routineDone(r, k = today()) { return ((S.routineLog || {})[k] || {})[r.id] || []; }
+function routineCard() {
+  const h = phx().getUTCHours(); const r = routineFor(h); if (!r || !r.steps.length) return "";
+  const done = routineDone(r); const n = done.length, all = n >= r.steps.length;
+  return `<section class="card"><div class="ch"><h2>${ico("repeat")}${esc(r.name)}</h2><span class="pill ${all ? "p4" : "p3"}">${n}/${r.steps.length}</span></div>
+    ${all ? `<p class="small" style="margin:0 0 6px;color:var(--ok)">Done. Nice work.</p>` : ""}<div class="listbox">${r.steps.map((s, i) => `<label class="li ${done.includes(i) ? "done" : ""}" for="rt-${r.id}-${i}"><input type="checkbox" id="rt-${r.id}-${i}" data-act="routineStep" data-id="${r.id}" data-i="${i}" ${done.includes(i) ? "checked" : ""}><span>${esc(s)}</span></label>`).join("")}</div></section>`;
+}
+function routinesSection() {
+  const rs = S.routines || [];
+  return `<section class="card" style="margin-top:16px"><div class="ch"><h2>Routines</h2><button class="btn sm" data-act="newRoutine">${ico("plus")}Routine</button></div><p class="muted small" style="margin:0 0 8px">Morning routines show on Today until 2 PM, evening ones after.</p>
+    ${rs.map((r) => { const streakN = (() => { let c = 0, k = today(); if (routineDone(r, k).length < r.steps.length) k = addDays(k, -1); while (r.steps.length && routineDone(r, k).length >= r.steps.length) { c++; k = addDays(k, -1); } return c; })(); return `<div class="row"><span><b>${esc(r.name)}</b> <span class="tag">${r.when === "am" ? "Morning" : "Evening"}</span><br><span class="muted small">${r.steps.length} steps · ${streakN}-day streak · today ${routineDone(r).length}/${r.steps.length}</span></span><button class="btn sm ghost" data-act="editRoutine" data-id="${r.id}" aria-label="Edit ${esc(r.name)}">${ico("edit")}</button></div>`; }).join("") || `<p class="muted small" style="margin:0">No routines.</p>`}</section>`;
+}
+function editRoutine(r) {
+  openForm({ title: r ? "Edit routine" : "New routine", values: r ? { ...r, steps: r.steps.join("\n") } : { when: "am", name: "" }, fields: [{ type: "row", items: [{ k: "name", label: "Name", req: true }, { k: "when", label: "When", type: "select", options: [["am", "Morning"], ["pm", "Evening"]] }] }, { k: "steps", label: "Steps (one per line)", type: "textarea" }],
+    onSave: (v) => { const body = { name: v.name, when: v.when, steps: String(v.steps || "").split("\n").map((s) => s.trim()).filter(Boolean) }; S.routines = S.routines || []; if (r) Object.assign(r, body); else S.routines.push({ id: uid(), ...body }); touch("routines"); },
+    onDelete: r ? () => { const u = snapshotUndo(["routines"]); S.routines = S.routines.filter((x) => x.id !== r.id); touch("routines"); toast("Routine deleted", u); } : null });
+}
+
+// ---------- search everything ----------
+function searchAll(q) {
+  q = q.toLowerCase(); if (q.length < 2) return [];
+  const hit = (...s) => s.some((x) => x && String(x).toLowerCase().includes(q)); const out = [];
+  S.tasks.forEach((t) => hit(t.title, t.project, t.notes) && out.push({ label: t.title, icon: "check", hint: t.done ? "done task" : "task", run: () => editTask(t) }));
+  S.events.forEach((e) => hit(e.title, e.where, e.notes) && out.push({ label: e.title, icon: "cal", hint: `event · ${nice(e.d)}`, run: () => editEvent(e) }));
+  S.goals.forEach((g) => hit(g.title, g.why) && out.push({ label: g.title, icon: "target", hint: "goal", run: () => editGoal(g) }));
+  S.leads.forEach((l) => hit(l.name, l.notes, l.contact) && out.push({ label: l.name, icon: "brief", hint: `lead · ${l.stage}`, run: () => editLead(l) }));
+  S.jobs.slice(-400).forEach((j) => hit(j.client, j.crew, j.type) && out.push({ label: `${j.client} · ${money(num(j.amount))}`, icon: "brief", hint: `job · ${nice(j.d)}`, run: () => editJob(j) }));
+  S.assignments.forEach((a) => hit(a.title, a.notes) && out.push({ label: a.title, icon: "school", hint: "assignment", run: () => editAssign(a) }));
+  S.courses.forEach((c) => hit(c.name, c.code, c.instructor) && out.push({ label: c.name, icon: "school", hint: "class", run: () => editCourse(c) }));
+  S.people.forEach((p) => hit(p.name, p.notes, p.phone) && out.push({ label: p.name, icon: "users", hint: "person", run: () => editPerson(p) }));
+  S.notes.forEach((n) => hit(n.title, n.body) && out.push({ label: n.title || n.body.slice(0, 40), icon: "note", hint: "note", run: () => editNote(n) }));
+  Object.entries(S.journal).forEach(([k, j]) => hit(j.text, j.review) && out.push({ label: `Journal · ${nice(k)}`, icon: "note", hint: ((j.text || j.review || "").toLowerCase().split(q)[1] || "").slice(0, 30) + "…", run: () => { ui.journalDay = k; go("notes"); } }));
+  S.txns.slice(-400).forEach((x) => hit(x.what, x.cat) && out.push({ label: `${x.what} · ${money(num(x.amount), 2)}`, icon: "wallet", hint: `${x.type} · ${nice(x.d)}`, run: () => editTxn(x) }));
+  S.lists.forEach((l) => l.items.forEach((it) => hit(it.t) && out.push({ label: it.t, icon: "list", hint: `list · ${l.name}`, run: () => { ui.listSel = l.id; go("lists"); } })));
+  return out.slice(0, 30);
+}
+
+
 const VIEWS = { today: vToday, tasks: vTasks, calendar: vCalendar, goals: vGoals, habits: vHabits, trackers: vTrackers, health: vHealth, money: vMoney, business: vBusiness, people: vPeople, notes: vNotes, lists: vLists, school: vSchool, review: vReview, assistant: vAssistant, data: vData, insights: vInsights };
 function render() {
   renderNav();
@@ -1483,12 +1581,12 @@ function smartCapture(text) {
   const t = addTaskFrom(s); return t ? `Task added: ${t.title}${t.due ? " · " + nice(t.due) : ""}` : null;
 }
 function openPalette(capture) {
-  $("#layer").innerHTML = `<div class="overlay" data-act="close"><div class="dialog" role="dialog" aria-modal="true" aria-label="${capture ? "Quick capture" : "Command palette"}"><input id="pin" autocomplete="off" placeholder="${capture ? "spent 42 gas · water 16 · call Linda tomorrow 3pm !1 · note: gate code 4421" : "Jump to a page or run a command…"}" aria-label="${capture ? "Capture" : "Search"}"><div id="pout"></div></div></div>`;
+  $("#layer").innerHTML = `<div class="overlay" data-act="close"><div class="dialog" role="dialog" aria-modal="true" aria-label="${capture ? "Quick capture" : "Command palette"}"><input id="pin" autocomplete="off" placeholder="${capture ? "spent 42 gas · water 16 · call Linda tomorrow 3pm !1 · note: gate code 4421" : "Search everything, jump to a page, or run a command…"}" aria-label="${capture ? "Capture" : "Search"}"><div id="pout"></div></div></div>`;
   const inp = $("#pin"); let sel = 0, list = [];
-  const cmds = () => [...NAV.map((n) => ({ label: `Go to ${n.label}`, icon: n.icon, key: `G ${n.key.toUpperCase()}`, run: () => go(n.id) })), { label: "Quick capture", icon: "bolt", key: "C", run: () => openPalette(true) }, { label: "Write today's brief", icon: "spark", run: () => { go("today"); writeBrief(); } }, { label: "Goal coach", icon: "target", run: () => { go("goals"); coachDialog(); } }, { label: "New task", icon: "check", run: () => editTask(null) }, { label: "Plan my day (time-block tasks)", icon: "cal", run: () => { go("today"); planDay(); } }, { label: "Start a focus session", icon: "bolt", run: () => focusPicker(null) }, { label: "Shut down the day", icon: "sun", run: () => { go("today"); shutdownDialog(); } }, { label: "Ask Claude for insights", icon: "spark", run: () => { go("insights"); aiInsights(); } }, { label: "Show the welcome setup", icon: "gear", run: welcomeDialog }, { label: "Log expense", icon: "wallet", run: () => editTxn(null) }, { label: "Log a job", icon: "brief", run: () => editJob(null) }, { label: "Toggle theme", icon: "sun", run: cycleTheme }, ...openTasks().slice(0, 40).map((t) => ({ label: t.title, icon: "check", hint: "task", run: () => editTask(t) })), ...S.people.map((p) => ({ label: p.name, icon: "users", hint: "person", run: () => editPerson(p) })), ...S.notes.map((n) => ({ label: n.title || n.body.slice(0, 40), icon: "note", hint: "note", run: () => editNote(n) }))];
+  const cmds = () => [...NAV.map((n) => ({ label: `Go to ${n.label}`, icon: n.icon, key: `G ${n.key.toUpperCase()}`, run: () => go(n.id) })), { label: "Quick capture", icon: "bolt", key: "C", run: () => openPalette(true) }, { label: "Write today's brief", icon: "spark", run: () => { go("today"); writeBrief(); } }, { label: "Goal coach", icon: "target", run: () => { go("goals"); coachDialog(); } }, { label: "New task", icon: "check", run: () => editTask(null) }, { label: "New window-cleaning quote", icon: "brief", run: () => quoteDialog(null) }, { label: "Plan my day (time-block tasks)", icon: "cal", run: () => { go("today"); planDay(); } }, { label: "Start a focus session", icon: "bolt", run: () => focusPicker(null) }, { label: "Shut down the day", icon: "sun", run: () => { go("today"); shutdownDialog(); } }, { label: "Ask Claude for insights", icon: "spark", run: () => { go("insights"); aiInsights(); } }, { label: "Show the welcome setup", icon: "gear", run: welcomeDialog }, { label: "Log expense", icon: "wallet", run: () => editTxn(null) }, { label: "Log a job", icon: "brief", run: () => editJob(null) }, { label: "Toggle theme", icon: "sun", run: cycleTheme }, ...openTasks().slice(0, 40).map((t) => ({ label: t.title, icon: "check", hint: "task", run: () => editTask(t) })), ...S.people.map((p) => ({ label: p.name, icon: "users", hint: "person", run: () => editPerson(p) })), ...S.notes.map((n) => ({ label: n.title || n.body.slice(0, 40), icon: "note", hint: "note", run: () => editNote(n) }))];
   const draw = () => { const q = inp.value.trim();
     if (capture) { $("#pout").innerHTML = `<div class="parse">${q ? "Press Enter to save" : "Tasks, expenses (“spent 42 gas”), tracker numbers (“water 16”, “sleep 7.5”), jobs (“job Patel 340”), workouts (“workout 45 legs”), notes (“note: …”)."}</div>`; return; }
-    list = cmds().filter((c) => !q || c.label.toLowerCase().includes(q.toLowerCase())).slice(0, 10); sel = Math.min(sel, Math.max(0, list.length - 1));
+    const base = cmds().filter((c) => !q || c.label.toLowerCase().includes(q.toLowerCase())); const seen = new Set(base.map((c) => c.label)); list = [...base, ...searchAll(q).filter((c) => !seen.has(c.label))].slice(0, 12); sel = Math.min(sel, Math.max(0, list.length - 1));
     $("#pout").innerHTML = `<div class="plist" role="listbox">${list.map((c, i) => `<button class="pitem" role="option" aria-selected="${i === sel}" data-i="${i}">${ico(c.icon)}<span>${esc(c.label)}</span>${c.key ? `<kbd>${c.key}</kbd>` : c.hint ? `<span class="muted small" style="margin-left:auto">${c.hint}</span>` : ""}</button>`).join("") || `<div class="parse">No matches. Enter captures “${esc(q)}”.</div>`}</div>`;
     $$(".pitem", $("#pout")).forEach((b) => b.onclick = () => { closeLayer(); list[+b.dataset.i].run(); }); };
   inp.oninput = () => { sel = 0; draw(); };
@@ -1511,6 +1609,12 @@ document.addEventListener("click", async (e) => {
     case "palette": return openPalette(false);
     case "capture": return openPalette(true);
     case "theme": return cycleTheme();
+    case "quote": return quoteDialog(null);
+    case "quoteLead": return quoteDialog(byId(S.leads, id));
+    case "jobPaid": { const j = byId(S.jobs, id); const u = snapshotUndo(["jobs"]); j.paid = true; touch("jobs"); render(); return toast(`${j.client} marked paid`, u); }
+    case "jobRemind": { const txt = remindText(byId(S.jobs, id)); try { await navigator.clipboard.writeText(txt); toast("Reminder text copied"); } catch { openForm({ title: "Payment reminder", values: { t: txt }, submit: "Done", fields: [{ k: "t", label: "Copy this", type: "textarea" }], onSave: () => {} }); } return; }
+    case "newRoutine": return editRoutine(null);
+    case "editRoutine": return editRoutine(byId(S.routines, id));
     case "shutdown": return shutdownDialog();
     case "planDay": return planDay();
     case "focus": return focus ? toast("A focus session is already running.") : focusPicker(null);
@@ -1610,6 +1714,7 @@ document.addEventListener("click", async (e) => {
 document.addEventListener("change", (e) => {
   const el = e.target;
   if (el.dataset.act === "habit") { const k = today(); const log = (S.habitLog[k] = S.habitLog[k] || {}); if (el.checked) log[el.dataset.id] = true; else delete log[el.dataset.id]; const keys = Object.keys(S.habitLog).sort(); while (keys.length > 400) delete S.habitLog[keys.shift()]; touch("habitLog"); const h = byId(S.habits, el.dataset.id); render(); if (el.checked && h) { const s = streak(h); if (s >= 3) toast(`${s}-day ${h.name} streak 🔥`); } }
+  if (el.dataset.act === "routineStep") { const k = today(); const log = ((S.routineLog = S.routineLog || {})[k] = S.routineLog[k] || {}); const arr = new Set(log[el.dataset.id] || []); const i = +el.dataset.i; if (el.checked) arr.add(i); else arr.delete(i); log[el.dataset.id] = [...arr]; const keys = Object.keys(S.routineLog).sort(); while (keys.length > 120) delete S.routineLog[keys.shift()]; touch("routineLog"); const r = byId(S.routines, el.dataset.id); render(); if (r && arr.size >= r.steps.length) toast(`${r.name} done ✓`); }
   if (el.dataset.act === "milestone") { const g = byId(S.goals, el.dataset.id); g.milestones[+el.dataset.i].done = el.checked; touch("goals"); render(); if (goalProgress(g).pct >= 1 && !g.done) toast("All milestones done. Mark the goal achieved?"); }
   if (el.dataset.act === "subtask") { const t = byId(S.tasks, el.dataset.id); t.subtasks[+el.dataset.i].done = el.checked; touch("tasks"); render(); if (t.subtasks.every((s) => s.done) && !t.done) toast("All subtasks done. Check off the task?"); }
   if (el.id === "taskSort") { ui.taskSort = el.value; render(); }
