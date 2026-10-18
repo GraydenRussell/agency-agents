@@ -25,6 +25,7 @@ const jobs: Array<[name: string, cron: string, note: string]> = [
   ["reminders", "* * * * *", "every minute"],
   ["calendar", "*/10 * * * *", "every 10 minutes"],
   ["projects", "7 * * * *", "hourly"],
+  ["housecall", "12,42 * * * *", "every 30 minutes"],
   ["maintenance", "0 10 * * *", "3:00 AM Phoenix"],
 ];
 

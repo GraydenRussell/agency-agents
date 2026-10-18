@@ -24,3 +24,9 @@ export function formatUsd(n: number, opts: { cents?: boolean } = {}): string {
     maximumFractionDigits: opts.cents ? 2 : 0,
   }).format(n);
 }
+
+/** US numbers → "(480) 555-1148"; anything else is returned as typed. */
+export function formatPhone(p: string): string {
+  const d = p.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
+  return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : p;
+}

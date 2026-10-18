@@ -25,6 +25,7 @@ enum IntegrationProvider {
   VERCEL
   TWILIO
   BUSINESS
+  HOUSECALL_PRO
 }
 
 enum IntegrationStatus {
@@ -709,4 +710,72 @@ model Project {
   syncedAt        DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+}
+
+// ─────────────────────── Business (Phase 11) ───────────────────────
+
+enum RecordSource {
+  HOUSECALL_PRO
+  MANUAL
+}
+
+model Customer {
+  id           String       @id @default(cuid())
+  source       RecordSource @default(MANUAL)
+  /// Housecall Pro customer id
+  externalId   String?      @unique
+  name         String
+  company      String?
+  phone        String?
+  email        String?
+  address      String?
+  city         String?
+  lat          Float?
+  lng          Float?
+  tags         String[]
+  /// Months between cleanings for re-booking (3, 6, 12). Null = the business default.
+  rebookMonths Int?
+  notes        String?
+  jobs         Job[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([name])
+}
+
+enum JobStatus {
+  UNSCHEDULED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+}
+
+model Job {
+  id             String       @id @default(cuid())
+  source         RecordSource @default(MANUAL)
+  /// Housecall Pro job id
+  externalId     String?      @unique
+  customerId     String?
+  customer       Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  title          String
+  address        String?
+  lat            Float?
+  lng            Float?
+  scheduledStart DateTime?
+  scheduledEnd   DateTime?
+  completedAt    DateTime?
+  status         JobStatus    @default(SCHEDULED)
+  /// Dollars
+  total          Float        @default(0)
+  /// Dollars still owed on the invoice
+  balanceDue     Float        @default(0)
+  invoiceNumber  String?
+  crew           String[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([scheduledStart])
+  @@index([customerId])
+  @@index([status])
 }

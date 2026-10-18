@@ -32,6 +32,7 @@ function fullEnv(): Env {
     GITHUB_TOKEN: "ghp_secret",
     VERCEL_TOKEN: "vercel_secret",
     ADMIN_DASH_URL: "https://dash.example.org",
+    HOUSECALL_PRO_API_KEY: "hcp_live_example",
     INTEGRATION_MODE: "live",
   };
 }

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { gotoReady } from "./helpers";
 
-const PAGES = ["/today", "/tasks", "/tasks?view=board", "/goals", "/routines", "/calendar", "/calendar?view=month", "/inbox", "/notes", "/settings", "/setup"];
+const PAGES = ["/today", "/tasks", "/tasks?view=board", "/goals", "/routines", "/calendar", "/calendar?view=month", "/inbox", "/notes", "/settings", "/setup", "/business/customers"];
 
 test.describe("no horizontal overflow on phones", () => {
   test.skip(({ isMobile }) => !isMobile, "mobile only");

@@ -251,6 +251,26 @@ export const SETUP_ITEMS: SetupItem[] = [
       }),
   },
   {
+    id: "housecall",
+    name: "Housecall Pro",
+    powers: "Customers and jobs for the Business hub: lifetime value, money owed, re-booking, route view, and review requests.",
+    required: false,
+    vars: ["HOUSECALL_PRO_API_KEY"],
+    steps: [
+      "Housecall Pro → App Store → API (needs the MAX plan) → Generate API key.",
+      "HOUSECALL_PRO_API_KEY = that key. Life OS only reads customers and jobs; it never writes to Housecall Pro.",
+      "Then press “Sync Housecall Pro” on Business → Customers (it also syncs every 30 minutes).",
+    ],
+    link: { label: "Housecall Pro API docs", href: "https://docs.housecallpro.com/" },
+    test: (env, f = fetch) =>
+      guard(async () => {
+        const res = await timed(f, "https://api.housecallpro.com/customers?page=1&page_size=1", { headers: { authorization: `Token ${env.HOUSECALL_PRO_API_KEY}`, accept: "application/json" } });
+        if (!res.ok) return httpFail("Housecall Pro", res);
+        const body = (await res.json()) as { total_items?: number };
+        return { ok: true, detail: `Key works${typeof body.total_items === "number" ? ` (${body.total_items} customers)` : ""}` };
+      }),
+  },
+  {
     id: "golive",
     name: "Go live",
     powers: "Switches every integration from sample data to the real services above.",

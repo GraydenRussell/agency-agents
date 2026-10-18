@@ -250,7 +250,7 @@ log + undo, rate limits + daily spend cap, /setup health page, JSON export, PWA 
 dark/light themes, quick capture, routines/habits, global search (tasks/notes).
 
 ### Phase 11 — Business power-ups (Rapid Window Cleaning)  ← building first
-- [ ] 11.1 Business data foundation: Customer, Job, Lead, Quote, PricingRule, Referral models; Housecall Pro adapter (mock + real) syncing customers/jobs/invoices
+- [x] 11.1 Business data foundation: Customer + Job models, Housecall Pro adapter (mock + real) syncing customers/jobs/balances, Customers pages. (Lead, Quote, Referral models land with their sections.)
 - [ ] 11.2 Quote builder: address, panes, stories, screens/tracks/hard water → price from editable pricing rules; branded PDF; send as text/email via Approvals
 - [ ] 11.3 Lead inbox: one queue for website form webhook (HMAC), GBP messages, Meta lead ads, and email; AI score + drafted reply; nudge if a lead sits unanswered 15+ min
 - [ ] 11.4 Customer re-booking: flag customers due at 3/6/12 months (per customer), draft re-book text

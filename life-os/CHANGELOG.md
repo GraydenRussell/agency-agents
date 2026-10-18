@@ -2,6 +2,24 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [11.1] Business data foundation: Housecall Pro customers + jobs — 2026-10-18
+### Added
+- **Customer** and **Job** tables (migration `business_customers_jobs`) with Housecall Pro ids, money owed, crew,
+  map coordinates, and two fields only you own: re-book interval (3/4/6/12 months) and notes.
+- Housecall Pro adapter (`HOUSECALL_PRO_API_KEY`, read-only): pages through customers and jobs (last 400 days →
+  next 90), converts cents to dollars, maps work status, skips malformed rows instead of failing the sync, and
+  explains a rejected key. Mock adapter with 8 East Valley customers for sample mode.
+- Sync every 30 minutes (`housecall` job, added to `npm run cron:sql`) plus a “Sync Housecall Pro” button.
+  Re-sync never overwrites your re-book interval or notes; failures show on the page and in sync state.
+- **Business → Customers**: search by name, street, city, email, or phone digits; lifetime value, last cleaned,
+  next job, and money owed per customer; add customers by hand. Customer page with contact links, jobs, notes.
+- Business section tabs (Overview / Customers); Housecall Pro on the Setup page with a live key test.
+- Tests: mapping, paging + auth header, rejected key, idempotent re-sync, roll-up math, validation, phone search;
+  Playwright for sync → search → detail → notes, manual add, axe, and phone width.
+### Not verified yet
+- The live Housecall Pro field mapping is written against their public API docs; it hasn't run against your real
+  account. The first live sync will confirm it (the Setup page test checks the key first).
+
 ## [Setup] Guided account setup — 2026-10-17
 ### Added
 - **/setup** page (sidebar → System, or `g u`): every external account in setup order with what it powers,
