@@ -30,6 +30,13 @@ boundaries computed in Phoenix time via one helper (`lib/time.ts`).
 | D15 | Projects discovery | GitHub user `GraydenRussell` (+ extra owners in Settings). Local folders via optional `scripts/sync-local-projects.ts` CLI that posts to the app. | Assumed |
 | D16 | Mock mode | Every integration has a mock adapter (`INTEGRATION_MODE=mock`) backed by seed data so every phase is clickable/testable before keys exist. | Assumed |
 | D17 | Writing style | With your OK at connect time, assistant samples last 200 sent emails into a `style` memory. | Assumed |
+| D18 | Expansion build target | Phases 11+ are built in the full Next.js app. The claude.ai tracker page only gets pieces that run in a browser. | Confirmed |
+| D19 | Business tools in use | Housecall Pro (jobs/customers/invoices, source of truth), Google Business Profile, Meta Ads. No QuickBooks/Stripe for now. | Confirmed |
+| D20 | Tyce partner view | Skipped for now; single user stays. Data model keeps business vs personal separable so it can be added later. | Confirmed |
+| D21 | Maps & drive times | Leaflet + OpenStreetMap tiles for display; Google Maps Routes API for drive times (key needed). Mock adapter until then. | Assumed |
+| D22 | Severe weather | National Weather Service alerts API (free; Dust Storm, Severe Thunderstorm, Excessive Heat warnings) + Open-Meteo forecast (D12). | Assumed |
+| D23 | Customer texts | Every text/email to a customer (quote, review request, re-book, lead reply, payment reminder) goes through the Approvals queue by default, with per-type auto-approve toggles (default OFF). | Confirmed (existing rule) |
+| D24 | Competitor data | Google Places API (ratings + review counts) — key needed. | Assumed |
 
 Anything marked **Assumed** can be changed by replying; none of them block Phase 1–2.
 
@@ -227,6 +234,103 @@ Each phase ends with: typecheck, lint, unit tests, Playwright smoke, app boots, 
 - [ ] Manifest, icons, service worker (offline shell, push handler), install prompt
 - [ ] Performance pass (RSC streaming, query caching), a11y pass, full test pass
 - [ ] Deployment guide: Supabase project, pg_cron, Google Cloud OAuth, Twilio, Vercel env vars
+
+
+---
+
+## 5b. Expansion phases (after the core build)
+
+Built **one section at a time** in the full app. Every section ends with: typecheck, lint, unit tests,
+Playwright smoke for its page, CHANGELOG entry, short summary, push. Every integration ships with a
+mock adapter first (D16) so each section is usable before keys exist. Anything outward-facing goes
+through Approvals (D23); every assistant action lands in the Activity Log with undo where possible.
+
+Already in the core build (upgraded, not rebuilt): encrypted OAuth tokens (`lib/crypto.ts`), audit
+log + undo, rate limits + daily spend cap, /setup health page, JSON export, PWA offline shell,
+dark/light themes, quick capture, routines/habits, global search (tasks/notes).
+
+### Phase 11 — Business power-ups (Rapid Window Cleaning)  ← building first
+- [ ] 11.1 Business data foundation: Customer, Job, Lead, Quote, PricingRule, Referral models; Housecall Pro adapter (mock + real) syncing customers/jobs/invoices
+- [ ] 11.2 Quote builder: address, panes, stories, screens/tracks/hard water → price from editable pricing rules; branded PDF; send as text/email via Approvals
+- [ ] 11.3 Lead inbox: one queue for website form webhook (HMAC), GBP messages, Meta lead ads, and email; AI score + drafted reply; nudge if a lead sits unanswered 15+ min
+- [ ] 11.4 Customer re-booking: flag customers due at 3/6/12 months (per customer), draft re-book text
+- [ ] 11.5 Review engine: auto-queue review request after a completed job; track review count/rating over time; AI-drafted replies to new Google reviews for approval
+- [ ] 11.6 Referral tracker: who referred whom, rewards owed/paid
+- [ ] 11.7 KPIs board: revenue vs goal, average ticket, close rate, cost per lead (Meta spend), jobs/week, revenue/hour; week/month/year comparisons
+- [ ] 11.8 Weather-aware scheduling: monsoon/haboob/110°F+ warnings on job days, suggested reschedule slots
+- [ ] 11.9 Route view: today's jobs on a map, drive times between stops, flag inefficient days
+- [ ] 11.10 Expense + mileage log: receipt photo → AI reads and categorizes it; mileage trips per vehicle
+- [ ] 11.11 Taxes: "set aside for taxes" number and quarterly estimate reminders (Apr 15, Jun 15, Sep 15, Jan 15)
+- [ ] 11.12 Content calendar: GBP posts, social posts, ads; AI drafts in batches; publish to GBP via Approvals
+- [ ] 11.13 Competitor watch: weekly AI summary of East Valley competitors' Google ratings/review counts
+- [ ] 11.14 Hiring pipeline: applicants, stages, interview notes, onboarding checklist
+- [ ] 11.15 Crew view: schedules, hours, job assignments, accountability scores (Housecall Pro / admin dashboard data)
+- [ ] 11.16 SOP quick-search: SOP library + "how do we do hard water removal?" answered from your SOPs with sources
+- [ ] (Deferred, D20) Partner view for Tyce
+
+### Phase 12 — Security & reliability (do no matter what)
+- [ ] 12.1 Verify every stored OAuth/integration token is encrypted at rest; key-rotation script
+- [ ] 12.2 Audit log: confirm every tool/integration action is logged; filters + CSV export
+- [ ] 12.3 Daily API cost dashboard + hard **monthly** cap (in addition to the daily cap)
+- [ ] 12.4 Health page: live test for every integration added in Phases 11+, last-success time, alerts
+- [ ] 12.5 Automatic nightly database backup (JSON + CSV to storage) with restore instructions
+
+### Phase 13 — Smarter AI assistant
+- [ ] 13.1 Assistant modes: Business coach, Marketing strategist, Scheduler, Personal (own prompt + tool set each)
+- [ ] 13.2 "Plan my week": time-blocked week from tasks/goals/calendar, approve before events are written
+- [ ] 13.3 Text the assistant: inbound SMS (Twilio webhook, your number only) → act → reply
+- [ ] 13.4 Voice mode: speech-to-text in, text-to-speech out (browser APIs on phone)
+- [ ] 13.5 Meeting prep: 30 min before an event, brief on attendees, last emails, talking points
+- [ ] 13.6 Follow-up tracker: sent emails expecting a reply → nudge after X days
+- [ ] 13.7 Inbox zero mode (one email at a time with suggested actions) + unsubscribe helper
+- [ ] 13.8 Writing style learning from sent mail (D17) + weekly "what I learned about you" memory review
+- [ ] 13.9 Proactive nudges with quiet hours ("no work on goal X in 5 days")
+- [ ] 13.10 Natural-language search across emails, notes, tasks, projects, journal
+- [ ] 13.11 Document Q&A: upload PDFs (contracts, insurance, manuals), ask questions with citations
+
+### Phase 14 — Personal life
+- [ ] 14.1 Morning launch screen: routine checklist, one big thing, quote, water/meds checkboxes
+- [ ] 14.2 Workout planner + lifts/PRs + body-weight chart; Apple Health / Google Fit import (file export first)
+- [ ] 14.3 Sleep + energy weekly chart with AI pattern spotting
+- [ ] 14.4 Meal planner + grocery list (phone-friendly, PWA)
+- [ ] 14.5 Personal finance: bills calendar, subscriptions (+ unused flag), savings goals, net worth snapshot
+- [ ] 14.6 Books / podcasts / courses with notes and takeaways
+- [ ] 14.7 Bucket list + someday/maybe
+- [ ] 14.8 Birthdays & important dates with gift ideas, reminders a week early
+- [ ] 14.9 Travel planner: trips, packing lists, bookings parsed from confirmation emails
+- [ ] 14.10 Vehicle maintenance (personal + work trucks) and home log (warranties, filters, chores)
+- [ ] 14.11 Journal weekly AI reflection + mood over time
+
+### Phase 15 — Goals & accountability
+- [ ] 15.1 Yearly vision board page
+- [ ] 15.2 Weekly life-area scorecard (1–10) with chart
+- [ ] 15.3 Points/levels across habits, tasks, goals; non-negotiables that turn red when skipped
+- [ ] 15.4 90-day sprint mode: 3 goals, dedicated tracker, weekly check-ins
+- [ ] 15.5 Auto-generated monthly review: wins, numbers, what to change
+
+### Phase 16 — Projects hub upgrades
+- [ ] 16.1 "Resume this project": last commit, TODOs from code, suggested next Claude Code prompt
+- [ ] 16.2 Uptime monitoring per deployed project + down alerts
+- [ ] 16.3 Vercel error alerts summarized by AI
+- [ ] 16.4 Ideas board with "AI, flesh this out" mini spec
+- [ ] 16.5 Time tracking per project
+
+### Phase 17 — Dashboard & UX
+- [ ] 17.1 Customizable widget grid (drag, resize, hide) with saved layouts ("Work mode", "Weekend mode")
+- [ ] 17.2 Focus mode: current task + Pomodoro, notifications held
+- [ ] 17.3 Global quick-add (shortcut + PWA home-screen shortcut / iOS Shortcut to Today)
+- [ ] 17.4 Notifications center with snooze + priority levels
+- [ ] 17.5 Compact mode; offline Today schedule + tasks
+- [ ] 17.6 CSV export alongside JSON
+
+### Phase 18 — Further integrations (only if you start using them)
+- [ ] GA4, Stripe/QuickBooks, Google Drive, Spotify, Apple Health/Google Fit, Slack/Discord alerts
+- [ ] Plaid bank sync (late; read-only, tokens encrypted, explicit consent, separate review)
+
+### New things you'll need to provide (when that section is reached)
+Housecall Pro API key (11.1) · GBP API access, which Google approves per account (11.3/11.5/11.12)
+· Meta app + lead-ads webhook + ads read token (11.3/11.7) · website form webhook secret (generated
+for you, 11.3) · Google Maps Platform key (11.9, 11.13).
 
 ---
 
