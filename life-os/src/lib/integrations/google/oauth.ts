@@ -16,6 +16,10 @@ export const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/gmail.send",
 ] as const;
 
+/** Only requested once you set GBP_LOCATION_ID (reviews need Google's Business Profile API approval). */
+export const BUSINESS_SCOPE = "https://www.googleapis.com/auth/business.manage";
+export const googleScopes = (): string[] => [...GOOGLE_SCOPES, ...(process.env.GBP_LOCATION_ID ? [BUSINESS_SCOPE] : [])];
+
 export type GoogleTokens = { access_token: string; refresh_token?: string; expires_at: number; scope?: string };
 
 export class GoogleAuthError extends Error {
@@ -43,7 +47,7 @@ export function buildAuthUrl(state: string): string {
     client_id: id,
     redirect_uri: redirectUri(),
     response_type: "code",
-    scope: GOOGLE_SCOPES.join(" "),
+    scope: googleScopes().join(" "),
     access_type: "offline",
     prompt: "consent", // guarantees a refresh_token
     include_granted_scopes: "true",

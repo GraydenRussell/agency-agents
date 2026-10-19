@@ -878,3 +878,55 @@ model Lead {
   @@unique([source, externalId])
   @@index([status, receivedAt])
 }
+
+enum ReviewRequestStatus {
+  PENDING
+  SENT
+  SKIPPED
+  FAILED
+}
+
+/** One per completed job: the "would you leave us a review?" text. */
+model ReviewRequest {
+  id         String              @id @default(cuid())
+  jobId      String              @unique
+  customerId String?
+  name       String
+  phone      String?
+  status     ReviewRequestStatus @default(PENDING)
+  skipReason String?
+  approvalId String?
+  sentAt     DateTime?
+  error      String?
+  createdAt  DateTime            @default(now())
+
+  @@index([status, createdAt])
+  @@index([customerId])
+}
+
+model Review {
+  id          String    @id @default(cuid())
+  source      String    @default("GOOGLE")
+  externalId  String    @unique
+  author      String
+  rating      Int
+  comment     String?
+  reviewedAt  DateTime
+  replyText   String?
+  repliedAt   DateTime?
+  draftReply  String?
+  draftBy     String?
+  notifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([reviewedAt])
+}
+
+/** Daily total + average from Google, for the trend chart. */
+model ReviewSnapshot {
+  /// Phoenix YYYY-MM-DD
+  date    String @id
+  count   Int
+  average Float
+}

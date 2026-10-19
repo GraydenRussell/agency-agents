@@ -307,6 +307,21 @@ export const SETUP_ITEMS: SetupItem[] = [
       }),
   },
   {
+    id: "gbp",
+    name: "Google reviews (Business Profile)",
+    powers: "Review count and rating over time, alerts for new reviews, and drafted replies you approve and post from Life OS.",
+    required: false,
+    vars: ["GBP_ACCOUNT_ID", "GBP_LOCATION_ID"],
+    steps: [
+      "Google Cloud console (same project as your Google sign-in) → request access to the Business Profile APIs (Google reviews the request, usually a few days), then enable “My Business Account Management API” and “Google My Business API”.",
+      "Find your ids: Account Management API accounts.list gives accounts/<GBP_ACCOUNT_ID>; Business Information API accounts.locations.list gives locations/<GBP_LOCATION_ID>.",
+      "Set both, redeploy, then Settings → reconnect Google (adds the Business Profile permission).",
+      "Business → Reviews → paste your “Ask for reviews” short link (Business Profile → Ask for reviews) so review-request texts can go out. That part works even before the API is approved.",
+    ],
+    link: { label: "Business Profile API access", href: "https://developers.google.com/my-business/content/prereqs" },
+    validate: (env) => [...(has(env, "GBP_ACCOUNT_ID") && !/^\d+$/.test(env.GBP_ACCOUNT_ID!) ? ["GBP_ACCOUNT_ID should be the number after accounts/"] : []), ...(has(env, "GBP_LOCATION_ID") && !/^\d+$/.test(env.GBP_LOCATION_ID!) ? ["GBP_LOCATION_ID should be the number after locations/"] : [])],
+  },
+  {
     id: "golive",
     name: "Go live",
     powers: "Switches every integration from sample data to the real services above.",

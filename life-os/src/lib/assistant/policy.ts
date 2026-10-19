@@ -19,6 +19,8 @@ export const APPROVAL_ACTIONS: Record<string, string> = {
   "quote.send": "Send quotes to customers (text / email)",
   "lead.reply": "Reply to new leads (text / email)",
   "rebook.text": "Text customers to re-book their next cleaning",
+  "review.request": "Text customers asking for a Google review after a job",
+  "review.reply": "Post public replies to Google reviews",
 };
 
 export async function isAutoApproved(actionType: string, opts: { emailCategory?: string | null } = {}): Promise<boolean> {

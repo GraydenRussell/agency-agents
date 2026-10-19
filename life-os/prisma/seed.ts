@@ -234,6 +234,22 @@ async function seedLeads() {
   });
 }
 
+async function seedReviews() {
+  const ago = (d: number) => new Date(Date.now() - d * 86_400_000);
+  await db.review.createMany({
+    data: [
+      { externalId: "rv1", author: "Priya Patel", rating: 5, comment: "Grayden and Tyce were on time, friendly, and our windows have never looked this good. They even cleaned the tracks!", reviewedAt: ago(1), draftReply: "Thank you, Priya! It was a pleasure getting your windows (and those tracks) sparkling. See you next time! – Grayden", draftBy: "template" },
+      { externalId: "rv2", author: "Mark Delgado", rating: 3, comment: "Windows look good but they showed up an hour later than the window we were given.", reviewedAt: ago(2), draftReply: "Hi Mark, thank you for the honest feedback. You're right, we were late, and I'm sorry. We're adding a heads-up text when the crew is on the way so this doesn't happen again. Please call or text me directly if there's anything else I can do. – Grayden", draftBy: "template" },
+      { externalId: "rv3", author: "Sun Lakes HOA", rating: 5, comment: "Reliable every quarter. Highly recommend for commercial work.", reviewedAt: ago(9), replyText: "Thank you! We love working with your team every quarter.", repliedAt: ago(8) },
+      { externalId: "rv4", author: "Linda Park", rating: 5, comment: null, reviewedAt: ago(20), replyText: "Thanks so much, Linda!", repliedAt: ago(19) },
+      { externalId: "rv5", author: "Chris W.", rating: 4, comment: "Great job on the hard water spots. Pricing was fair.", reviewedAt: ago(41), replyText: "Appreciate it, Chris! Those back sliders were a challenge.", repliedAt: ago(40) },
+    ],
+  });
+  const t = new Date();
+  const day = (d: number) => new Date(t.getTime() - d * 86_400_000).toISOString().slice(0, 10);
+  await db.reviewSnapshot.createMany({ data: [{ date: day(35), count: 84, average: 4.8 }, { date: day(0), count: 87, average: 4.8 }] });
+}
+
 async function main() {
   console.log(`Seeding ${url?.replace(/:[^:@/]+@/, ":***@")} for local date ${T} …`);
   await wipe();
@@ -245,6 +261,7 @@ async function main() {
   await seedProjects();
   await seedSettingsAndMemory();
   await seedLeads();
+  await seedReviews();
   console.log("Seed complete.");
 }
 

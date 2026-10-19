@@ -2,6 +2,26 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [11.5] Review engine — 2026-10-19
+### Added
+- **Business → Reviews**: Google rating and review count (with growth over the last 30 days), new reviews per
+  month, a “Need a reply” queue with a drafted reply on each (AI when available, a template otherwise; 1–3★ are
+  flagged “needs care” and get an own-it-and-take-it-offline draft), Redraft, and **Post reply** (public on Google;
+  pressing it is the approval; logged).
+- **Review requests after every job**: each job Housecall Pro marks complete (1 h–3 days ago) queues one
+  “would you leave us a quick Google review?” text with your review link. It waits in **Approvals** (new toggle
+  “Text customers asking for a Google review”, default OFF; when on, they go out automatically between 9 AM and
+  7 PM). Skipped automatically: no textable phone, or the customer was asked in the last 6 months. Send or skip
+  from the Reviews page too.
+- Hourly `reviews` job: queue + dispatch requests, sync Google reviews, alert on new unanswered ones
+  (⚠️ for 1–3★), record daily totals for the trend.
+- Assistant: `review_list`, `review_reply` and `review_request_send`, both of which wait in Approvals.
+- Setup page item for Google reviews. Setting GBP_ACCOUNT_ID/GBP_LOCATION_ID adds the Business Profile permission to
+  the Google connection (reconnect Google once); without them nothing about your Google sign-in changes.
+### Needs from you
+- Google must approve your Cloud project for the Business Profile APIs before reviews can be read or replied to
+  (a request form; usually a few days). Review-request texts only need your “Ask for reviews” link + Twilio.
+
 ## [11.4] Customer re-booking — 2026-10-19
 ### Added
 - **Business → Re-book**: customers due for their next cleaning, grouped Overdue / Due now (2 weeks) / Coming up

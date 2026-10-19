@@ -30,6 +30,8 @@ export const SETTINGS = {
   "business.serviceArea": { schema: z.array(z.string().min(1)).max(50), default: ["Chandler", "Gilbert", "Mesa", "Tempe", "Queen Creek", "Sun Lakes", "Ahwatukee", "San Tan Valley", "Phoenix", "Scottsdale"] },
   /** Months between cleanings when a customer has no interval of their own. */
   "business.rebookDefaultMonths": { schema: z.number().int().min(1).max(36), default: 6 },
+  /** Google "ask for reviews" short link (Business Profile → Ask for reviews), used in review-request texts. */
+  "business.reviewLink": { schema: z.union([z.string().url(), z.literal("")]), default: "" },
   /** Nudge me when a new lead has had no reply for this long. */
   "leads.nudgeMinutes": { schema: z.number().int().min(5).max(24 * 60), default: 15 },
   /** Shown on quote PDFs and customer messages. */

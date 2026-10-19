@@ -56,6 +56,8 @@ const schema = z.object({
   META_APP_SECRET: optional,
   META_VERIFY_TOKEN: optional,
   META_PAGE_ACCESS_TOKEN: optional,
+  GBP_ACCOUNT_ID: optional,
+  GBP_LOCATION_ID: optional,
 
   WEATHER_LAT: z.coerce.number().default(33.3062),
   WEATHER_LON: z.coerce.number().default(-111.8413),

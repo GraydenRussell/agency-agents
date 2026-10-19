@@ -7,6 +7,8 @@ import * as customers from "@/lib/services/customers";
 import * as leads from "@/lib/services/leads";
 import * as quotes from "@/lib/services/quotes";
 import * as rebook from "@/lib/services/rebook";
+import * as reviews from "@/lib/services/reviews";
+import { approve } from "@/lib/assistant/executor";
 import { setSetting, type SettingValue } from "@/lib/services/settings";
 
 const refresh = () => revalidatePath("/business", "layout");
@@ -135,5 +137,63 @@ export async function rebookOptOutAction(customerId: string, optOut: boolean) {
     await rebook.setRebookOptOut(customerId, optOut);
     refresh();
     return undefined;
+  });
+}
+
+export async function saveReviewLinkAction(link: string) {
+  return runAction(async () => {
+    const v = link.trim();
+    if (v && !/^https:\/\//.test(v)) throw new Error("Paste the full https:// link from Business Profile → Ask for reviews");
+    await setSetting("business.reviewLink", v);
+    refresh();
+    return undefined;
+  });
+}
+/** Send = approval. If the request is already waiting in Approvals, approve that one so it isn't left dangling. */
+export async function sendReviewRequestAction(id: string) {
+  return runAction(async () => {
+    const r = await db.reviewRequest.findUniqueOrThrow({ where: { id } });
+    if (r.approvalId) {
+      const out = await approve(r.approvalId);
+      if (out.status !== "ok") throw new Error(out.status === "error" ? out.error : "Couldn't send");
+      refresh();
+      return out.summary;
+    }
+    const sent = await reviews.sendReviewRequest(id);
+    const summary = `Asked ${sent.name} for a Google review (${sent.to})`;
+    await db.activityLog.create({ data: { actor: "USER", actionType: "review.request", summary, input: { requestId: id } } });
+    refresh();
+    return summary;
+  });
+}
+export async function skipReviewRequestAction(id: string) {
+  return runAction(async () => {
+    await reviews.skipReviewRequest(id);
+    refresh();
+    return undefined;
+  });
+}
+/** Posting publicly after reading the reply is the approval. */
+export async function postReviewReplyAction(id: string, text: string) {
+  return runAction(async () => {
+    const r = await reviews.postReviewReply(id, text);
+    const summary = `Replied to ${r.author}'s ${r.rating}★ review on Google`;
+    await db.activityLog.create({ data: { actor: "USER", actionType: "review.reply", summary, input: { reviewId: id, text } } });
+    refresh();
+    return summary;
+  });
+}
+export async function redraftReviewAction(id: string) {
+  return runAction(async () => {
+    const r = await reviews.redraftReviewReply(id);
+    refresh();
+    return r.draftReply ?? "";
+  });
+}
+export async function syncReviewsAction() {
+  return runAction(async () => {
+    const out = await reviews.syncReviews();
+    refresh();
+    return out;
   });
 }

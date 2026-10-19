@@ -37,6 +37,8 @@ function fullEnv(): Env {
     META_APP_SECRET: "meta_app_secret",
     META_VERIFY_TOKEN: "meta_verify_token",
     META_PAGE_ACCESS_TOKEN: "EAAmetapagetoken",
+    GBP_ACCOUNT_ID: "1234567890",
+    GBP_LOCATION_ID: "9876543210",
     INTEGRATION_MODE: "live",
   };
 }

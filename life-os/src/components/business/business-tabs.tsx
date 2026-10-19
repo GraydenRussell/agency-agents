@@ -9,6 +9,7 @@ const TABS = [
   { href: "/business/customers", label: "Customers" },
   { href: "/business/quotes", label: "Quotes" },
   { href: "/business/rebook", label: "Re-book" },
+  { href: "/business/reviews", label: "Reviews" },
 ];
 
 export function BusinessTabs({ unansweredLeads = 0, lateLeads = 0 }: { unansweredLeads?: number; lateLeads?: number }) {

@@ -254,7 +254,7 @@ dark/light themes, quick capture, routines/habits, global search (tasks/notes).
 - [x] 11.2 Quote builder: address, panes, stories, screens/tracks/hard water → price from editable pricing rules; branded PDF; send as text/email via Approvals
 - [x] 11.3 Lead inbox: website form webhook, Meta lead ads, lead emails, manual phone/referral leads; AI score + drafted reply; nudges at 15 min / 1 h / 4 h. (GBP messages: Google retired Business Profile chat in July 2024, so there is no API; listing leads come in by phone/web/email.)
 - [x] 11.4 Customer re-booking: flag customers due at 3/6/12 months (per customer), draft re-book text
-- [ ] 11.5 Review engine: auto-queue review request after a completed job; track review count/rating over time; AI-drafted replies to new Google reviews for approval
+- [x] 11.5 Review engine: auto-queue review request after a completed job; track review count/rating over time; AI-drafted replies to new Google reviews for approval
 - [ ] 11.6 Referral tracker: who referred whom, rewards owed/paid
 - [ ] 11.7 KPIs board: revenue vs goal, average ticket, close rate, cost per lead (Meta spend), jobs/week, revenue/hour; week/month/year comparisons
 - [ ] 11.8 Weather-aware scheduling: monsoon/haboob/110°F+ warnings on job days, suggested reschedule slots
