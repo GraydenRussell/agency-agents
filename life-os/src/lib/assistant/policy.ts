@@ -18,6 +18,7 @@ export const APPROVAL_ACTIONS: Record<string, string> = {
   "memory.delete": "Forget remembered items",
   "quote.send": "Send quotes to customers (text / email)",
   "lead.reply": "Reply to new leads (text / email)",
+  "rebook.text": "Text customers to re-book their next cleaning",
 };
 
 export async function isAutoApproved(actionType: string, opts: { emailCategory?: string | null } = {}): Promise<boolean> {

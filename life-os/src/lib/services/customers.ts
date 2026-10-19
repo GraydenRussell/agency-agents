@@ -123,6 +123,7 @@ export const customerInput = z.object({
   address: z.string().trim().max(300).optional().nullable(),
   city: z.string().trim().max(100).optional().nullable(),
   rebookMonths: z.coerce.number().int().min(1).max(36).optional().nullable(),
+  rebookOptOut: z.boolean().optional(),
   notes: z.string().max(5000).optional().nullable(),
 });
 export type CustomerInput = z.infer<typeof customerInput>;
@@ -138,6 +139,6 @@ export async function createCustomer(input: CustomerInput) {
 export async function updateCustomer(id: string, input: Partial<CustomerInput>) {
   const c = await db.customer.findUniqueOrThrow({ where: { id } });
   const data = blankToNull(customerInput.partial().parse(input));
-  const allowed = c.source === "HOUSECALL_PRO" ? { rebookMonths: data.rebookMonths, notes: data.notes } : data;
+  const allowed = c.source === "HOUSECALL_PRO" ? { rebookMonths: data.rebookMonths, rebookOptOut: data.rebookOptOut, notes: data.notes } : data;
   return db.customer.update({ where: { id }, data: Object.fromEntries(Object.entries(allowed).filter(([, v]) => v !== undefined)) });
 }

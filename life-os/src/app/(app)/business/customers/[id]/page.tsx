@@ -37,7 +37,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
             {c.email && <a href={`mailto:${c.email}`} className="flex items-center gap-2 [overflow-wrap:anywhere] hover:underline"><Mail className="size-4 shrink-0 text-muted-foreground" />{c.email}</a>}
             {c.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(c.address)}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:underline"><MapPin className="size-4 shrink-0 text-muted-foreground" />{c.address}</a>}
             {!c.phone && !c.email && !c.address && <p className="text-muted-foreground">No contact details.</p>}
-            <CustomerEditor id={c.id} rebookMonths={c.rebookMonths} notes={c.notes ?? ""} />
+            <CustomerEditor id={c.id} rebookMonths={c.rebookMonths} rebookOptOut={c.rebookOptOut} notes={c.notes ?? ""} />
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">

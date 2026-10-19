@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +8,7 @@ import { useAction } from "@/components/ui/use-action";
 import { updateCustomerAction } from "@/app/(app)/business/actions";
 
 /** Life OS–owned fields (never overwritten by Housecall Pro sync). */
-export function CustomerEditor({ id, rebookMonths, notes: initialNotes }: { id: string; rebookMonths: number | null; notes: string }) {
+export function CustomerEditor({ id, rebookMonths, rebookOptOut, notes: initialNotes }: { id: string; rebookMonths: number | null; rebookOptOut: boolean; notes: string }) {
   const { run } = useAction();
   const [notes, setNotes] = useState(initialNotes);
   return (
@@ -20,6 +21,9 @@ export function CustomerEditor({ id, rebookMonths, notes: initialNotes }: { id: 
             <option key={m} value={m}>{m} months</option>
           ))}
         </NativeSelect>
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox defaultChecked={rebookOptOut} onCheckedChange={(v) => run(() => updateCustomerAction(id, { rebookOptOut: v === true }), { success: v === true ? "Won't suggest re-booking" : "Re-booking suggestions on" })} aria-label="Don't suggest re-booking" /> Don&apos;t suggest re-booking
+        </label>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="cnotes">Notes</Label>

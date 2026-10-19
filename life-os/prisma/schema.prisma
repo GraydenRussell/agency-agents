@@ -74,24 +74,24 @@ enum GoalStatus {
 }
 
 model Goal {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  level       GoalLevel
-  area        Area
-  status      GoalStatus @default(ACTIVE)
-  periodStart DateTime   @db.Date
-  periodEnd   DateTime   @db.Date
+  id           String     @id @default(cuid())
+  title        String
+  description  String?
+  level        GoalLevel
+  area         Area
+  status       GoalStatus @default(ACTIVE)
+  periodStart  DateTime   @db.Date
+  periodEnd    DateTime   @db.Date
   /// Optional numeric target (e.g. revenue). When set, progress = currentValue / targetValue.
-  targetValue Float?
+  targetValue  Float?
   currentValue Float?
-  unit        String?
-  parentId    String?
-  parent      Goal?      @relation("GoalTree", fields: [parentId], references: [id], onDelete: SetNull)
-  children    Goal[]     @relation("GoalTree")
-  tasks       Task[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  unit         String?
+  parentId     String?
+  parent       Goal?      @relation("GoalTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Goal[]     @relation("GoalTree")
+  tasks        Task[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@index([level, periodStart])
 }
@@ -104,34 +104,34 @@ enum TaskStatus {
 }
 
 model Task {
-  id                 String     @id @default(cuid())
+  id                 String          @id @default(cuid())
   title              String
   notes              String?
-  status             TaskStatus @default(TODO)
+  status             TaskStatus      @default(TODO)
   /// 1 = urgent … 4 = low
-  priority           Int        @default(3)
-  area               Area       @default(PERSONAL)
+  priority           Int             @default(3)
+  area               Area            @default(PERSONAL)
   dueAt              DateTime?
   scheduledStart     DateTime?
   scheduledEnd       DateTime?
   /// Phoenix-local date (YYYY-MM-DD) this task is pinned as a Top-3 priority for.
   top3Date           String?
   estimateMinutes    Int?
-  sortOrder          Float      @default(0)
+  sortOrder          Float           @default(0)
   completedAt        DateTime?
   /// RFC 5545 RRULE (without DTSTART); the template task holds it.
   recurrenceRule     String?
   recurrenceParentId String?
-  recurrenceParent   Task?      @relation("TaskRecurrence", fields: [recurrenceParentId], references: [id], onDelete: SetNull)
-  recurrences        Task[]     @relation("TaskRecurrence")
+  recurrenceParent   Task?           @relation("TaskRecurrence", fields: [recurrenceParentId], references: [id], onDelete: SetNull)
+  recurrences        Task[]          @relation("TaskRecurrence")
   parentId           String?
-  parent             Task?      @relation("Subtasks", fields: [parentId], references: [id], onDelete: Cascade)
-  subtasks           Task[]     @relation("Subtasks")
+  parent             Task?           @relation("Subtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks           Task[]          @relation("Subtasks")
   goalId             String?
-  goal               Goal?      @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  goal               Goal?           @relation(fields: [goalId], references: [id], onDelete: SetNull)
   events             CalendarEvent[]
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
   deletedAt          DateTime?
 
   @@index([status, dueAt])
@@ -301,50 +301,50 @@ enum EmailCategory {
 }
 
 model EmailThread {
-  id             String         @id @default(cuid())
-  gmailThreadId  String         @unique
-  subject        String
-  fromName       String?
-  fromEmail      String
-  snippet        String?
-  lastMessageAt  DateTime
-  labels         String[]
-  unread         Boolean        @default(true)
-  inInbox        Boolean        @default(true)
-  category       EmailCategory?
+  id            String         @id @default(cuid())
+  gmailThreadId String         @unique
+  subject       String
+  fromName      String?
+  fromEmail     String
+  snippet       String?
+  lastMessageAt DateTime
+  labels        String[]
+  unread        Boolean        @default(true)
+  inInbox       Boolean        @default(true)
+  category      EmailCategory?
   /// 0–100, higher = more important
-  priority       Int?
-  summary        String?
-  needsReply     Boolean        @default(false)
-  triagedAt      DateTime?
-  snoozedUntil   DateTime?
+  priority      Int?
+  summary       String?
+  needsReply    Boolean        @default(false)
+  triagedAt     DateTime?
+  snoozedUntil  DateTime?
   /// When a high-priority alert was sent for the latest message (dedupes notifications).
-  notifiedAt     DateTime?
-  historyId      String?
-  messages       EmailMessage[]
-  drafts         EmailDraft[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  notifiedAt    DateTime?
+  historyId     String?
+  messages      EmailMessage[]
+  drafts        EmailDraft[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([inInbox, lastMessageAt])
   @@index([needsReply])
 }
 
 model EmailMessage {
-  id             String      @id @default(cuid())
-  gmailMessageId String      @unique
-  threadId       String
-  thread         EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  fromName       String?
-  fromEmail      String
-  to             String[]
-  cc             String[]
-  date           DateTime
-  subject        String
-  bodyText       String
+  id              String      @id @default(cuid())
+  gmailMessageId  String      @unique
+  threadId        String
+  thread          EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  fromName        String?
+  fromEmail       String
+  to              String[]
+  cc              String[]
+  date            DateTime
+  subject         String
+  bodyText        String
   /// RFC 2822 Message-ID header, used for In-Reply-To when replying.
   messageIdHeader String?
-  isFromMe       Boolean     @default(false)
+  isFromMe        Boolean     @default(false)
 }
 
 enum DraftStatus {
@@ -369,12 +369,12 @@ model EmailDraft {
 // ─────────────────────────── Assistant ──────────────────────────
 
 model Conversation {
-  id        String        @id @default(cuid())
+  id        String            @id @default(cuid())
   title     String?
   messages  ChatMessage[]
   approvals PendingApproval[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 }
 
 enum ChatRole {
@@ -594,11 +594,11 @@ model Workout {
 }
 
 model SleepLog {
-  id        String @id @default(cuid())
-  date      String @unique
-  hours     Float
-  quality   Int?
-  notes     String?
+  id      String  @id @default(cuid())
+  date    String  @unique
+  hours   Float
+  quality Int?
+  notes   String?
 }
 
 model WaterLog {
@@ -720,27 +720,33 @@ enum RecordSource {
 }
 
 model Customer {
-  id           String       @id @default(cuid())
-  source       RecordSource @default(MANUAL)
+  id                 String       @id @default(cuid())
+  source             RecordSource @default(MANUAL)
   /// Housecall Pro customer id
-  externalId   String?      @unique
-  name         String
-  company      String?
-  phone        String?
-  email        String?
-  address      String?
-  city         String?
-  lat          Float?
-  lng          Float?
-  tags         String[]
+  externalId         String?      @unique
+  name               String
+  company            String?
+  phone              String?
+  email              String?
+  address            String?
+  city               String?
+  lat                Float?
+  lng                Float?
+  tags               String[]
   /// Months between cleanings for re-booking (3, 6, 12). Null = the business default.
-  rebookMonths Int?
-  notes        String?
-  jobs         Job[]
-  quotes       Quote[]
-  leads        Lead[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  rebookMonths       Int?
+  /// Last time a re-book text went out (so it isn't sent again for a while)
+  rebookTextedAt     DateTime?
+  /// Phoenix YYYY-MM-DD; hidden from the re-book list until then
+  rebookSnoozedUntil String?
+  /// Never suggest re-booking (moved, unhappy, one-time job)
+  rebookOptOut       Boolean      @default(false)
+  notes              String?
+  jobs               Job[]
+  quotes             Quote[]
+  leads              Lead[]
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
   @@index([name])
 }

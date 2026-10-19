@@ -28,6 +28,8 @@ export const SETTINGS = {
   "business.pricing": { schema: pricingRulesSchema, default: DEFAULT_PRICING },
   /** Cities you serve; leads outside them score lower. */
   "business.serviceArea": { schema: z.array(z.string().min(1)).max(50), default: ["Chandler", "Gilbert", "Mesa", "Tempe", "Queen Creek", "Sun Lakes", "Ahwatukee", "San Tan Valley", "Phoenix", "Scottsdale"] },
+  /** Months between cleanings when a customer has no interval of their own. */
+  "business.rebookDefaultMonths": { schema: z.number().int().min(1).max(36), default: 6 },
   /** Nudge me when a new lead has had no reply for this long. */
   "leads.nudgeMinutes": { schema: z.number().int().min(5).max(24 * 60), default: 15 },
   /** Shown on quote PDFs and customer messages. */

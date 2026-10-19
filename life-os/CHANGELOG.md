@@ -2,6 +2,17 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [11.4] Customer re-booking — 2026-10-19
+### Added
+- **Business → Re-book**: customers due for their next cleaning, grouped Overdue / Due now (2 weeks) / Coming up
+  (~6 weeks), from their last completed job and their interval (per customer, or the default of 6 months).
+  Customers with work already booked are left off.
+- Each row has a drafted text (“It's been about 7 months since we cleaned your windows (Mar 19, 2026)…”) you can
+  edit and send (pressing Send is the approval; logged), snooze 30 days, or “don't suggest again”. A customer you
+  texted stays off the list for 30 days. The customer page has a “Don't suggest re-booking” switch.
+- Monday 7 AM digest: “N customers due for a cleaning” with the repeat-work value (only when someone is due).
+- Assistant: `rebook_list` and `rebook_text`, which always waits in Approvals (toggle “Text customers to re-book”, OFF).
+
 ## [11.3] Lead inbox — 2026-10-19
 ### Added
 - **Business → Leads**: one queue for website forms, Meta lead ads, lead emails, and calls/referrals you add by

@@ -6,6 +6,7 @@ import { pricingRulesSchema, type PricingRules } from "@/lib/business/pricing";
 import * as customers from "@/lib/services/customers";
 import * as leads from "@/lib/services/leads";
 import * as quotes from "@/lib/services/quotes";
+import * as rebook from "@/lib/services/rebook";
 import { setSetting, type SettingValue } from "@/lib/services/settings";
 
 const refresh = () => revalidatePath("/business", "layout");
@@ -109,5 +110,30 @@ export async function replyLeadAction(id: string, via: leads.LeadChannel, body: 
     await db.activityLog.create({ data: { actor: "USER", actionType: "lead.reply", summary, input: { leadId: id, via, body } } });
     refresh();
     return summary;
+  });
+}
+
+/** Pressing Send after reading the text is the approval. */
+export async function sendRebookAction(customerId: string, body: string) {
+  return runAction(async () => {
+    const r = await rebook.sendRebookText(customerId, body);
+    const summary = `Sent re-book text to ${r.name} (${r.to})`;
+    await db.activityLog.create({ data: { actor: "USER", actionType: "rebook.text", summary, input: { customerId, body } } });
+    refresh();
+    return summary;
+  });
+}
+export async function snoozeRebookAction(customerId: string, days: number) {
+  return runAction(async () => {
+    await rebook.snoozeRebook(customerId, days);
+    refresh();
+    return undefined;
+  });
+}
+export async function rebookOptOutAction(customerId: string, optOut: boolean) {
+  return runAction(async () => {
+    await rebook.setRebookOptOut(customerId, optOut);
+    refresh();
+    return undefined;
   });
 }
