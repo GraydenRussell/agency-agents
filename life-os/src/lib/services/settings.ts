@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
+import { DEFAULT_PRICING, pricingRulesSchema } from "@/lib/business/pricing";
 
 /**
  * Typed settings stored as JSON in the Setting table. Every key has a schema + default, so
@@ -22,6 +23,13 @@ export const SETTINGS = {
   "business.quickLinks": {
     schema: z.array(z.object({ label: z.string(), url: z.string().url() })),
     default: [] as Array<{ label: string; url: string }>,
+  },
+  /** Quote builder prices (Business → Quotes → Pricing). */
+  "business.pricing": { schema: pricingRulesSchema, default: DEFAULT_PRICING },
+  /** Shown on quote PDFs and customer messages. */
+  "business.profile": {
+    schema: z.object({ name: z.string().min(1).max(120), legalName: z.string().max(120), city: z.string().max(120), phone: z.string().max(40), email: z.string().max(200), website: z.string().max(200) }),
+    default: { name: "Rapid Window Cleaning", legalName: "AZ Rapid Washers LLC", city: "Chandler, AZ", phone: "", email: "", website: "" },
   },
 } as const;
 

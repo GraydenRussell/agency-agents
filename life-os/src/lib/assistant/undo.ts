@@ -34,6 +34,11 @@ const HANDLERS: Record<string, Handler> = {
       create: { key: s(p.key), value: s(p.value), kind: p.kind as MemoryKind, source: p.source ? s(p.source) : null },
       update: { value: s(p.value), kind: p.kind as MemoryKind },
     }),
+  "quote.delete": async (p) => {
+    // A sent quote's link is already in the customer's hands; don't pull it out from under them.
+    const removed = await db.quote.deleteMany({ where: { id: s(p.id), status: "DRAFT", sentAt: null } });
+    if (removed.count === 0) throw new Error("This quote was already sent or decided, so it can't be undone. Mark it lost instead.");
+  },
   "project.revert": (p) => db.project.update({ where: { id: s(p.id) }, data: p.data as object }),
 };
 

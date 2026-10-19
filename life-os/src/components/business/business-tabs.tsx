@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { href: "/business", label: "Overview" },
   { href: "/business/customers", label: "Customers" },
+  { href: "/business/quotes", label: "Quotes" },
 ];
 
 export function BusinessTabs() {

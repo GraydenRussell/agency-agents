@@ -4,7 +4,7 @@ import { gotoReady } from "./helpers";
 test.describe.configure({ mode: "serial" });
 
 test("quick capture creates a task that appears on the Tasks page", async ({ page, isMobile }) => {
-  await page.goto("/today");
+  await gotoReady(page, "/today");
   if (isMobile) await page.getByRole("button", { name: "Quick capture" }).click();
   else await page.getByRole("button", { name: /Capture anything/ }).first().click();
   const box = page.getByLabel("Capture text");
@@ -17,7 +17,7 @@ test("quick capture creates a task that appears on the Tasks page", async ({ pag
 });
 
 test("completing a Top 3 task updates Today with undo", async ({ page }) => {
-  await page.goto("/today");
+  await gotoReady(page, "/today");
   const row = page.getByTestId("task-row").filter({ hasText: "Approve Meta ad creative" }).first();
   await row.getByRole("checkbox").click();
   await expect(page.getByText("Done", { exact: true })).toBeVisible();
@@ -45,7 +45,7 @@ test("task sheet edits persist", async ({ page }, info) => {
 
 test("kanban drag moves a card to Doing", async ({ page, isMobile }) => {
   test.skip(isMobile, "drag tested on desktop");
-  await page.goto("/tasks?view=board");
+  await gotoReady(page, "/tasks?view=board");
   const card = page.getByRole("region", { name: "To do" }).getByText("Read: The E-Myth Revisited");
   const doing = page.getByRole("region", { name: "Doing" });
   await card.scrollIntoViewIfNeeded();

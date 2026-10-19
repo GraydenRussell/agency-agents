@@ -737,6 +737,7 @@ model Customer {
   rebookMonths Int?
   notes        String?
   jobs         Job[]
+  quotes       Quote[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -778,4 +779,41 @@ model Job {
   @@index([scheduledStart])
   @@index([customerId])
   @@index([status])
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+}
+
+model Quote {
+  id         String      @id @default(cuid())
+  /// Human-facing quote number (#1001, #1002, …)
+  number     Int         @unique @default(autoincrement())
+  customerId String?
+  customer   Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  name       String
+  phone      String?
+  email      String?
+  address    String?
+  /// Counts entered in the builder (panes, stories, screens, …)
+  inputs     Json
+  /// Priced line items at the time of quoting (prices don't change if rules change later)
+  lines      Json
+  subtotal   Float
+  total      Float
+  status     QuoteStatus @default(DRAFT)
+  notes      String?
+  /// Phoenix-local YYYY-MM-DD
+  validUntil String
+  sentAt     DateTime?
+  sentVia    String[]
+  decidedAt  DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([status, createdAt])
+  @@index([customerId])
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, FileText, Mail, MapPin, Phone } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shell/page-header";
@@ -22,7 +23,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
       <Link href="/business/customers" className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" /> Customers
       </Link>
-      <PageHeader title={c.name} description={<span className="flex flex-wrap items-center gap-2">{c.company && c.company !== c.name ? c.company : null}{c.source === "HOUSECALL_PRO" ? <Badge variant="outline">Housecall Pro</Badge> : <Badge variant="outline">Added by hand</Badge>}{c.tags.map((t) => <Badge key={t} variant="outline">{t}</Badge>)}</span>} />
+      <PageHeader title={c.name} description={<span className="flex flex-wrap items-center gap-2">{c.company && c.company !== c.name ? c.company : null}{c.source === "HOUSECALL_PRO" ? <Badge variant="outline">Housecall Pro</Badge> : <Badge variant="outline">Added by hand</Badge>}{c.tags.map((t) => <Badge key={t} variant="outline">{t}</Badge>)}</span>} actions={<Button asChild><Link href={`/business/quotes/new?customer=${c.id}`}><FileText /> New quote</Link></Button>} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[["Lifetime value", formatUsd(c.stats.lifetimeValue)], ["Completed jobs", String(c.stats.jobCount)], ["Last cleaned", c.stats.lastCompletedAt ? formatLocalDate(localDateOf(c.stats.lastCompletedAt)) : "–"], ["Owed", formatUsd(c.stats.balanceDue)]].map(([l, v]) => (
           <Card key={l}><CardContent className="p-4"><p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{l}</p><p className="mt-1 font-display text-2xl">{v}</p></CardContent></Card>

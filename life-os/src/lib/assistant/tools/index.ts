@@ -3,10 +3,11 @@ import type { ToolDef } from "../registry";
 import { calendarTools } from "./calendar";
 import { emailTools } from "./email";
 import { businessTools, memoryTools, noteTools, projectTools, reminderTools } from "./misc";
+import { quoteTools } from "./quotes";
 import { taskTools } from "./tasks";
 
 /** Order is stable (prompt caching: the tool list is part of the cached prefix). */
-export const TOOLS: ToolDef[] = [...emailTools, ...calendarTools, ...taskTools, ...reminderTools, ...noteTools, ...projectTools, ...businessTools, ...memoryTools] as ToolDef[];
+export const TOOLS: ToolDef[] = [...emailTools, ...calendarTools, ...taskTools, ...reminderTools, ...noteTools, ...projectTools, ...businessTools, ...memoryTools, ...quoteTools] as ToolDef[];
 
 const byName = new Map(TOOLS.map((t) => [t.name, t]));
 

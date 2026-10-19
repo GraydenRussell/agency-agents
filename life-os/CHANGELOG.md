@@ -2,6 +2,28 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [11.2] Quote builder — 2026-10-19
+### Added
+- **Business → Quotes**: build a quote in under a minute. Enter panes (outside / inside), screens, tracks,
+  hard-water panes, solar screens, stories, and a discount; the price updates as you type (line items → story
+  surcharge → discount → minimum charge). Start one from a customer's page and it's prefilled.
+- **Pricing** page: your rates, 2-/3-story surcharges, minimum charge, how long quotes stay valid, and the business
+  details printed on quotes. Starts at placeholder prices ($6/pane, +$4 inside, $3 screens, $2 tracks, $8 hard water,
+  $12 solar screens, +15%/+30% stories, $150 minimum). Old quotes keep the prices they were made with.
+- **Branded PDF** (Azure/Cyan header, line items, total, notes, terms) to preview, download, or send.
+- **Send to customer** by text (summary + private link to the PDF) and/or email (PDF attached through your Gmail).
+  You see and can edit the exact message first; pressing Send is the approval and is logged in the Activity Log.
+- Customer link `/q/<token>`: no login needed, the token is a signature of that one quote (can't be guessed or
+  changed), not indexed by search engines. Deleting a quote kills its link.
+- Quote statuses (draft / sent / won / lost), expiry badges, open pipeline value and close rate.
+- Assistant tools: `customer_search`, `quote_create` (draft only, undoable while unsent), and `quote_send`, which
+  always waits in **Approvals** (new auto-approve toggle “Send quotes to customers”, default OFF).
+### Changed
+- Gmail messages can now carry attachments (multipart MIME).
+### Needs from you (to send for real)
+- Twilio (already on the Setup page) for texts; Google connected for email.
+- `APP_URL` must be your public https address, or the link in a quote text won't open for the customer.
+
 ## [11.1] Business data foundation: Housecall Pro customers + jobs — 2026-10-18
 ### Added
 - **Customer** and **Job** tables (migration `business_customers_jobs`) with Housecall Pro ids, money owed, crew,

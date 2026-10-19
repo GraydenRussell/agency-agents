@@ -159,19 +159,31 @@ function encodeHeader(v: string): string {
 const fmt = (a: Address) => (a.name ? `${encodeHeader(a.name)} <${a.email}>` : a.email);
 
 /** Builds a base64url RFC 2822 message (plain text) that threads correctly in Gmail. */
-export function buildMime(opts: { from?: string; to: Address[]; cc?: Address[]; subject: string; body: string; inReplyTo?: string | null; references?: string | null }): string {
+export type MimeAttachment = { filename: string; contentType: string; data: Uint8Array };
+
+export function buildMime(opts: { from?: string; to: Address[]; cc?: Address[]; subject: string; body: string; inReplyTo?: string | null; references?: string | null; attachments?: MimeAttachment[] }): string {
+  const b64 = (buf: Buffer) => buf.toString("base64").replace(/(.{76})/g, "$1\r\n");
   const headers = [
     ...(opts.from ? [`From: ${opts.from}`] : []),
     `To: ${opts.to.map(fmt).join(", ")}`,
     ...(opts.cc?.length ? [`Cc: ${opts.cc.map(fmt).join(", ")}`] : []),
     `Subject: ${encodeHeader(opts.subject)}`,
     "MIME-Version: 1.0",
-    'Content-Type: text/plain; charset="UTF-8"',
-    "Content-Transfer-Encoding: base64",
     ...(opts.inReplyTo ? [`In-Reply-To: ${opts.inReplyTo}`, `References: ${[opts.references, opts.inReplyTo].filter(Boolean).join(" ")}`] : []),
   ];
-  const body = Buffer.from(opts.body, "utf8").toString("base64").replace(/(.{76})/g, "$1\r\n");
-  return Buffer.from(`${headers.join("\r\n")}\r\n\r\n${body}`, "utf8").toString("base64url");
+  const text = b64(Buffer.from(opts.body, "utf8"));
+  if (!opts.attachments?.length) {
+    const h = [...headers, 'Content-Type: text/plain; charset="UTF-8"', "Content-Transfer-Encoding: base64"];
+    return Buffer.from(`${h.join("\r\n")}\r\n\r\n${text}`, "utf8").toString("base64url");
+  }
+  const boundary = `lifeos_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+  const safeName = (n: string) => n.replace(/["\\\r\n]/g, "_");
+  const parts = [
+    `--${boundary}\r\nContent-Type: text/plain; charset="UTF-8"\r\nContent-Transfer-Encoding: base64\r\n\r\n${text}`,
+    ...opts.attachments.map((a) => `--${boundary}\r\nContent-Type: ${a.contentType}; name="${safeName(a.filename)}"\r\nContent-Disposition: attachment; filename="${safeName(a.filename)}"\r\nContent-Transfer-Encoding: base64\r\n\r\n${b64(Buffer.from(a.data))}`),
+  ];
+  const h = [...headers, `Content-Type: multipart/mixed; boundary="${boundary}"`];
+  return Buffer.from(`${h.join("\r\n")}\r\n\r\n${parts.join("\r\n")}\r\n--${boundary}--`, "utf8").toString("base64url");
 }
 
 export function replySubject(subject: string): string {

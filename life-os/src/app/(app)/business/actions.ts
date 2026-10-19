@@ -1,7 +1,11 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { runAction } from "@/lib/actions";
+import { db } from "@/lib/db";
+import { pricingRulesSchema, type PricingRules } from "@/lib/business/pricing";
 import * as customers from "@/lib/services/customers";
+import * as quotes from "@/lib/services/quotes";
+import { setSetting, type SettingValue } from "@/lib/services/settings";
 
 const refresh = () => revalidatePath("/business", "layout");
 
@@ -22,6 +26,53 @@ export async function createCustomerAction(input: customers.CustomerInput) {
 export async function updateCustomerAction(id: string, input: Partial<customers.CustomerInput>) {
   return runAction(async () => {
     await customers.updateCustomer(id, input);
+    refresh();
+    return undefined;
+  });
+}
+
+export async function createQuoteAction(input: quotes.QuoteInput) {
+  return runAction(async () => {
+    const q = await quotes.createQuote(input);
+    refresh();
+    return q.id;
+  });
+}
+export async function updateQuoteAction(id: string, input: Partial<quotes.QuoteInput>) {
+  return runAction(async () => {
+    const q = await quotes.updateQuote(id, input);
+    refresh();
+    return q.id;
+  });
+}
+export async function setQuoteStatusAction(id: string, status: "ACCEPTED" | "DECLINED" | "DRAFT") {
+  return runAction(async () => {
+    const q = await quotes.setQuoteStatus(id, status);
+    await db.activityLog.create({ data: { actor: "USER", actionType: "quote.status", summary: `Marked quote #${q.number} ${status.toLowerCase()}`, input: { quoteId: id, status } } });
+    refresh();
+    return undefined;
+  });
+}
+/** Pressing Send after reviewing the message is the approval (same rule as inbox replies). */
+export async function sendQuoteAction(id: string, via: quotes.QuoteChannel[], custom: { sms?: string; email?: string } = {}) {
+  return runAction(async () => {
+    const r = await quotes.sendQuote(id, via, custom);
+    const summary = `Sent quote #${r.number} (${quotes.usd(r.total)}) by ${r.sent.map((s) => `${s.channel === "SMS" ? "text" : "email"} to ${s.to}`).join(" and ")}`;
+    await db.activityLog.create({ data: { actor: "USER", actionType: "quote.send", summary, input: { quoteId: id, via }, result: r } });
+    refresh();
+    return summary;
+  });
+}
+export async function savePricingAction(rules: PricingRules) {
+  return runAction(async () => {
+    await setSetting("business.pricing", pricingRulesSchema.parse(rules));
+    refresh();
+    return undefined;
+  });
+}
+export async function saveBusinessProfileAction(profile: SettingValue<"business.profile">) {
+  return runAction(async () => {
+    await setSetting("business.profile", profile);
     refresh();
     return undefined;
   });

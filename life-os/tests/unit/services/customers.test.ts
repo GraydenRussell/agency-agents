@@ -92,7 +92,8 @@ describe("customer sync + reads", () => {
     const patel = rows.find((r) => r.name === "Priya Patel")!;
     expect(patel.jobCount).toBe(1);
     expect(patel.lifetimeValue).toBe(385);
-    expect(patel.nextScheduledAt).not.toBeNull();
+    expect(patel.lastCompletedAt).not.toBeNull();
+    expect(rows.find((r) => r.name === "Ocotillo Lakes Office Park")!.nextScheduledAt).not.toBeNull(); // job in 2 days, so time-of-day independent
     expect(rows.find((r) => r.name === "Jennifer Alvarez")!.balanceDue).toBe(410);
     expect((await listCustomers({ q: "gilbert" })).map((r) => r.name).sort()).toEqual(["Desert Ridge Dental", "Linda Park", "Minh Nguyen"]); // Desert Ridge is on Gilbert Rd
     expect((await listCustomers({ q: "HOA" })).map((r) => r.name)).toEqual(["Sun Lakes HOA"]);
