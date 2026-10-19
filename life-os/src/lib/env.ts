@@ -52,6 +52,10 @@ const schema = z.object({
   ADMIN_DASH_URL: optional,
   LIFE_OS_API_TOKEN: optional,
   HOUSECALL_PRO_API_KEY: optional,
+  LEAD_WEBHOOK_SECRET: optional,
+  META_APP_SECRET: optional,
+  META_VERIFY_TOKEN: optional,
+  META_PAGE_ACCESS_TOKEN: optional,
 
   WEATHER_LAT: z.coerce.number().default(33.3062),
   WEATHER_LON: z.coerce.number().default(-111.8413),

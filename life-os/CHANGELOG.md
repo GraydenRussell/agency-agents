@@ -2,6 +2,34 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [11.3] Lead inbox — 2026-10-19
+### Added
+- **Business → Leads**: one queue for website forms, Meta lead ads, lead emails, and calls/referrals you add by
+  hand. Unanswered leads sort to the top with a “waiting 23 min” badge (red past your threshold); the Leads tab
+  shows how many are waiting.
+- Every new lead is **scored 0–100 with a one-line reason** and gets a **drafted first text** in your voice
+  (Claude when available; rules otherwise: phone number, service area, commercial/recurring, urgency, job size).
+  You get a “New lead” alert right away (push/SMS/email, quiet hours respected).
+- **Nudges** if nobody has replied: at 15 min, 1 h, and 4 h (Settings key `leads.nudgeMinutes`), then it stops.
+  A nudge held back by quiet hours goes out when they end.
+- Lead page: what they said, why the score, edit-and-send reply by text or email (pressing Send is the
+  approval; logged), “I called them”, Won/Lost, Re-score, and **Make a quote** (prefilled; the lead moves to
+  quoted, then won/lost with the quote).
+- **Website webhook** `POST /api/leads/webhook`: JSON, form-encoded, or multipart from any form builder; auth by
+  `Authorization: Bearer`, an HMAC signature header, or `?key=` for plain HTML forms (with `?redirect=` to your
+  thank-you page). Common field names are matched; extra fields are kept in the message; `_gotcha` honeypot and
+  obvious pitches are dropped; repeat submissions and same-person follow-ups within 24 h merge into one lead;
+  known customers are linked by phone/email.
+- **Meta Lead Ads** `GET/POST /api/leads/meta`: subscription check, `X-Hub-Signature-256` verification, then the
+  form answers are fetched from the Graph API after responding.
+- Emails the triage marks as LEAD become leads automatically (phone number pulled from the body).
+- Assistant: `lead_list`, and `lead_reply`, which always waits in Approvals (toggle “Reply to new leads”, OFF).
+- Setup page items for website forms and Meta; `npm run setup:secrets` now generates LEAD_WEBHOOK_SECRET and
+  META_VERIFY_TOKEN; new `leads` job every 5 minutes.
+### Not possible
+- **Google Business Profile messages**: Google shut down Business Profile chat in July 2024, so there is no
+  message feed to connect. Leads from your listing arrive by phone, website, or email, which this inbox covers.
+
 ## [11.2] Quote builder — 2026-10-19
 ### Added
 - **Business → Quotes**: build a quote in under a minute. Enter panes (outside / inside), screens, tracks,

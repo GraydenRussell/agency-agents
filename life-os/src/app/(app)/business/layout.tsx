@@ -1,9 +1,11 @@
 import { BusinessTabs } from "@/components/business/business-tabs";
+import { leadCounts } from "@/lib/services/leads";
 
-export default function BusinessLayout({ children }: { children: React.ReactNode }) {
+export default async function BusinessLayout({ children }: { children: React.ReactNode }) {
+  const counts = await leadCounts();
   return (
     <>
-      <BusinessTabs />
+      <BusinessTabs unansweredLeads={counts.unanswered} lateLeads={counts.late} />
       {children}
     </>
   );

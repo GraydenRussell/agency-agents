@@ -33,6 +33,7 @@ export default defineConfig({
       DATABASE_URL: process.env.E2E_DATABASE_URL ?? "postgresql://postgres@localhost:5432/lifeos_e2e",
       AUTH_MODE: "dev",
       INTEGRATION_MODE: "mock",
+      LEAD_WEBHOOK_SECRET: "e2e-lead-webhook-secret-123",
     },
   },
 });

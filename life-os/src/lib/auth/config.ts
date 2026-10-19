@@ -14,7 +14,7 @@ export function isAllowedEmail(email: string | null | undefined): boolean {
   return Boolean(allowed) && (email ?? "").trim().toLowerCase() === allowed;
 }
 
-export const PUBLIC_PATHS = ["/login", "/mfa", "/auth", "/api/cron", "/api/health", "/api/projects/local", "/manifest.webmanifest", "/sw.js", "/offline", "/q"];
+export const PUBLIC_PATHS = ["/login", "/mfa", "/auth", "/api/cron", "/api/health", "/api/projects/local", "/manifest.webmanifest", "/sw.js", "/offline", "/q", "/api/leads/webhook", "/api/leads/meta"];
 
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));

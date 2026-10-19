@@ -26,6 +26,10 @@ export const SETTINGS = {
   },
   /** Quote builder prices (Business → Quotes → Pricing). */
   "business.pricing": { schema: pricingRulesSchema, default: DEFAULT_PRICING },
+  /** Cities you serve; leads outside them score lower. */
+  "business.serviceArea": { schema: z.array(z.string().min(1)).max(50), default: ["Chandler", "Gilbert", "Mesa", "Tempe", "Queen Creek", "Sun Lakes", "Ahwatukee", "San Tan Valley", "Phoenix", "Scottsdale"] },
+  /** Nudge me when a new lead has had no reply for this long. */
+  "leads.nudgeMinutes": { schema: z.number().int().min(5).max(24 * 60), default: 15 },
   /** Shown on quote PDFs and customer messages. */
   "business.profile": {
     schema: z.object({ name: z.string().min(1).max(120), legalName: z.string().max(120), city: z.string().max(120), phone: z.string().max(40), email: z.string().max(200), website: z.string().max(200) }),

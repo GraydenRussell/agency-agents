@@ -15,6 +15,7 @@ export const usd = (n: number) => formatUsd(n, { cents: Math.round(n * 100) % 10
 
 export const quoteInput = z.object({
   customerId: z.string().optional().nullable(),
+  leadId: z.string().optional().nullable(),
   name: z.string().trim().min(1, "Customer name is required").max(200),
   phone: z.string().trim().max(40).optional().nullable(),
   email: z.union([z.string().trim().email("That email doesn't look right"), z.literal("")]).optional().nullable(),
@@ -43,9 +44,12 @@ export async function createQuote(raw: QuoteInput): Promise<QuoteView> {
     const c = await db.customer.create({ data: { name: input.name, phone: blank(input.phone), email: blank(input.email), address: blank(input.address), source: "MANUAL", tags: [] } });
     customerId = c.id;
   }
+  const leadId = input.leadId ?? null;
+  if (leadId && !(await db.lead.findUnique({ where: { id: leadId } }))) throw new Error("That lead no longer exists");
   const q = await db.quote.create({
-    data: { customerId, name: input.name, phone: blank(input.phone), email: blank(input.email), address: blank(input.address), notes: blank(input.notes), inputs: json(input.inputs), lines: json(priced.lines), subtotal: priced.subtotal, total: priced.total, validUntil: addDays(today(), rules.validDays) },
+    data: { leadId, customerId, name: input.name, phone: blank(input.phone), email: blank(input.email), address: blank(input.address), notes: blank(input.notes), inputs: json(input.inputs), lines: json(priced.lines), subtotal: priced.subtotal, total: priced.total, validUntil: addDays(today(), rules.validDays) },
   });
+  if (leadId) await db.lead.updateMany({ where: { id: leadId, status: { in: ["NEW", "CONTACTED"] } }, data: { status: "QUOTED", ...(customerId ? { customerId } : {}) } });
   return view(q);
 }
 
@@ -66,8 +70,11 @@ export async function updateQuote(id: string, raw: Partial<QuoteInput>): Promise
   return view(await db.quote.update({ where: { id }, data }));
 }
 
+/** Winning/losing a quote carries over to the lead it came from. */
 export async function setQuoteStatus(id: string, status: "ACCEPTED" | "DECLINED" | "DRAFT"): Promise<QuoteView> {
-  return view(await db.quote.update({ where: { id }, data: { status, decidedAt: status === "DRAFT" ? null : new Date() } }));
+  const q = await db.quote.update({ where: { id }, data: { status, decidedAt: status === "DRAFT" ? null : new Date() } });
+  if (q.leadId) await db.lead.update({ where: { id: q.leadId }, data: { status: status === "ACCEPTED" ? "WON" : status === "DECLINED" ? "LOST" : "QUOTED" } });
+  return view(q);
 }
 
 export async function getQuote(id: string): Promise<QuoteView | null> {

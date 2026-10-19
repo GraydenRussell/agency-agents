@@ -271,6 +271,42 @@ export const SETUP_ITEMS: SetupItem[] = [
       }),
   },
   {
+    id: "leads",
+    name: "Lead inbox: website forms",
+    powers: "Website and form-builder leads land in Business → Leads, get scored with a drafted reply, and nudge you if unanswered.",
+    required: false,
+    vars: ["LEAD_WEBHOOK_SECRET"],
+    steps: [
+      "`npm run setup:secrets` generates LEAD_WEBHOOK_SECRET (or use `openssl rand -hex 24`).",
+      "Point your form at POST {APP_URL}/api/leads/webhook with header `Authorization: Bearer <secret>` (Zapier, Make, Webflow, Wix, WordPress plugins). Plain HTML forms can use {APP_URL}/api/leads/webhook?key=<secret>&redirect=https://your-site/thanks.",
+      "Fields are matched by common names (name, phone, email, address, message…); anything else is kept in the message. Add a hidden `_gotcha` field to trap bots.",
+      "Google Business Profile chat no longer exists (Google shut it down in July 2024). Leads from your listing arrive by phone, website, or email, which this inbox already covers.",
+    ],
+    validate: (env) => (has(env, "LEAD_WEBHOOK_SECRET") && env.LEAD_WEBHOOK_SECRET!.length < 16 ? ["LEAD_WEBHOOK_SECRET should be at least 16 characters"] : []),
+  },
+  {
+    id: "meta",
+    name: "Meta Lead Ads",
+    powers: "Facebook/Instagram lead-form submissions arrive in the lead inbox within seconds.",
+    required: false,
+    vars: ["META_APP_SECRET", "META_VERIFY_TOKEN", "META_PAGE_ACCESS_TOKEN"],
+    steps: [
+      "developers.facebook.com → My Apps → Create app (Business). Add the Webhooks product → Page → subscribe to `leadgen`.",
+      "Callback URL: {APP_URL}/api/leads/meta. Verify token: META_VERIFY_TOKEN (from `npm run setup:secrets`).",
+      "META_APP_SECRET = App settings → Basic → App secret.",
+      "META_PAGE_ACCESS_TOKEN = a long-lived Page token with leads_retrieval + pages_manage_metadata (Business Settings → System users is the durable way). Subscribe the Page to the app.",
+      "Test with Meta's Lead Ads Testing Tool; the lead should show up in Business → Leads.",
+    ],
+    link: { label: "Lead Ads webhooks guide", href: "https://developers.facebook.com/docs/marketing-api/guides/lead-ads/retrieving" },
+    test: (env, f = fetch) =>
+      guard(async () => {
+        const res = await timed(f, `https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${encodeURIComponent(env.META_PAGE_ACCESS_TOKEN ?? "")}`, {});
+        if (!res.ok) return httpFail("Meta", res);
+        const me = (await res.json()) as { name?: string };
+        return { ok: true, detail: `Page token works (${me.name ?? "?"})` };
+      }),
+  },
+  {
     id: "golive",
     name: "Go live",
     powers: "Switches every integration from sample data to the real services above.",

@@ -33,6 +33,10 @@ function fullEnv(): Env {
     VERCEL_TOKEN: "vercel_secret",
     ADMIN_DASH_URL: "https://dash.example.org",
     HOUSECALL_PRO_API_KEY: "hcp_live_example",
+    LEAD_WEBHOOK_SECRET: "lead_webhook_secret_0123456789",
+    META_APP_SECRET: "meta_app_secret",
+    META_VERIFY_TOKEN: "meta_verify_token",
+    META_PAGE_ACCESS_TOKEN: "EAAmetapagetoken",
     INTEGRATION_MODE: "live",
   };
 }

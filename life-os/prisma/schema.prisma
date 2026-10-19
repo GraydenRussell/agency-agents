@@ -738,6 +738,7 @@ model Customer {
   notes        String?
   jobs         Job[]
   quotes       Quote[]
+  leads        Lead[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -790,6 +791,8 @@ enum QuoteStatus {
 
 model Quote {
   id         String      @id @default(cuid())
+  leadId     String?
+  lead       Lead?       @relation(fields: [leadId], references: [id], onDelete: SetNull)
   /// Human-facing quote number (#1001, #1002, …)
   number     Int         @unique @default(autoincrement())
   customerId String?
@@ -816,4 +819,56 @@ model Quote {
 
   @@index([status, createdAt])
   @@index([customerId])
+  @@index([leadId])
+}
+
+enum LeadSource {
+  WEBSITE
+  META
+  EMAIL
+  PHONE
+  REFERRAL
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  WON
+  LOST
+}
+
+model Lead {
+  id              String     @id @default(cuid())
+  source          LeadSource
+  /// Id in the source system (Meta leadgen id, Gmail thread id, form submission id)
+  externalId      String?
+  /// Free-text detail: which form, ad, or email sender it came from
+  sourceDetail    String?
+  name            String
+  phone           String?
+  email           String?
+  address         String?
+  message         String?
+  status          LeadStatus @default(NEW)
+  /// 0–100: how likely and how valuable (AI, or rules when AI is off)
+  score           Int?
+  scoreReason     String?
+  scoredBy        String?
+  draftReply      String?
+  customerId      String?
+  customer        Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  quotes          Quote[]
+  receivedAt      DateTime   @default(now())
+  firstResponseAt DateTime?
+  /// When I was told about it (the "new lead" alert)
+  alertedAt       DateTime?
+  nudgeCount      Int        @default(0)
+  lastNudgedAt    DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([source, externalId])
+  @@index([status, receivedAt])
 }

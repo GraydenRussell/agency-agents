@@ -223,6 +223,17 @@ async function seedSettingsAndMemory() {
   });
 }
 
+async function seedLeads() {
+  const ago = (min: number) => new Date(Date.now() - min * 60_000);
+  await db.lead.createMany({
+    data: [
+      { source: "WEBSITE", sourceDetail: "Contact page", name: "Jennifer Alvarez", phone: "480-555-0185", email: "jen.alvarez@example.com", address: "980 N Alma School Rd, Chandler", message: "Hi! We're selling our house and have an open house next weekend. 2 story, maybe 30 windows, need inside and out plus screens. Can you come this week?", score: 88, scoredBy: "rules", scoreReason: "has a phone number, in Chandler, wants it soon, bigger job.", draftReply: "Hi Jennifer, this is Grayden with Rapid Window Cleaning. Congrats on the sale! We can absolutely get you sparkling before the open house. Does Thursday or Friday morning work? For ~30 windows inside and out with screens on a 2-story, I'll send a firm quote right after.", receivedAt: ago(22), alertedAt: ago(22) },
+      { source: "META", sourceDetail: "Fall window special", name: "Ashley Romero", phone: "+14805550147", email: "ashley.r@example.com", message: "City: Gilbert\nhow_many_windows?: about 25, two story", score: 74, scoredBy: "rules", scoreReason: "has a phone number, in Gilbert, bigger job.", draftReply: "Hi Ashley, this is Grayden with Rapid Window Cleaning. Thanks for grabbing the fall special! For about 25 windows on a 2-story, do you want inside and out, and any screens or hard-water spots? I can get you on the schedule this week.", receivedAt: ago(6), alertedAt: ago(6) },
+      { source: "EMAIL", sourceDetail: "manager@mesaverdehoa.example", name: "Mesa Verde HOA", email: "manager@mesaverdehoa.example", message: "Requesting a bid for quarterly exterior window cleaning of our clubhouse and two pool buildings.", status: "CONTACTED", score: 81, scoredBy: "rules", scoreReason: "sounds commercial or recurring.", draftReply: null, receivedAt: ago(60 * 26), firstResponseAt: ago(60 * 25), alertedAt: ago(60 * 26) },
+    ],
+  });
+}
+
 async function main() {
   console.log(`Seeding ${url?.replace(/:[^:@/]+@/, ":***@")} for local date ${T} …`);
   await wipe();
@@ -233,6 +244,7 @@ async function main() {
   await seedPeopleMoneyHealth();
   await seedProjects();
   await seedSettingsAndMemory();
+  await seedLeads();
   console.log("Seed complete.");
 }
 

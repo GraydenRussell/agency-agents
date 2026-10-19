@@ -4,6 +4,7 @@ import { runAction } from "@/lib/actions";
 import { db } from "@/lib/db";
 import { pricingRulesSchema, type PricingRules } from "@/lib/business/pricing";
 import * as customers from "@/lib/services/customers";
+import * as leads from "@/lib/services/leads";
 import * as quotes from "@/lib/services/quotes";
 import { setSetting, type SettingValue } from "@/lib/services/settings";
 
@@ -75,5 +76,38 @@ export async function saveBusinessProfileAction(profile: SettingValue<"business.
     await setSetting("business.profile", profile);
     refresh();
     return undefined;
+  });
+}
+
+export async function createLeadAction(input: Parameters<typeof leads.createManualLead>[0]) {
+  return runAction(async () => {
+    const l = await leads.createManualLead(input);
+    refresh();
+    return l.id;
+  });
+}
+export async function setLeadStatusAction(id: string, status: "NEW" | "CONTACTED" | "QUOTED" | "WON" | "LOST") {
+  return runAction(async () => {
+    const l = await leads.setLeadStatus(id, status);
+    await db.activityLog.create({ data: { actor: "USER", actionType: "lead.status", summary: `Marked lead ${l.name} ${status.toLowerCase()}`, input: { leadId: id, status } } });
+    refresh();
+    return undefined;
+  });
+}
+export async function rescoreLeadAction(id: string) {
+  return runAction(async () => {
+    const l = await leads.scoreLead(id);
+    refresh();
+    return l.score ?? 0;
+  });
+}
+/** Pressing Send after reading the reply is the approval (same rule as inbox replies). */
+export async function replyLeadAction(id: string, via: leads.LeadChannel, body: string) {
+  return runAction(async () => {
+    const r = await leads.replyToLead(id, via, body);
+    const summary = `Replied to ${r.name} by ${r.via === "SMS" ? "text" : "email"} (${r.to})`;
+    await db.activityLog.create({ data: { actor: "USER", actionType: "lead.reply", summary, input: { leadId: id, via, body } } });
+    refresh();
+    return summary;
   });
 }

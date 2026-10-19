@@ -8,6 +8,7 @@ import { syncAll as syncCalendars } from "@/lib/services/calendar";
 import { generateDraft, syncAndTriage } from "@/lib/services/mail";
 import { syncHousecallPro } from "@/lib/services/customers";
 import { housecallConfigured } from "@/lib/integrations/housecall";
+import { leadWatch } from "@/lib/services/leads";
 import { syncProjects } from "@/lib/services/projects";
 import { advanceReminder } from "@/lib/services/reminders";
 import { getSetting } from "@/lib/services/settings";
@@ -91,6 +92,7 @@ export const JOBS: Record<string, JobDef> = {
   calendar: { label: "Calendar sync", schedule: "every 10 min", slot: (n) => minuteSlot(n, 10), run: async () => JSON.stringify(await syncCalendars()).slice(0, 300) },
   projects: { label: "Projects sync (GitHub + Vercel)", schedule: "hourly", slot: (n) => minuteSlot(n, 60), run: async () => JSON.stringify(await syncProjects()) },
   housecall: { label: "Housecall Pro sync (customers + jobs)", schedule: "every 30 min", slot: (n) => minuteSlot(n, 30), run: async () => (housecallConfigured() ? JSON.stringify(await syncHousecallPro()) : "skipped: HOUSECALL_PRO_API_KEY not set") },
+  leads: { label: "Lead inbox: email leads + unanswered nudges", schedule: "every 5 min", slot: (n) => minuteSlot(n, 5), run: (n) => leadWatch(n) },
   maintenance: { label: "Maintenance", schedule: "daily 3:00 AM", slot: (n) => today(n), run: () => maintenance() },
 };
 

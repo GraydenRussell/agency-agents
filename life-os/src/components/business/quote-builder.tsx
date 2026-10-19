@@ -13,7 +13,7 @@ import { createQuoteAction, updateQuoteAction } from "@/app/(app)/business/actio
 import { priceQuote, type PricingRules, type QuoteInputs } from "@/lib/business/pricing";
 import { formatUsd } from "@/lib/utils";
 
-type Contact = { customerId: string | null; name: string; phone: string; email: string; address: string; notes: string };
+type Contact = { customerId: string | null; leadId?: string | null; name: string; phone: string; email: string; address: string; notes: string };
 
 const COUNTS: Array<{ key: keyof QuoteInputs; label: string; rule: keyof PricingRules; hint?: string }> = [
   { key: "panes", label: "Panes, outside", rule: "pane", hint: "Count each glass pane" },
@@ -37,11 +37,11 @@ export function QuoteBuilder({ rules, initial, initialInputs, quoteId }: { rules
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const payload = { customerId: c.customerId, name: c.name, phone: c.phone, email: c.email, address: c.address, notes: c.notes, inputs, saveCustomer: !c.customerId && saveCustomer };
+    const payload = { customerId: c.customerId, leadId: c.leadId ?? null, name: c.name, phone: c.phone, email: c.email, address: c.address, notes: c.notes, inputs, saveCustomer: !c.customerId && saveCustomer };
     run(() => (quoteId ? updateQuoteAction(quoteId, payload) : createQuoteAction(payload)), { success: quoteId ? "Quote updated" : "Quote saved", onSuccess: (id) => router.push(`/business/quotes/${id}`) });
   }
 
-  const field = (k: keyof Omit<Contact, "customerId" | "notes">, label: string, type = "text") => (
+  const field = (k: keyof Omit<Contact, "customerId" | "leadId" | "notes">, label: string, type = "text") => (
     <div className="space-y-1.5">
       <Label htmlFor={`q-${k}`}>{label}</Label>
       <Input id={`q-${k}`} type={type} required={k === "name"} value={c[k]} onChange={(e) => setC({ ...c, [k]: e.target.value })} autoComplete="off" />

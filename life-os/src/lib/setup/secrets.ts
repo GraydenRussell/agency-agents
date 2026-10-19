@@ -9,6 +9,8 @@ export function generateSecrets(): Record<string, string> {
     CRON_SECRET: randomBytes(32).toString("hex"),
     PROJECTS_SYNC_TOKEN: randomBytes(24).toString("hex"),
     LIFE_OS_API_TOKEN: randomBytes(24).toString("hex"),
+    LEAD_WEBHOOK_SECRET: randomBytes(24).toString("hex"),
+    META_VERIFY_TOKEN: randomBytes(16).toString("hex"),
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: vapid.publicKey,
     VAPID_PRIVATE_KEY: vapid.privateKey,
   };
