@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { ExternalLink, Pencil, RotateCw } from "lucide-react";
+import { useRef, useState } from "react";
+import { ExternalLink, Maximize, Pencil, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ export function DashboardFrame({ url }: { url: string }) {
   const [editing, setEditing] = useState(!url);
   const [v, setV] = useState(url);
   const [key, setKey] = useState(0);
+  const frameRef = useRef<HTMLIFrameElement>(null);
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -27,6 +28,7 @@ export function DashboardFrame({ url }: { url: string }) {
         ) : (
           <>
             <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{url}</span>
+            <Button variant="outline" size="sm" onClick={() => void frameRef.current?.requestFullscreen?.()}><Maximize /> Full screen</Button>
             <Button variant="outline" size="sm" onClick={() => setKey(key + 1)}><RotateCw /> Reload</Button>
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}><Pencil /> Change</Button>
             <Button asChild size="sm"><a href={url} target="_blank" rel="noreferrer">Open in new tab <ExternalLink /></a></Button>
@@ -37,9 +39,11 @@ export function DashboardFrame({ url }: { url: string }) {
         <>
           <iframe
             key={key}
+            ref={frameRef}
+            allowFullScreen
             src={url}
             title="Rapid Window Cleaning dashboard"
-            className="h-[calc(100dvh-16rem)] min-h-[520px] w-full rounded-xl border border-border bg-white"
+            className="h-[calc(100dvh-11rem)] min-h-[520px] w-full rounded-xl border border-border bg-white"
             referrerPolicy="no-referrer"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
           />

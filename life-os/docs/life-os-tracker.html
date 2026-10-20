@@ -572,6 +572,7 @@ const NAV = [
   { id: "health", label: "Health", icon: "heart", key: "e", group: "Track" },
   { id: "money", label: "Money", icon: "wallet", key: "m", group: "Track" },
   { id: "business", label: "Business", icon: "brief", key: "b", group: "Track" },
+  { id: "dash", label: "Rapid Dashboard", icon: "chart", key: "d", group: "Track" },
   { id: "insights", label: "Insights", icon: "chart", key: "x", group: "Track" },
   { id: "school", label: "School", icon: "school", key: "y", group: "Life" },
   { id: "people", label: "People", icon: "users", key: "o", group: "Life" },
@@ -1553,7 +1554,17 @@ function searchAll(q) {
 }
 
 
-const VIEWS = { today: vToday, tasks: vTasks, calendar: vCalendar, goals: vGoals, habits: vHabits, trackers: vTrackers, health: vHealth, money: vMoney, business: vBusiness, people: vPeople, notes: vNotes, lists: vLists, school: vSchool, review: vReview, assistant: vAssistant, data: vData, insights: vInsights };
+const VIEWS = { today: vToday, tasks: vTasks, calendar: vCalendar, goals: vGoals, habits: vHabits, trackers: vTrackers, health: vHealth, money: vMoney, business: vBusiness, people: vPeople, notes: vNotes, lists: vLists, school: vSchool, review: vReview, assistant: vAssistant, data: vData, insights: vInsights, dash: vDash };
+function vDash() {
+  const url = S.settings.dashUrl || "https://rapid-window-dashboard.vercel.app";
+  return header("Rapid Dashboard", "Your Rapid Window Cleaning dashboard: revenue, jobs, crew, and everything else on it.")
+  + `<section class="card" style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:24px">
+      <h2 style="font-family:var(--display);font-size:28px;font-weight:400;letter-spacing:.02em;text-transform:none">Open your dashboard</h2>
+      <p class="muted" style="margin:0;max-width:60ch">This page runs inside Claude, which doesn't allow other websites to be shown inside it, so your dashboard opens full screen in its own tab. In the full Life OS app it shows right inside the Rapid Dashboard section.</p>
+      <a class="btn pri" href="${esc(url)}" target="_blank" rel="noreferrer" style="font-size:16px;padding:12px 18px">Open Rapid Dashboard ↗</a>
+      <p class="small muted" style="margin:0">${esc(url)} · change it in Settings &amp; Data</p>
+    </section>`;
+}
 function render() {
   renderNav();
   const scroll = $("#main").scrollTop;

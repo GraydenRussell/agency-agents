@@ -10,9 +10,10 @@ All notable changes to Life OS. Dates are America/Phoenix.
   when the referred person completes a job or their lead is marked won; you get a heads-up with what you owe.
   Reward amount and type (credit / cash / gift card) are set on the page (default $25 credit).
 - Assistant: `referral_list`, `referral_add` (undoable while pending).
-- **Business → Dashboard**: your Rapid Window dashboard (https://rapid-window-dashboard.vercel.app by default,
-  changeable) shown inside Life OS, with Reload and Open-in-new-tab. It's also the first Business quick link.
-  The tracker page's Business screen links to it too.
+- **Rapid Dashboard** (its own sidebar section, `g d`): your Rapid Window dashboard
+  (https://rapid-window-dashboard.vercel.app by default, changeable) shown full-size inside Life OS, with Full
+  screen, Reload, and Open in new tab. It's also the first Business quick link. The tracker page has a Rapid
+  Dashboard section too (opens it in a new tab, since pages inside Claude can't show other websites).
 ### Couldn't verify
 - The dashboard address didn't load from here (blocked by this environment's network rules, and a separate fetch
   couldn't resolve the hostname), so whether it allows being shown inside another app is untested. If the frame is

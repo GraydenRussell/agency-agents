@@ -1,15 +1,6 @@
-import { PageHeader } from "@/components/shell/page-header";
-import { DashboardFrame } from "@/components/business/dashboard-frame";
-import { getSetting } from "@/lib/services/settings";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Dashboard" };
-
-export default async function DashboardPage() {
-  const url = await getSetting("business.dashboardUrl");
-  return (
-    <>
-      <PageHeader title="Dashboard" description="Your Rapid Window Cleaning dashboard, right here in Life OS." />
-      <DashboardFrame url={url} />
-    </>
-  );
+/** Moved to its own sidebar section. */
+export default function OldDashboardTab() {
+  redirect("/dashboard");
 }

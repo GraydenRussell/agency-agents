@@ -1,8 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { gotoReady } from "./helpers";
 
-test("business dashboard tab embeds the Rapid Window dashboard and the link can be changed", async ({ page, isMobile }) => {
-  await gotoReady(page, "/business/dashboard");
+test("Rapid Dashboard is its own section (sidebar + g d), embeds the dashboard, and the link can be changed", async ({ page, isMobile }) => {
+  if (!isMobile) {
+    await gotoReady(page, "/today");
+    await page.getByRole("link", { name: "Rapid Dashboard" }).first().click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+  }
+  await gotoReady(page, "/business/dashboard"); // old address redirects
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole("button", { name: "Full screen" })).toBeVisible();
   const frame = page.getByTitle("Rapid Window Cleaning dashboard");
   await expect(frame).toHaveAttribute("src", "https://rapid-window-dashboard.vercel.app");
   await expect(page.getByRole("link", { name: /Open in new tab/ })).toHaveAttribute("href", "https://rapid-window-dashboard.vercel.app");
