@@ -11,6 +11,7 @@ import { housecallConfigured } from "@/lib/integrations/housecall";
 import { leadWatch } from "@/lib/services/leads";
 import { rebookDigest } from "@/lib/services/rebook";
 import { dispatchReviewRequests, queueReviewRequests, syncReviews } from "@/lib/services/reviews";
+import { referralWatch } from "@/lib/services/referrals";
 import { syncProjects } from "@/lib/services/projects";
 import { advanceReminder } from "@/lib/services/reminders";
 import { getSetting } from "@/lib/services/settings";
@@ -106,6 +107,7 @@ export const JOBS: Record<string, JobDef> = {
       return `queued ${queued}; ${dispatched}; ${await syncReviews(n)}`;
     },
   },
+  referrals: { label: "Referrals: link referral leads, mark rewards earned", schedule: "hourly", slot: (n) => minuteSlot(n, 60), run: (n) => referralWatch(n) },
   maintenance: { label: "Maintenance", schedule: "daily 3:00 AM", slot: (n) => today(n), run: () => maintenance() },
 };
 

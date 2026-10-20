@@ -25,8 +25,8 @@ export type BusinessView =
 export async function quickLinks() {
   const saved = await getSetting("business.quickLinks");
   const links = saved.length ? saved : DEFAULT_QUICK_LINKS;
-  const dash = process.env.ADMIN_DASH_URL;
-  return dash && !links.some((l) => l.url.startsWith(dash)) ? [{ label: "Admin dashboard", url: dash }, ...links] : links;
+  const dash = process.env.ADMIN_DASH_URL || (await getSetting("business.dashboardUrl"));
+  return dash && !links.some((l) => l.url.startsWith(dash)) ? [{ label: "Rapid Window dashboard", url: dash }, ...links] : links;
 }
 
 export async function businessView(): Promise<BusinessView> {

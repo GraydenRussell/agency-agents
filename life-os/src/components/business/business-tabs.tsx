@@ -5,11 +5,13 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/business", label: "Overview" },
+  { href: "/business/dashboard", label: "Dashboard" },
   { href: "/business/leads", label: "Leads" },
   { href: "/business/customers", label: "Customers" },
   { href: "/business/quotes", label: "Quotes" },
   { href: "/business/rebook", label: "Re-book" },
   { href: "/business/reviews", label: "Reviews" },
+  { href: "/business/referrals", label: "Referrals" },
 ];
 
 export function BusinessTabs({ unansweredLeads = 0, lateLeads = 0 }: { unansweredLeads?: number; lateLeads?: number }) {

@@ -53,7 +53,9 @@ describe("business", () => {
     expect((await quickLinks()).map((l) => l.label)).toContain("Housecall Pro");
     await setSetting("business.quickLinks", [{ label: "GBP", url: "https://business.google.com/u/0/dashboard/l/123" }]);
     process.env.ADMIN_DASH_URL = "https://dash.example.com";
-    expect((await quickLinks()).map((l) => l.label)).toEqual(["Admin dashboard", "GBP"]);
+    expect((await quickLinks()).map((l) => l.label)).toEqual(["Rapid Window dashboard", "GBP"]);
+    delete process.env.ADMIN_DASH_URL;
+    expect((await quickLinks())[0]).toEqual({ label: "Rapid Window dashboard", url: "https://rapid-window-dashboard.vercel.app" });
   });
 
   it("today's timeline includes jobs from the dashboard", async () => {

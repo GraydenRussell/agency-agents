@@ -432,7 +432,7 @@ function fresh() {
     jobs: [], leads: [],
     people: [], notes: [], journal: {}, courses: [], assignments: [],
     memory: [], chat: [], briefs: {},
-    settings: { name: "Grayden", revenueGoal: 30000, city: "Chandler, AZ", briefLength: "standard", dashUrl: "" },
+    settings: { name: "Grayden", revenueGoal: 30000, city: "Chandler, AZ", briefLength: "standard", dashUrl: "https://rapid-window-dashboard.vercel.app" },
   };
 }
 let S = fresh();
@@ -1152,7 +1152,7 @@ function vBusiness() {
   const months = [...Array(6)].map((_, i) => monthKey(addDays(`${monthKey()}-15`, (i - 5) * 30)));
   const revByMonth = months.map((m) => revenue(`${m}-01`, `${m}-31`));
   const jobs = S.jobs.slice().sort((a, b) => b.d.localeCompare(a.d)).slice(0, 25);
-  return header("Business", "Rapid Window Cleaning: jobs, revenue, and leads.", `${S.settings.dashUrl ? `<a class="btn" href="${esc(S.settings.dashUrl)}" target="_blank" rel="noreferrer">Open my dashboard ↗</a>` : `<button class="btn" data-nav="data">Link my dashboard</button>`}<button class="btn" data-act="newLead">${ico("plus")}Lead</button><button class="btn" data-act="quote">${ico("plus")}Quote</button><button class="btn pri" data-act="newJob">${ico("plus")}Job</button>`)
+  return header("Business", "Rapid Window Cleaning: jobs, revenue, and leads.", `${(S.settings.dashUrl || "https://rapid-window-dashboard.vercel.app") ? `<a class="btn" href="${esc(S.settings.dashUrl || "https://rapid-window-dashboard.vercel.app")}" target="_blank" rel="noreferrer">Open my dashboard ↗</a>` : `<button class="btn" data-nav="data">Link my dashboard</button>`}<button class="btn" data-act="newLead">${ico("plus")}Lead</button><button class="btn" data-act="quote">${ico("plus")}Quote</button><button class="btn pri" data-act="newJob">${ico("plus")}Job</button>`)
   + `<div class="stat-row"><div class="stat"><span>Today</span><b class="big">${money(revenue(t, t))}</b></div><div class="stat"><span>This week</span><b class="big">${money(revenue(weekStart(), t))}</b></div><div class="stat"><span>Month to date</span><b class="big">${money(pace.got)}</b></div><div class="stat"><span>Month pace vs goal</span><b class="big ${pace.goal && pace.pace >= pace.goal ? "money-pos" : ""}">${money(Math.round(pace.pace))}</b> <span class="muted small">goal ${money(pace.goal)}</span></div></div>
   ${arCard()}<div class="grid"><section class="card"><div class="ch"><h2>Revenue by month</h2><button class="btn sm ghost" data-act="editRevGoal">Goal: ${money(pace.goal)}</button></div>${bars(revByMonth, months.map((m) => MON[+m.slice(5, 7) - 1]), { target: pace.goal, fmt: (v) => money(v), h: 150, hi: 5 })}</section>
   <section class="card"><div class="ch"><h2>Recent jobs</h2></div>${jobs.length ? jobs.map((j) => `<div class="row"><span><button style="all:unset;cursor:pointer" data-act="editJob" data-id="${j.id}"><b>${esc(j.client)}</b></button><br><span class="muted small">${nice(j.d)}${j.time ? " " + fmtTime(j.time) : ""}${j.type ? " · " + esc(j.type) : ""}${j.crew ? " · " + esc(j.crew) : ""}</span></span><span>${money(num(j.amount))}${j.paid ? "" : ` <span class="st no">unpaid</span>`}</span></div>`).join("") : empty("No jobs logged", "Log jobs as you finish them to see revenue pace and feed your brief.")}</section></div>

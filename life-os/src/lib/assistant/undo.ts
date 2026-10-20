@@ -39,6 +39,7 @@ const HANDLERS: Record<string, Handler> = {
     const removed = await db.quote.deleteMany({ where: { id: s(p.id), status: "DRAFT", sentAt: null } });
     if (removed.count === 0) throw new Error("This quote was already sent or decided, so it can't be undone. Mark it lost instead.");
   },
+  "referral.delete": (p) => db.referral.deleteMany({ where: { id: s(p.id), status: "PENDING" } }),
   "project.revert": (p) => db.project.update({ where: { id: s(p.id) }, data: p.data as object }),
 };
 

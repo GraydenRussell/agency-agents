@@ -32,6 +32,10 @@ export const SETTINGS = {
   "business.rebookDefaultMonths": { schema: z.number().int().min(1).max(36), default: 6 },
   /** Google "ask for reviews" short link (Business Profile → Ask for reviews), used in review-request texts. */
   "business.reviewLink": { schema: z.union([z.string().url(), z.literal("")]), default: "" },
+  /** What a referrer gets once the person they sent completes a job. */
+  "business.referralReward": { schema: z.object({ amount: z.number().min(0).max(10_000), kind: z.enum(["credit", "cash", "gift card"]) }), default: { amount: 25, kind: "credit" as const } },
+  /** Your Rapid Window Cleaning dashboard, shown on Business → Dashboard. */
+  "business.dashboardUrl": { schema: z.union([z.string().url().startsWith("https://"), z.literal("")]), default: "https://rapid-window-dashboard.vercel.app" },
   /** Nudge me when a new lead has had no reply for this long. */
   "leads.nudgeMinutes": { schema: z.number().int().min(5).max(24 * 60), default: 15 },
   /** Shown on quote PDFs and customer messages. */

@@ -745,6 +745,8 @@ model Customer {
   jobs               Job[]
   quotes             Quote[]
   leads              Lead[]
+  referralsMade      Referral[]   @relation("Referrer")
+  referralsReceived  Referral[]   @relation("Referred")
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -866,6 +868,7 @@ model Lead {
   customerId      String?
   customer        Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
   quotes          Quote[]
+  referral        Referral?
   receivedAt      DateTime   @default(now())
   firstResponseAt DateTime?
   /// When I was told about it (the "new lead" alert)
@@ -886,7 +889,9 @@ enum ReviewRequestStatus {
   FAILED
 }
 
-/** One per completed job: the "would you leave us a review?" text. */
+/**
+ * One per completed job: the "would you leave us a review?" text.
+ */
 model ReviewRequest {
   id         String              @id @default(cuid())
   jobId      String              @unique
@@ -905,28 +910,60 @@ model ReviewRequest {
 }
 
 model Review {
-  id          String    @id @default(cuid())
-  source      String    @default("GOOGLE")
-  externalId  String    @unique
-  author      String
-  rating      Int
-  comment     String?
-  reviewedAt  DateTime
-  replyText   String?
-  repliedAt   DateTime?
-  draftReply  String?
-  draftBy     String?
-  notifiedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String    @id @default(cuid())
+  source     String    @default("GOOGLE")
+  externalId String    @unique
+  author     String
+  rating     Int
+  comment    String?
+  reviewedAt DateTime
+  replyText  String?
+  repliedAt  DateTime?
+  draftReply String?
+  draftBy    String?
+  notifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@index([reviewedAt])
 }
 
-/** Daily total + average from Google, for the trend chart. */
+/**
+ * Daily total + average from Google, for the trend chart.
+ */
 model ReviewSnapshot {
   /// Phoenix YYYY-MM-DD
   date    String @id
   count   Int
   average Float
+}
+
+enum ReferralStatus {
+  PENDING
+  EARNED
+  PAID
+  VOID
+}
+
+model Referral {
+  id                 String         @id @default(cuid())
+  referrerId         String
+  referrer           Customer       @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredName       String
+  referredCustomerId String?
+  referredCustomer   Customer?      @relation("Referred", fields: [referredCustomerId], references: [id], onDelete: SetNull)
+  leadId             String?        @unique
+  lead               Lead?          @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  status             ReferralStatus @default(PENDING)
+  /// Dollars owed/paid to the referrer
+  reward             Float
+  rewardKind         String         @default("credit")
+  earnedAt           DateTime?
+  paidAt             DateTime?
+  notes              String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([status])
+  @@index([referrerId])
 }

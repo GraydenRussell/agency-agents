@@ -2,6 +2,24 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [11.6] Referral tracker + your dashboard inside Life OS — 2026-10-20
+### Added
+- **Business → Referrals**: who referred whom, “waiting to book” → “reward owed” → “paid”, rewards owed and
+  paid, and a top-referrers leaderboard. Leads marked Referral with a customer's name (“Referred by Priya Patel”)
+  become referrals automatically (exact or unambiguous first-name + last-initial match only). A reward is earned
+  when the referred person completes a job or their lead is marked won; you get a heads-up with what you owe.
+  Reward amount and type (credit / cash / gift card) are set on the page (default $25 credit).
+- Assistant: `referral_list`, `referral_add` (undoable while pending).
+- **Business → Dashboard**: your Rapid Window dashboard (https://rapid-window-dashboard.vercel.app by default,
+  changeable) shown inside Life OS, with Reload and Open-in-new-tab. It's also the first Business quick link.
+  The tracker page's Business screen links to it too.
+### Couldn't verify
+- The dashboard address didn't load from here (blocked by this environment's network rules, and a separate fetch
+  couldn't resolve the hostname), so whether it allows being shown inside another app is untested. If the frame is
+  blank, use Open in new tab.
+- Its numbers can't flow into briefs/KPIs yet: the GitHub repo `Rapid-Windows-dash` is still empty, so the
+  `/api/life-os/summary` endpoint (docs/admin-dashboard-endpoint.md) can't be added to it from here.
+
 ## [11.5] Review engine — 2026-10-19
 ### Added
 - **Business → Reviews**: Google rating and review count (with growth over the last 30 days), new reviews per

@@ -36,6 +36,7 @@ boundaries computed in Phoenix time via one helper (`lib/time.ts`).
 | D21 | Maps & drive times | Leaflet + OpenStreetMap tiles for display; Google Maps Routes API for drive times (key needed). Mock adapter until then. | Assumed |
 | D22 | Severe weather | National Weather Service alerts API (free; Dust Storm, Severe Thunderstorm, Excessive Heat warnings) + Open-Meteo forecast (D12). | Assumed |
 | D23 | Customer texts | Every text/email to a customer (quote, review request, re-book, lead reply, payment reminder) goes through the Approvals queue by default, with per-type auto-approve toggles (default OFF). | Confirmed (existing rule) |
+| D25 | Dashboard URL | https://rapid-window-dashboard.vercel.app, embedded on Business → Dashboard. Its source isn't in `Rapid-Windows-dash` (empty), so the summary endpoint can't be added yet. | Confirmed (URL) / blocked (data) |
 | D24 | Competitor data | Google Places API (ratings + review counts) — key needed. | Assumed |
 
 Anything marked **Assumed** can be changed by replying; none of them block Phase 1–2.
@@ -255,7 +256,7 @@ dark/light themes, quick capture, routines/habits, global search (tasks/notes).
 - [x] 11.3 Lead inbox: website form webhook, Meta lead ads, lead emails, manual phone/referral leads; AI score + drafted reply; nudges at 15 min / 1 h / 4 h. (GBP messages: Google retired Business Profile chat in July 2024, so there is no API; listing leads come in by phone/web/email.)
 - [x] 11.4 Customer re-booking: flag customers due at 3/6/12 months (per customer), draft re-book text
 - [x] 11.5 Review engine: auto-queue review request after a completed job; track review count/rating over time; AI-drafted replies to new Google reviews for approval
-- [ ] 11.6 Referral tracker: who referred whom, rewards owed/paid
+- [x] 11.6 Referral tracker: who referred whom, rewards owed/paid
 - [ ] 11.7 KPIs board: revenue vs goal, average ticket, close rate, cost per lead (Meta spend), jobs/week, revenue/hour; week/month/year comparisons
 - [ ] 11.8 Weather-aware scheduling: monsoon/haboob/110°F+ warnings on job days, suggested reschedule slots
 - [ ] 11.9 Route view: today's jobs on a map, drive times between stops, flag inefficient days

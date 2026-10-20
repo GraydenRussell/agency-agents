@@ -8,6 +8,7 @@ import * as leads from "@/lib/services/leads";
 import * as quotes from "@/lib/services/quotes";
 import * as rebook from "@/lib/services/rebook";
 import * as reviews from "@/lib/services/reviews";
+import * as referrals from "@/lib/services/referrals";
 import { approve } from "@/lib/assistant/executor";
 import { setSetting, type SettingValue } from "@/lib/services/settings";
 
@@ -195,5 +196,39 @@ export async function syncReviewsAction() {
     const out = await reviews.syncReviews();
     refresh();
     return out;
+  });
+}
+
+export async function createReferralAction(input: { referrerId: string; referredName: string; notes?: string }) {
+  return runAction(async () => {
+    const r = await referrals.createReferral(input);
+    await db.activityLog.create({ data: { actor: "USER", actionType: "referral.add", summary: `Recorded referral → ${r.referredName}`, input } });
+    refresh();
+    return r.id;
+  });
+}
+export async function setReferralStatusAction(id: string, status: "PENDING" | "EARNED" | "PAID" | "VOID") {
+  return runAction(async () => {
+    const r = await referrals.setReferralStatus(id, status);
+    await db.activityLog.create({ data: { actor: "USER", actionType: "referral.status", summary: `Referral → ${r.referredName} marked ${status.toLowerCase()}`, input: { id, status } } });
+    refresh();
+    return undefined;
+  });
+}
+export async function saveReferralRewardAction(amount: number, kind: "credit" | "cash" | "gift card") {
+  return runAction(async () => {
+    await setSetting("business.referralReward", { amount, kind });
+    refresh();
+    return undefined;
+  });
+}
+
+export async function saveDashboardUrlAction(url: string) {
+  return runAction(async () => {
+    const v = url.trim().replace(/\/$/, "");
+    if (v && !/^https:\/\/[^\s]+$/.test(v)) throw new Error("Use the full https:// address of your dashboard");
+    await setSetting("business.dashboardUrl", v);
+    refresh();
+    return undefined;
   });
 }
