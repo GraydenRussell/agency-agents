@@ -58,6 +58,7 @@ const schema = z.object({
   META_PAGE_ACCESS_TOKEN: optional,
   GBP_ACCOUNT_ID: optional,
   META_AD_ACCOUNT_ID: optional,
+  GOOGLE_MAPS_API_KEY: optional,
   META_ADS_TOKEN: optional,
   GBP_LOCATION_ID: optional,
 

@@ -39,6 +39,7 @@ function fullEnv(): Env {
     META_PAGE_ACCESS_TOKEN: "EAAmetapagetoken",
     GBP_ACCOUNT_ID: "1234567890",
     GBP_LOCATION_ID: "9876543210",
+    GOOGLE_MAPS_API_KEY: "AIzaExampleMapsKey",
     INTEGRATION_MODE: "live",
   };
 }

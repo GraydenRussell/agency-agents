@@ -9,11 +9,12 @@ import { rebookTools } from "./rebook";
 import { kpiTools } from "./kpis";
 import { referralTools } from "./referrals";
 import { reviewTools } from "./reviews";
+import { routeTools } from "./route";
 import { weatherTools } from "./weather";
 import { taskTools } from "./tasks";
 
 /** Order is stable (prompt caching: the tool list is part of the cached prefix). */
-export const TOOLS: ToolDef[] = [...emailTools, ...calendarTools, ...taskTools, ...reminderTools, ...noteTools, ...projectTools, ...businessTools, ...memoryTools, ...quoteTools, ...leadTools, ...rebookTools, ...reviewTools, ...referralTools, ...kpiTools, ...weatherTools] as ToolDef[];
+export const TOOLS: ToolDef[] = [...emailTools, ...calendarTools, ...taskTools, ...reminderTools, ...noteTools, ...projectTools, ...businessTools, ...memoryTools, ...quoteTools, ...leadTools, ...rebookTools, ...reviewTools, ...referralTools, ...kpiTools, ...weatherTools, ...routeTools] as ToolDef[];
 
 const byName = new Map(TOOLS.map((t) => [t.name, t]));
 

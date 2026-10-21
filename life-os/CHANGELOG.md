@@ -2,6 +2,20 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [11.9] Route view — 2026-10-21
+### Added
+- **Business → Route**: a day's Housecall Pro jobs on a map (Leaflet + OpenStreetMap; home base and numbered stops),
+  the stop list with times, ticket, and drive minutes/miles into each stop and back home, plus day-to-day
+  navigation and a 7-day strip showing jobs and drive time per day (⚠ on days with problems).
+- **Inefficient-day flags**: a better visiting order that saves 15+ min (with the order), driving over 30% of the
+  working day, a single drive over 30 min, and 90+ idle minutes between jobs. “Best possible” shows the minimum
+  drive time for the day's stops (exact search for up to 8 stops).
+- **Google Maps** button: opens the whole day as a multi-stop route on your phone.
+- Drive times: Google Routes API (traffic-aware for upcoming days) with `GOOGLE_MAPS_API_KEY`; otherwise estimated
+  from distance (×1.3 road factor at ~28 mph + 3 min to park). Home base is a setting (default Chandler).
+- Jobs without map coordinates are listed separately instead of guessed.
+- Assistant: `route_day`. Setup page item for the Maps key with a live test.
+
 ## [11.8] Weather-aware scheduling — 2026-10-21
 ### Added
 - **Business → Weather**: the next 8 days side by side with booked jobs. Each day shows the high, rain chance,

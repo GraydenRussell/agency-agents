@@ -322,6 +322,26 @@ export const SETUP_ITEMS: SetupItem[] = [
     validate: (env) => [...(has(env, "GBP_ACCOUNT_ID") && !/^\d+$/.test(env.GBP_ACCOUNT_ID!) ? ["GBP_ACCOUNT_ID should be the number after accounts/"] : []), ...(has(env, "GBP_LOCATION_ID") && !/^\d+$/.test(env.GBP_LOCATION_ID!) ? ["GBP_LOCATION_ID should be the number after locations/"] : [])],
   },
   {
+    id: "maps",
+    name: "Google Maps (route drive times)",
+    powers: "Real, traffic-aware drive times on Business → Route. Without it, drive times are estimated from distance.",
+    required: false,
+    vars: ["GOOGLE_MAPS_API_KEY"],
+    steps: [
+      "Google Cloud console → APIs & Services → enable the Routes API (the same project as your Google sign-in is fine).",
+      "Credentials → Create API key → restrict it to the Routes API.",
+      "GOOGLE_MAPS_API_KEY = that key. A day's route is one small request (well inside Google's free monthly credit).",
+    ],
+    link: { label: "Routes API", href: "https://developers.google.com/maps/documentation/routes" },
+    test: (env, f = fetch) =>
+      guard(async () => {
+        const wp = (lat: number, lng: number) => ({ waypoint: { location: { latLng: { latitude: lat, longitude: lng } } } });
+        const res = await timed(f, "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix", { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": env.GOOGLE_MAPS_API_KEY ?? "", "x-goog-fieldmask": "duration" }, body: JSON.stringify({ origins: [wp(33.3062, -111.8413)], destinations: [wp(33.3528, -111.789)], travelMode: "DRIVE" }) });
+        if (!res.ok) return httpFail("Routes API", res);
+        return { ok: true, detail: "Key works (Routes API answered)" };
+      }),
+  },
+  {
     id: "golive",
     name: "Go live",
     powers: "Switches every integration from sample data to the real services above.",
