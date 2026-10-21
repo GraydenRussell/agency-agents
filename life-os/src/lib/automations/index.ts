@@ -13,6 +13,7 @@ import { rebookDigest } from "@/lib/services/rebook";
 import { dispatchReviewRequests, queueReviewRequests, syncReviews } from "@/lib/services/reviews";
 import { referralWatch } from "@/lib/services/referrals";
 import { syncAdSpend } from "@/lib/services/kpis";
+import { weatherWatch } from "@/lib/services/weather-plan";
 import { syncProjects } from "@/lib/services/projects";
 import { advanceReminder } from "@/lib/services/reminders";
 import { getSetting } from "@/lib/services/settings";
@@ -110,6 +111,8 @@ export const JOBS: Record<string, JobDef> = {
   },
   referrals: { label: "Referrals: link referral leads, mark rewards earned", schedule: "hourly", slot: (n) => minuteSlot(n, 60), run: (n) => referralWatch(n) },
   "ad-spend": { label: "Meta ad spend (cost per lead)", schedule: "daily 5:00 AM", slot: (n) => today(n), run: () => syncAdSpend() },
+  weather: { label: "Weather: NWS warnings on job days", schedule: "hourly", slot: (n) => minuteSlot(n, 60), run: (n) => weatherWatch(n) },
+  "weather-digest": { label: "Weather heads-up for the next 3 job days", schedule: "daily 4:00 PM", slot: (n) => today(n), run: (n) => weatherWatch(n, { digest: true }) },
   maintenance: { label: "Maintenance", schedule: "daily 3:00 AM", slot: (n) => today(n), run: () => maintenance() },
 };
 

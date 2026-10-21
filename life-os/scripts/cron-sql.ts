@@ -31,6 +31,8 @@ const jobs: Array<[name: string, cron: string, note: string]> = [
   ["reviews", "23 * * * *", "hourly"],
   ["referrals", "37 * * * *", "hourly"],
   ["ad-spend", "0 12 * * *", "5:00 AM Phoenix"],
+  ["weather", "41 * * * *", "hourly"],
+  ["weather-digest", "0 23 * * *", "4:00 PM Phoenix"],
   ["maintenance", "0 10 * * *", "3:00 AM Phoenix"],
 ];
 

@@ -10,6 +10,7 @@ import * as rebook from "@/lib/services/rebook";
 import * as reviews from "@/lib/services/reviews";
 import * as referrals from "@/lib/services/referrals";
 import * as kpis from "@/lib/services/kpis";
+import { rescheduleTask } from "@/lib/services/weather-plan";
 import { approve } from "@/lib/assistant/executor";
 import { setSetting, type SettingValue } from "@/lib/services/settings";
 
@@ -253,5 +254,13 @@ export async function syncAdSpendAction() {
     const out = await kpis.syncAdSpend();
     refresh();
     return out;
+  });
+}
+
+export async function rescheduleTaskAction(jobId: string, toDate: string | null) {
+  return runAction(async () => {
+    const t = await rescheduleTask(jobId, toDate);
+    revalidatePath("/tasks");
+    return t.title;
   });
 }

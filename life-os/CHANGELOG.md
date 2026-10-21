@@ -2,6 +2,20 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [11.8] Weather-aware scheduling — 2026-10-21
+### Added
+- **Business → Weather**: the next 8 days side by side with booked jobs. Each day shows the high, rain chance,
+  and gusts, flagged for exterior window work: 110°F+ (danger) / 105°F+ (caution), thunderstorms or 60%+ rain
+  (monsoon), 40 mph+ gusts (haboob/dust) / 30 mph+ (wind), plus any active **National Weather Service** warning
+  (Dust Storm, Severe Thunderstorm, Flash Flood, Extreme Heat, Heat Advisory, Wind).
+- Risky job days suggest the **best day to move them**: the soonest day without danger, preferring no cautions
+  and fewer booked jobs, never Sunday. “Call task” adds a P1 task to call the customer (with their number);
+  Life OS never edits Housecall Pro.
+- Alerts: each NWS warning that hits a day with jobs alerts once (urgent when it's today), checked hourly; a
+  4 PM heads-up covers risky job days in the next 3 days.
+- Assistant: `weather_jobs` (“any weather problems with this week's jobs?”).
+- Sources: Open-Meteo daily forecast and api.weather.gov alerts (both free, no keys).
+
 ## [11.7] KPIs board — 2026-10-21
 ### Added
 - **Business → KPIs** (Week / Month / Year): revenue, jobs done, average ticket, revenue per hour (on-site hours

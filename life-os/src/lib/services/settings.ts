@@ -38,6 +38,8 @@ export const SETTINGS = {
   "business.dashboardUrl": { schema: z.union([z.string().url().startsWith("https://"), z.literal("")]), default: "https://rapid-window-dashboard.vercel.app" },
   /** Monthly revenue goal for the KPIs board and briefs. */
   "business.monthlyRevenueGoal": { schema: z.number().min(0).max(10_000_000), default: 30_000 },
+  /** NWS alert ids I've already been told about (so each warning alerts once). */
+  "weather.notifiedAlerts": { schema: z.array(z.string()).max(100), default: [] as string[] },
   /** Nudge me when a new lead has had no reply for this long. */
   "leads.nudgeMinutes": { schema: z.number().int().min(5).max(24 * 60), default: 15 },
   /** Shown on quote PDFs and customer messages. */
