@@ -48,3 +48,29 @@ export async function fetchMetaLead(leadgenId: string, f: typeof fetch = fetch):
   const lead = leadSchema.parse(await res.json());
   return { fields: Object.fromEntries(lead.field_data.map((d) => [d.name, d.values.join(", ")])), createdAt: lead.created_time ? new Date(lead.created_time) : null, adName: lead.ad_name ?? null };
 }
+
+// ───────────── Ads spend (cost per lead) ─────────────
+
+export const metaAdsConfigured = () => isMock() || Boolean(process.env.META_AD_ACCOUNT_ID && (process.env.META_ADS_TOKEN || process.env.META_PAGE_ACCESS_TOKEN));
+
+/** Daily spend for the ad account (Marketing API insights, ads_read). */
+export async function fetchMetaSpend(since: string, until: string, f: typeof fetch = fetch): Promise<Array<{ date: string; amount: number }>> {
+  if (isMock()) {
+    const out: Array<{ date: string; amount: number }> = [];
+    for (let d = new Date(`${since}T12:00:00Z`); d <= new Date(`${until}T12:00:00Z`); d = new Date(d.getTime() + 86_400_000)) out.push({ date: d.toISOString().slice(0, 10), amount: 18 + (d.getUTCDate() % 5) * 3 });
+    return out;
+  }
+  const acct = process.env.META_AD_ACCOUNT_ID?.replace(/^act_/, "");
+  const token = process.env.META_ADS_TOKEN || process.env.META_PAGE_ACCESS_TOKEN;
+  if (!acct || !token) throw new Error("Set META_AD_ACCOUNT_ID and META_ADS_TOKEN to pull ad spend");
+  const url = new URL(`${GRAPH}/act_${acct}/insights`);
+  url.searchParams.set("fields", "spend");
+  url.searchParams.set("time_increment", "1");
+  url.searchParams.set("time_range", JSON.stringify({ since, until }));
+  url.searchParams.set("limit", "500");
+  url.searchParams.set("access_token", token);
+  const res = await f(url, { signal: AbortSignal.timeout(15_000) });
+  if (!res.ok) throw new Error(`Meta insights returned ${res.status}`);
+  const body = z.object({ data: z.array(z.object({ spend: z.string().optional(), date_start: z.string() })).default([]) }).parse(await res.json());
+  return body.data.map((r) => ({ date: r.date_start, amount: Number(r.spend ?? 0) || 0 }));
+}

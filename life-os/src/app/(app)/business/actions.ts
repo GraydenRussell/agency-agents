@@ -9,6 +9,7 @@ import * as quotes from "@/lib/services/quotes";
 import * as rebook from "@/lib/services/rebook";
 import * as reviews from "@/lib/services/reviews";
 import * as referrals from "@/lib/services/referrals";
+import * as kpis from "@/lib/services/kpis";
 import { approve } from "@/lib/assistant/executor";
 import { setSetting, type SettingValue } from "@/lib/services/settings";
 
@@ -230,5 +231,27 @@ export async function saveDashboardUrlAction(url: string) {
     await setSetting("business.dashboardUrl", v);
     refresh();
     return undefined;
+  });
+}
+
+export async function addAdSpendAction(input: { date: string; source: "GOOGLE_ADS" | "DOOR_HANGERS" | "NEXTDOOR" | "OTHER"; amount: number; note?: string }) {
+  return runAction(async () => {
+    await kpis.addAdSpend(input);
+    refresh();
+    return undefined;
+  });
+}
+export async function saveRevenueGoalAction(goal: number) {
+  return runAction(async () => {
+    await setSetting("business.monthlyRevenueGoal", goal);
+    refresh();
+    return undefined;
+  });
+}
+export async function syncAdSpendAction() {
+  return runAction(async () => {
+    const out = await kpis.syncAdSpend();
+    refresh();
+    return out;
   });
 }

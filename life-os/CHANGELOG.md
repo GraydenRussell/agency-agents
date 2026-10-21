@@ -2,6 +2,20 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [11.7] KPIs board — 2026-10-21
+### Added
+- **Business → KPIs** (Week / Month / Year): revenue, jobs done, average ticket, revenue per hour (on-site hours
+  from scheduled job windows), jobs per week, leads, cost per lead (spend ÷ leads), and quote close rate. Each
+  shows the change vs the previous period and vs the same period last year, measured over the **same number
+  of elapsed days** so a half-finished month isn't compared to a full one. Green/red follows what “better” means
+  (lower is better for cost per lead).
+- Revenue vs monthly goal with month-to-date, day X of Y, and projected month total (goal set on the page;
+  default $30,000).
+- Revenue trend: last 12 months, 10 weeks, or 3 years, current period highlighted.
+- **Marketing spend**: Meta ad spend pulled every morning (`ad-spend` job; META_AD_ACCOUNT_ID + a token with
+  ads_read), plus a form for everything else (Google Ads/LSA, door hangers, Nextdoor).
+- Assistant: `kpi_summary` (“how's this month vs last?”).
+
 ## [11.6] Referral tracker + your dashboard inside Life OS — 2026-10-20
 ### Added
 - **Business → Referrals**: who referred whom, “waiting to book” → “reward owed” → “paid”, rewards owed and

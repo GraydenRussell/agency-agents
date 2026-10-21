@@ -257,7 +257,7 @@ dark/light themes, quick capture, routines/habits, global search (tasks/notes).
 - [x] 11.4 Customer re-booking: flag customers due at 3/6/12 months (per customer), draft re-book text
 - [x] 11.5 Review engine: auto-queue review request after a completed job; track review count/rating over time; AI-drafted replies to new Google reviews for approval
 - [x] 11.6 Referral tracker: who referred whom, rewards owed/paid
-- [ ] 11.7 KPIs board: revenue vs goal, average ticket, close rate, cost per lead (Meta spend), jobs/week, revenue/hour; week/month/year comparisons
+- [x] 11.7 KPIs board: revenue vs goal, average ticket, close rate, cost per lead (Meta spend), jobs/week, revenue/hour; week/month/year comparisons
 - [ ] 11.8 Weather-aware scheduling: monsoon/haboob/110°F+ warnings on job days, suggested reschedule slots
 - [ ] 11.9 Route view: today's jobs on a map, drive times between stops, flag inefficient days
 - [ ] 11.10 Expense + mileage log: receipt photo → AI reads and categorizes it; mileage trips per vehicle

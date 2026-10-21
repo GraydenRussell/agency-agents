@@ -967,3 +967,16 @@ model Referral {
   @@index([status])
   @@index([referrerId])
 }
+
+/** Daily marketing spend (Meta synced; anything else entered by hand) for cost per lead. */
+model AdSpend {
+  /// Phoenix YYYY-MM-DD
+  date      String
+  /// META, GOOGLE_ADS, DOOR_HANGERS, OTHER
+  source    String
+  amount    Float
+  note      String?
+  updatedAt DateTime @updatedAt
+
+  @@id([date, source])
+}

@@ -12,6 +12,7 @@ import { leadWatch } from "@/lib/services/leads";
 import { rebookDigest } from "@/lib/services/rebook";
 import { dispatchReviewRequests, queueReviewRequests, syncReviews } from "@/lib/services/reviews";
 import { referralWatch } from "@/lib/services/referrals";
+import { syncAdSpend } from "@/lib/services/kpis";
 import { syncProjects } from "@/lib/services/projects";
 import { advanceReminder } from "@/lib/services/reminders";
 import { getSetting } from "@/lib/services/settings";
@@ -108,6 +109,7 @@ export const JOBS: Record<string, JobDef> = {
     },
   },
   referrals: { label: "Referrals: link referral leads, mark rewards earned", schedule: "hourly", slot: (n) => minuteSlot(n, 60), run: (n) => referralWatch(n) },
+  "ad-spend": { label: "Meta ad spend (cost per lead)", schedule: "daily 5:00 AM", slot: (n) => today(n), run: () => syncAdSpend() },
   maintenance: { label: "Maintenance", schedule: "daily 3:00 AM", slot: (n) => today(n), run: () => maintenance() },
 };
 
