@@ -36,6 +36,10 @@ boundaries computed in Phoenix time via one helper (`lib/time.ts`).
 | D21 | Maps & drive times | Leaflet + OpenStreetMap tiles for display; Google Maps Routes API for drive times (key needed). Mock adapter until then. | Assumed |
 | D22 | Severe weather | National Weather Service alerts API (free; Dust Storm, Severe Thunderstorm, Excessive Heat warnings) + Open-Meteo forecast (D12). | Assumed |
 | D23 | Customer texts | Every text/email to a customer (quote, review request, re-book, lead reply, payment reminder) goes through the Approvals queue by default, with per-type auto-approve toggles (default OFF). | Confirmed (existing rule) |
+| D26 | GREYVO store | Not launched yet: manual entry + sample data now, store connector added at launch (Shopify most likely; confirm then). | Confirmed |
+| D27 | GREYVO channels | TikTok only (posts + TikTok Ads). Instagram/YouTube/Meta Ads for GREYVO not planned. | Confirmed |
+| D28 | Build order | Finish Phase 11 (Rapid) first, then 12 (security), then 19 onward roughly in order; 13–18 items fold into the matching new phase where they overlap. | Confirmed |
+| D29 | Sharing | Private, revocable, optionally expiring links (unguessable token, read-only, one thing per link, every view logged). No extra accounts. | Confirmed |
 | D25 | Dashboard URL | https://rapid-window-dashboard.vercel.app, embedded on Business → Dashboard. Its source isn't in `Rapid-Windows-dash` (empty), so the summary endpoint can't be added yet. | Confirmed (URL) / blocked (data) |
 | D24 | Competitor data | Google Places API (ratings + review counts) — key needed. | Assumed |
 
@@ -328,10 +332,79 @@ dark/light themes, quick capture, routines/habits, global search (tasks/notes).
 - [ ] GA4, Stripe/QuickBooks, Google Drive, Spotify, Apple Health/Google Fit, Slack/Discord alerts
 - [ ] Plaid bank sync (late; read-only, tokens encrypted, explicit consent, separate review)
 
+### Phase 19 — GREYVO workspace (drink-mix brand; D26, D27)
+- [ ] 19.1 Workspaces: Business hub switcher (Rapid / GREYVO); tasks, goals, notes, KPIs tagged by workspace
+- [ ] 19.2 Store metrics: daily sales, orders, AOV, conversion, returning-customer rate, subscriptions + churn (manual/CSV now, store API at launch)
+- [ ] 19.3 Inventory: units on hand, sell-through, "reorder by" date from lead time, low-stock alerts
+- [ ] 19.4 Product launch planner: flavor/SKU pipeline (idea → formulation → samples → packaging → launch)
+- [ ] 19.5 Suppliers/manufacturers: contacts, quotes, MOQs, lead times
+- [ ] 19.6 Unit economics calculator: COGS, shipping, packaging, ad cost → margin per unit and per order
+- [ ] 19.7 Creator content hub: video calendar, hook bank, script drafts, filming checklist, posted log (TikTok views/likes where the API allows)
+- [ ] 19.8 AI hook + script generator grounded in your best-performing posts
+- [ ] 19.9 TikTok Ads board: spend, ROAS, CPA, best creatives, AI notes
+- [ ] 19.10 Influencer/UGC tracker: outreach → product sent → posted → results
+- [ ] 19.11 Customer feedback inbox: reviews + DMs summarized by theme (taste, price, shipping)
+- [ ] 19.12 Compliance checklist for labels and claims; flags items for professional review, never legal advice
+
+### Phase 20 — Money & wealth (absorbs 14.5)
+- [ ] 20.1 Combined dashboard: personal + Rapid + GREYVO, owner pay, profit, cash on hand side by side
+- [ ] 20.2 90-day cash flow forecast
+- [ ] 20.3 Pay-yourself planner (Profit First buckets: tax, profit, owner pay, operating)
+- [ ] 20.4 Debt payoff tracker + investment snapshot (manual)
+- [ ] 20.5 "Can I afford this?" big-purchase planner against runway
+- [ ] 20.6 Invoices + payments owed (both businesses)
+
+### Phase 21 — Learning & growth
+- [ ] 21.1 Skill tree (sales, marketing, video editing, coding…) with progress + resources
+- [ ] 21.2 Daily learning slot: AI picks one short lesson tied to current goals
+- [ ] 21.3 Flashcards from notes and books (spaced repetition)
+- [ ] 21.4 Lessons-learned log tied to wins/mistakes
+- [ ] 21.5 Mentor/expert notes tagged by topic
+
+### Phase 22 — Relationships & network (extends People; absorbs 14.8)
+- [ ] 22.1 Personal CRM upgrade: relationship types, "too long" nudges by cadence
+- [ ] 22.2 Networking pipeline (realtors, property managers, builders, HOAs) with follow-up cadences
+- [ ] 22.3 Gift + occasion planner
+- [ ] 22.4 Shared lists with specific people (private links, D29)
+
+### Phase 23 — Time & productivity analytics
+- [ ] 23.1 Automatic time tracking from calendar blocks by area (Rapid, GREYVO, personal, admin)
+- [ ] 23.2 Time ROI: revenue / goal progress per hour by area
+- [ ] 23.3 Distraction log + daily focus score
+- [ ] 23.4 Best-hours analysis; deep work scheduled there
+- [ ] 23.5 Weekly calendar audit: cut / delegate / automate suggestions
+
+### Phase 24 — Delegation & automation (absorbs 18 webhooks)
+- [ ] 24.1 Delegation board (Tyce, crew, VA, automation) with status
+- [ ] 24.2 SOP generator from a description (feeds 11.16 SOP library)
+- [ ] 24.3 Automation ideas from repeated logged tasks
+- [ ] 24.4 Inbound webhooks / Zapier: outside tools push data and trigger actions (signed, logged, approval-gated where outward-facing)
+
+### Phase 25 — Daily experience (absorbs 14.1, 17.2)
+- [ ] 25.1 Command center wall/tablet view
+- [ ] 25.2 End-of-day shutdown ritual (review, inbox, plan tomorrow, mark done)
+- [ ] 25.3 Win log + wall of wins
+- [ ] 25.4 Decision journal with 3/6-month revisit reminders
+- [ ] 25.5 Energy-based task picker
+- [ ] 25.6 Opt-in random check-in prompts (respect quiet hours)
+
+### Phase 26 — Assistant upgrades (with Phase 13)
+- [ ] 26.1 Audio daily brief for the drive
+- [ ] 26.2 Plain-English inbox autopilot rules (every action logged; outward actions approval-gated)
+- [ ] 26.3 Photo/screenshot understanding → expense, task, contact, or note
+- [ ] 26.4 Brain-dump mode → tasks, notes, events, ideas
+- [ ] 26.5 Second-opinion mode for big decisions
+- [ ] 26.6 Weekly strategy session per business from that week's numbers
+
+### Phase 27 — Reports & sharing (D29)
+- [ ] 27.1 Monthly PDF report per business + personal
+- [ ] 27.2 Self-building year-in-review page
+- [ ] 27.3 Shareable read-only snapshot links (create, expire, revoke, view log)
+
 ### New things you'll need to provide (when that section is reached)
 Housecall Pro API key (11.1) · GBP API access, which Google approves per account (11.3/11.5/11.12)
 · Meta app + lead-ads webhook + ads read token (11.3/11.7) · website form webhook secret (generated
-for you, 11.3) · Google Maps Platform key (11.9, 11.13).
+for you, 11.3) · Google Maps Platform key (11.9, 11.13) · GREYVO store API at launch (19.2) · TikTok for Developers app + TikTok Ads token (19.7, 19.9).
 
 ---
 
