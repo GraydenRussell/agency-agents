@@ -2,6 +2,22 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [11.10] Expenses + mileage — 2026-10-26
+### Added
+- **Business → Expenses**: **Snap receipt** (phone camera or a file): the photo/PDF is saved and Claude reads the
+  vendor, date, total, payment method, what was bought, and picks the category; you confirm or fix, then save.
+  Without the Anthropic key the photo is still saved and you fill the fields in. iPhone HEIC photos get a clear
+  “use Most Compatible / screenshot” message (they can't be read).
+- Schedule C–style categories (Fuel, Supplies, Equipment, Vehicle repairs, Advertising, Software & phone,
+  Insurance, Contract labor, Meals at 50%, Uniforms, Fees & licenses, Other) with vendor-based guesses (Circle K →
+  Fuel, Home Depot → Supplies, Chick-fil-A → Meals…). Month view, totals by category, deductible amounts.
+- **Mileage**: vehicles (work/personal), trips with purpose, **“Log that day's job route”** (uses the Route view's
+  miles, once per day per vehicle), IRS rate setting (default $0.70; update it each January), year-to-date business
+  miles and deduction.
+- **For your accountant**: year CSVs for expenses and mileage (formula-safe). Each export is logged.
+- Assistant: `expense_add` and `mileage_log` (both undoable), `tax_summary`.
+- Receipts are stored in the database (max 6 MB each) and only viewable signed in.
+
 ## [11.9] Route view — 2026-10-21
 ### Added
 - **Business → Route**: a day's Housecall Pro jobs on a map (Leaflet + OpenStreetMap; home base and numbered stops),

@@ -40,6 +40,8 @@ const HANDLERS: Record<string, Handler> = {
     if (removed.count === 0) throw new Error("This quote was already sent or decided, so it can't be undone. Mark it lost instead.");
   },
   "referral.delete": (p) => db.referral.deleteMany({ where: { id: s(p.id), status: "PENDING" } }),
+  "expense.delete": (p) => db.businessExpense.deleteMany({ where: { id: s(p.id) } }),
+  "trip.delete": (p) => db.trip.deleteMany({ where: { id: s(p.id) } }),
   "project.revert": (p) => db.project.update({ where: { id: s(p.id) }, data: p.data as object }),
 };
 

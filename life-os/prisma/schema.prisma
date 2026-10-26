@@ -980,3 +980,64 @@ model AdSpend {
 
   @@id([date, source])
 }
+
+/** Business expense (Schedule C style), separate from personal Transactions. */
+model BusinessExpense {
+  id            String       @id @default(cuid())
+  /// RAPID now; GREYVO when that workspace lands (Phase 19)
+  workspace     String       @default("RAPID")
+  /// Phoenix YYYY-MM-DD
+  date          String
+  vendor        String
+  amount        Float
+  category      String
+  /// Share that's deductible (meals 50%)
+  deductiblePct Int          @default(100)
+  paymentMethod String?
+  notes         String?
+  receiptId     String?      @unique
+  receipt       ReceiptFile? @relation(fields: [receiptId], references: [id], onDelete: SetNull)
+  /// What the AI read off the receipt (kept for reference)
+  extracted     Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([workspace, date])
+}
+
+/** Receipt photos/PDFs (small, so they live in the database; max 6 MB each). */
+model ReceiptFile {
+  id        String           @id @default(cuid())
+  mime      String
+  size      Int
+  data      Bytes
+  expense   BusinessExpense?
+  createdAt DateTime         @default(now())
+}
+
+model Vehicle {
+  id        String   @id @default(cuid())
+  name      String
+  /// WORK or PERSONAL
+  kind      String   @default("WORK")
+  plate     String?
+  active    Boolean  @default(true)
+  trips     Trip[]
+  createdAt DateTime @default(now())
+}
+
+model Trip {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  /// Phoenix YYYY-MM-DD
+  date      String
+  miles     Float
+  purpose   String
+  business  Boolean  @default(true)
+  /// MANUAL or ROUTE (logged from the day's route)
+  source    String   @default("MANUAL")
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}

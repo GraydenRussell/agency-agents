@@ -42,6 +42,8 @@ export const SETTINGS = {
   "weather.notifiedAlerts": { schema: z.array(z.string()).max(100), default: [] as string[] },
   /** Where the truck starts and ends the day (route view). */
   "business.homeBase": { schema: z.object({ label: z.string().max(120), lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }), default: { label: "Home base (Chandler)", lat: 33.3062, lng: -111.8413 } },
+  /** IRS standard mileage rate ($/business mile). Update it each January to the current IRS rate. */
+  "taxes.mileageRate": { schema: z.number().min(0).max(5), default: 0.7 },
   /** Nudge me when a new lead has had no reply for this long. */
   "leads.nudgeMinutes": { schema: z.number().int().min(5).max(24 * 60), default: 15 },
   /** Shown on quote PDFs and customer messages. */

@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     },
   },
   serverExternalPackages: ["@prisma/adapter-pg", "pg"],
+  // Receipt photos are uploaded through a server action (the service rejects anything over 6 MB).
+  experimental: { serverActions: { bodySizeLimit: "7mb" } },
   poweredByHeader: false,
   async headers() {
     return [

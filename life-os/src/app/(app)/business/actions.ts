@@ -11,6 +11,8 @@ import * as reviews from "@/lib/services/reviews";
 import * as referrals from "@/lib/services/referrals";
 import * as kpis from "@/lib/services/kpis";
 import { rescheduleTask } from "@/lib/services/weather-plan";
+import * as expenses from "@/lib/services/expenses";
+import type { ReadReceipt } from "@/lib/ai/receipt";
 import { approve } from "@/lib/assistant/executor";
 import { setSetting, type SettingValue } from "@/lib/services/settings";
 
@@ -262,5 +264,57 @@ export async function rescheduleTaskAction(jobId: string, toDate: string | null)
     const t = await rescheduleTask(jobId, toDate);
     revalidatePath("/tasks");
     return t.title;
+  });
+}
+
+export async function uploadReceiptAction(form: FormData) {
+  return runAction(async () => {
+    const f = form.get("file");
+    if (!(f instanceof File) || f.size === 0) throw new Error("Choose a receipt photo or PDF");
+    return expenses.uploadReceipt({ name: f.name, type: f.type, bytes: Buffer.from(await f.arrayBuffer()) });
+  });
+}
+export async function createExpenseAction(input: expenses.ExpenseInput, extracted?: ReadReceipt | null) {
+  return runAction(async () => {
+    const e = await expenses.createExpense(input, extracted);
+    await db.activityLog.create({ data: { actor: "USER", actionType: "expense.add", summary: `Logged $${e.amount} at ${e.vendor} (${e.category})`, input: { id: e.id } } });
+    refresh();
+    return e.id;
+  });
+}
+export async function deleteExpenseAction(id: string) {
+  return runAction(async () => {
+    const e = await expenses.deleteExpense(id);
+    await db.activityLog.create({ data: { actor: "USER", actionType: "expense.delete", summary: `Deleted $${e.amount} expense at ${e.vendor}`, input: { id } } });
+    refresh();
+    return undefined;
+  });
+}
+export async function createVehicleAction(input: { name: string; kind: "WORK" | "PERSONAL"; plate?: string }) {
+  return runAction(async () => {
+    await expenses.createVehicle(input);
+    refresh();
+    return undefined;
+  });
+}
+export async function createTripAction(input: { vehicleId: string; date: string; miles: number; purpose: string; business: boolean }) {
+  return runAction(async () => {
+    const t = await expenses.createTrip(input);
+    refresh();
+    return `Logged ${t.miles} mi`;
+  });
+}
+export async function logRouteMilesAction(date: string, vehicleId: string) {
+  return runAction(async () => {
+    const t = await expenses.logRouteMiles(date, vehicleId);
+    refresh();
+    return `Logged ${t.miles} mi from the route`;
+  });
+}
+export async function saveMileageRateAction(rate: number) {
+  return runAction(async () => {
+    await setSetting("taxes.mileageRate", rate);
+    refresh();
+    return undefined;
   });
 }
