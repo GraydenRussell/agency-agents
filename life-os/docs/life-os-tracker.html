@@ -309,6 +309,8 @@ code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); 
 .agenda-day h4 { margin: 0 0 6px; font-size: 13px; }
 .danger-zone { border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
 @media (max-width: 560px) { .form .two { grid-template-columns: 1fr; } .brief-head { font-size: 26px; } }
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.nowico{flex:none;width:18px;height:18px;margin-top:2px;color:var(--muted);display:inline-flex}.nowico svg{width:18px;height:18px}
 </style>
 <div class="app" id="app">
   <aside class="side" aria-label="Sidebar">
@@ -562,10 +564,11 @@ function addTaskFrom(text, extra = {}) { const p = parseCapture(text); if (!p.ti
 
 // ---------- navigation ----------
 const NAV = [
+  { id: "now", label: "Do Now", icon: "check", key: "j", group: "Run the day", tab: true },
   { id: "today", label: "Today", icon: "sun", key: "h", group: "Run the day", tab: true },
   { id: "tasks", label: "Tasks", icon: "check", key: "t", group: "Run the day", tab: true },
   { id: "calendar", label: "Calendar", icon: "cal", key: "c", group: "Run the day" },
-  { id: "goals", label: "Goals", icon: "target", key: "g", group: "Run the day", tab: true },
+  { id: "goals", label: "Goals", icon: "target", key: "g", group: "Run the day" },
   { id: "assistant", label: "Assistant", icon: "bot", key: "a", group: "Run the day" },
   { id: "habits", label: "Habits", icon: "repeat", key: "r", group: "Track", tab: true },
   { id: "trackers", label: "Trackers", icon: "chart", key: "k", group: "Track" },
@@ -581,7 +584,7 @@ const NAV = [
   { id: "review", label: "Weekly Review", icon: "review", key: "w", group: "Life" },
   { id: "data", label: "Settings & Data", icon: "gear", key: "s", group: "Life" },
 ];
-let view = location.hash.replace("#", "") || "today"; if (!NAV.some((n) => n.id === view)) view = "today";
+let view = location.hash.replace("#", "") || "now"; if (!NAV.some((n) => n.id === view)) view = "now";
 const ui = { taskView: "today", taskSort: "due", calView: "week", calDate: null, taskQ: "", taskArea: "", goalLevel: "all", noteId: null, journalDay: today(), month: monthKey(), more: false, trackerSel: null, listSel: null, briefBusy: false, chatBusy: false, coach: null };
 function go(id) { view = id; ui.more = false; try { history.replaceState(null, "", "#" + id); } catch { /* sandboxed */ } render(); $("#main").scrollTop = 0; }
 function renderNav() {
@@ -1554,7 +1557,54 @@ function searchAll(q) {
 }
 
 
-const VIEWS = { today: vToday, tasks: vTasks, calendar: vCalendar, goals: vGoals, habits: vHabits, trackers: vTrackers, health: vHealth, money: vMoney, business: vBusiness, people: vPeople, notes: vNotes, lists: vLists, school: vSchool, review: vReview, assistant: vAssistant, data: vData, insights: vInsights, dash: vDash };
+// ---------- Do Now: everything that needs you, ranked, with one-tap actions ----------
+function nowItems() {
+  const t = today(), out = [];
+  const add = (urg, icon, title, detail, actions = [], nav = null) => out.push({ urg, icon, title, detail, actions, nav });
+  for (const k of openTasks()) {
+    const late = k.due && k.due < t;
+    if (!late && !k.top3 && k.due !== t) continue;
+    add(late ? 0 : k.top3 ? 0 : 1, "check", k.title, late ? `Overdue since ${nice(k.due)}` : k.top3 ? "Top 3 today" : "Due today", [["toggleTask", k.id, "Done", true], ["snooze", k.id, "Tomorrow"]]);
+  }
+  for (const l of S.leads.filter((x) => x.next && x.next <= t && !["won", "lost"].includes(x.stage))) add(l.next < t ? 0 : 1, "brief", `Follow up with ${l.name}`, `${l.stage === "quoted" ? "Quoted" : "Lead"}${l.value ? " · " + money(num(l.value)) : ""} · ${l.next < t ? "overdue since " + nice(l.next) : "today"}`, [["editLead", l.id, "Open"]]);
+  for (const b of billsDue(3)) add(b.due < t ? 0 : b.due === t ? 1 : 2, "wallet", `Pay ${b.name}`, `${money(num(b.amount))} ${b.due < t ? "overdue since " + nice(b.due) : "due " + nice(b.due)}`, [["payBill", b.id, "Paid", true]]);
+  for (const j of unpaidJobs().filter((x) => dayDiff(x.d, t) >= 7)) add(2, "brief", `Collect ${money(num(j.amount))} from ${j.client}`, `Job ${nice(j.d)}, still unpaid`, [["jobPaid", j.id, "Paid", true], ["jobRemind", j.id, "Reminder text"]]);
+  for (const a of S.assignments.filter((x) => !x.done && x.due && dayDiff(t, x.due) <= (x.type === "exam" ? 7 : 2))) add(a.due <= t ? 0 : 1, "school", a.type === "exam" ? `Study for ${a.title}` : a.title, `${(S.courses.find((c) => c.id === a.course) || {}).name || "School"} · ${a.due < t ? "overdue" : a.due === t ? "due today" : "due " + nice(a.due)}`, a.type === "exam" ? [] : [["assignDone", a.id, "Done", true]], "school");
+  for (const p of followUps().filter((x) => x.due <= t)) add(2, "users", `Check in with ${p.name}`, p.last ? `Last talked ${nice(p.last)}` : "Follow-up due", [["touched", p.id, "Done", true]]);
+  for (const p of birthdays(7)) add(p.next === t ? 0 : 2, "users", `${p.name}'s birthday ${p.next === t ? "is today" : nice(p.next)}`, "Text, card, or gift?", [], "people");
+  for (const h of S.habits.filter((x) => !habitDone(x, t))) add(1, "repeat", h.name, streak(h) ? `${streak(h)}-day streak on the line` : "Habit", [["doHabit", h.id, "Done", true]]);
+  const r = typeof routineFor === "function" ? routineFor(phx().getUTCHours()) : null;
+  if (r && r.steps.length && routineDone(r).length < r.steps.length) add(1, "repeat", r.name, `${routineDone(r).length}/${r.steps.length} steps done`, [], "today");
+  return out.sort((a, b) => a.urg - b.urg);
+}
+function vNow() {
+  const items = nowItems();
+  const groups = [[0, "Right now", "var(--danger)"], [1, "Today", "var(--warn)"], [2, "This week", "var(--border)"]];
+  const n = (u) => items.filter((i) => i.urg === u).length;
+  const sub = items.length ? [n(0) && `${n(0)} need you right now`, n(1) && `${n(1)} for today`, n(2) && `${n(2)} this week`].filter(Boolean).join(" · ") : "You're all caught up.";
+  const btn = ([act, id, label, pri]) => `<button class="btn sm ${pri ? "pri" : ""}" data-act="${act}" data-id="${id}">${esc(label)}</button>`;
+  return header("Do Now", `Everything that needs you, from every part of Life OS. ${sub}`, sampleState !== "off" ? `<button class="btn pri" data-act="aiPlanNow" ${ui.planBusy ? "disabled" : ""}>${ico("spark")}${ui.planBusy ? "Planning…" : "Plan my day with Claude"}</button>` : "")
+  + `<section class="card" style="margin-bottom:16px"><form id="nowAsk" style="display:flex;gap:8px"><label for="nowAskIn" class="sr-only">Ask Life OS to do anything</label><input id="nowAskIn" placeholder="Ask Life OS to do anything… “add a task to call the HOA tomorrow at 9”, “log $48 gas”" style="flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--fg)"><button class="btn pri" type="submit">Do it</button></form>
+    <div class="sugs">${["Plan my day", "What's most urgent?", "Log 32 oz water", "Spent 42 on gas"].map((s) => `<button class="chip" data-act="nowSuggest" data-t="${esc(s)}">${esc(s)}</button>`).join("")}</div></section>`
+  + (ui.planText ? `<section class="card" style="margin-bottom:16px"><div class="ch"><h2>${ico("spark")}Your plan</h2><button class="btn sm ghost" data-act="planClear" aria-label="Clear plan">${ico("x")}</button></div><div class="md small" id="nowPlanOut">${mdLite(ui.planText)}</div></section>` : "")
+  + (items.length === 0 ? empty("Nothing needs you right now", "Every task, bill, and follow-up is handled. New things show up here the moment they need you.") : groups.map(([u, label, color]) => {
+    const list = items.filter((i) => i.urg === u);
+    if (!list.length) return "";
+    return `<h2 style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px">${label} · ${list.length}</h2><section class="card" style="padding:4px 14px;border-color:${color}" data-testid="now-${u}">${list.map((i) => `<div class="row" style="flex-wrap:wrap;gap:8px"><span style="display:flex;gap:10px;align-items:flex-start;min-width:12rem;flex:1"><span class="nowico">${ico(i.icon)}</span><span><b style="font-weight:600">${esc(i.title)}</b><br><span class="muted small">${esc(i.detail || "")}</span></span></span><span style="display:flex;gap:6px;flex-wrap:wrap">${i.actions.map(btn).join("")}${i.nav ? `<button class="btn sm ghost" data-nav="${i.nav}">Open →</button>` : ""}</span></div>`).join("")}</section>`;
+  }).join(""));
+}
+async function aiPlanNow() {
+  const sample = await getSample(); if (!sample) return toast("Claude isn't available here.");
+  ui.planBusy = true; ui.planText = ""; render();
+  const items = nowItems().map((i) => `${["NOW", "TODAY", "WEEK"][i.urg]} | ${i.title} | ${i.detail || ""}`);
+  const agenda = itemsOn(today()).filter((x) => x.time).sort((a, b) => a.time.localeCompare(b.time)).map((x) => `${x.time} ${x.title}`);
+  try { await sample(`You're ${S.settings.name}'s chief of staff (owner of Rapid Window Cleaning in Chandler, AZ, also building a drink-mix brand and in school). It's ${nowHM()} on ${DOW[phx().getUTCDay()]}. Turn this into a realistic plan for the rest of today: a short time-ordered list that works around the fixed schedule, does the most important things first, batches small items, and names what can wait. Be direct, 10 lines max, markdown bullets with times.\n\nFixed schedule:\n${agenda.join("\n") || "(nothing scheduled)"}\n\nOpen items:\n${items.join("\n") || "(nothing)"}`, { cache: false, onText: ({ text }) => { ui.planText = text; const o = $("#nowPlanOut"); if (o) o.innerHTML = mdLite(text); else render(); } }); }
+  catch (e) { const m = aiErr(e); if (m) toast(m); }
+  finally { ui.planBusy = false; render(); }
+}
+function nowAsk(text) { const v = text.trim(); if (!v) return; go("assistant"); setTimeout(() => ask(v), 0); }
+
+const VIEWS = { now: vNow, today: vToday, tasks: vTasks, calendar: vCalendar, goals: vGoals, habits: vHabits, trackers: vTrackers, health: vHealth, money: vMoney, business: vBusiness, people: vPeople, notes: vNotes, lists: vLists, school: vSchool, review: vReview, assistant: vAssistant, data: vData, insights: vInsights, dash: vDash };
 function vDash() {
   const url = S.settings.dashUrl || "https://rapid-window-dashboard.vercel.app";
   return header("Rapid Dashboard", "Your Rapid Window Cleaning dashboard: revenue, jobs, crew, and everything else on it.")
@@ -1620,6 +1670,10 @@ document.addEventListener("click", async (e) => {
     case "palette": return openPalette(false);
     case "capture": return openPalette(true);
     case "theme": return cycleTheme();
+    case "aiPlanNow": return aiPlanNow();
+    case "planClear": ui.planText = ""; return render();
+    case "nowSuggest": return nowAsk(el.dataset.t);
+    case "doHabit": { const k = today(); (S.habitLog[k] = S.habitLog[k] || {})[id] = true; touch("habitLog"); render(); const h = byId(S.habits, id); return toast(h && streak(h) >= 3 ? `${streak(h)}-day ${h.name} streak 🔥` : "Nice"); }
     case "quote": return quoteDialog(null);
     case "quoteLead": return quoteDialog(byId(S.leads, id));
     case "jobPaid": { const j = byId(S.jobs, id); const u = snapshotUndo(["jobs"]); j.paid = true; touch("jobs"); render(); return toast(`${j.client} marked paid`, u); }
@@ -1742,6 +1796,7 @@ document.addEventListener("input", (e) => {
 });
 document.addEventListener("submit", (e) => {
   const f = e.target; e.preventDefault();
+  if (f.id === "nowAsk") { nowAsk($("#nowAskIn").value); return; }
   if (f.id === "quickTask") { const v = $("#quickTaskIn").value; const t = addTaskFrom(v); render(); if (t) toast(`Task added: ${t.title}`); setTimeout(() => $("#quickTaskIn")?.focus(), 0); }
   if (f.id === "composer") { ask($("#askBox").value); }
   if (f.dataset.form === "log") { const v = $(`#lg-${f.dataset.id}`).value; if (v === "") return; logEntry(f.dataset.id, v, $(`#ld-${f.dataset.id}`).value || today()); render(); }
