@@ -57,7 +57,7 @@ const TOOL_LABEL: Record<string, string> = {
 
 export const SUGGESTIONS = ["Plan my day", "What needs a reply?", "How's the business doing this week?", "Find 2 hours for admin this week", "What's on my calendar tomorrow?"];
 
-export function ChatView({ initialConversationId = null, initialItems = [], compact = false, onConversation }: { initialConversationId?: string | null; initialItems?: ChatItem[]; compact?: boolean; onConversation?: (id: string) => void }) {
+export function ChatView({ initialConversationId = null, initialItems = [], compact = false, onConversation, initialPrompt }: { initialConversationId?: string | null; initialItems?: ChatItem[]; compact?: boolean; onConversation?: (id: string) => void; initialPrompt?: string }) {
   const router = useRouter();
   const [conversationId, setConversationId] = useState<string | null>(initialConversationId);
   const [items, setItems] = useState<ChatItem[]>(initialItems);
@@ -69,6 +69,16 @@ export function ChatView({ initialConversationId = null, initialItems = [], comp
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: "end" });
   }, [items]);
+
+  // "Ask Life OS" on Do Now arrives as ?q=…: send it once, then drop it from the URL.
+  const sentInitial = useRef(false);
+  useEffect(() => {
+    if (!initialPrompt || sentInitial.current) return;
+    sentInitial.current = true;
+    window.history.replaceState(null, "", "/assistant");
+    void send(initialPrompt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPrompt]);
 
   const patchAssistant = (fn: (a: ChatItem) => ChatItem) =>
     setItems((xs) => {

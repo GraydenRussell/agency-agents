@@ -2,6 +2,20 @@
 
 All notable changes to Life OS. Dates are America/Phoenix.
 
+## [Do Now] One list of everything that needs you — 2026-11-16
+### Added
+- **Do Now** (`/now`, first in the sidebar and phone tab bar, `g w`; Life OS now opens here): every open loop
+  from across the app in one ranked list (**Right now / Today / This week / To finish setting up**): waiting
+  approvals, unanswered leads, overdue / Top 3 / due-today tasks, quotes sent 3+ days ago with no answer,
+  customers due to re-book, reviews to answer, review requests, referral rewards owed, weather risks on the next
+  3 days' jobs, bills due or overdue, money owed on finished jobs, people to check in with, important emails, today's
+  habits, and required setup still missing.
+- One-tap actions right in the list (Approve/Reject, Done, Tomorrow, I called them, Won/Lost, Paid, Snooze,
+  Skip); the item disappears and the action is logged. Anything that messages a customer stays on its own page so
+  you read it before it goes out.
+- **Ask Life OS to do anything** box with quick suggestions: hands the request to the assistant and sends it.
+- Assistant: `do_now_list` (“what do I need to get done?”).
+
 ## [11.10] Expenses + mileage — 2026-10-26
 ### Added
 - **Business → Expenses**: **Snap receipt** (phone camera or a file): the photo/PDF is saved and Claude reads the

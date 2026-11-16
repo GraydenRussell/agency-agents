@@ -7,6 +7,7 @@ import {
   FolderGit2,
   HeartPulse,
   Inbox,
+  ListTodo,
   LayoutDashboard,
   Repeat,
   NotebookPen,
@@ -32,8 +33,9 @@ export type NavItem = {
 };
 
 export const NAV: NavItem[] = [
+  { href: "/now", label: "Do Now", icon: ListTodo, chord: "w", mobile: true, group: "main" },
   { href: "/today", label: "Today", icon: Sun, chord: "h", mobile: true, group: "main" },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays, chord: "c", mobile: true, group: "main" },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays, chord: "c", group: "main" },
   { href: "/tasks", label: "Tasks", icon: CheckSquare, chord: "t", mobile: true, group: "main" },
   { href: "/goals", label: "Goals", icon: Target, chord: "g", group: "main" },
   { href: "/routines", label: "Routines & Habits", icon: Repeat, chord: "r", group: "main" },

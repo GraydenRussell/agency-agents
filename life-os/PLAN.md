@@ -381,6 +381,7 @@ dark/light themes, quick capture, routines/habits, global search (tasks/notes).
 - [ ] 24.4 Inbound webhooks / Zapier: outside tools push data and trigger actions (signed, logged, approval-gated where outward-facing)
 
 ### Phase 25 — Daily experience (absorbs 14.1, 17.2)
+- [x] 25.0 Do Now: ranked open loops from every module with one-tap actions + ask box (landing page)
 - [ ] 25.1 Command center wall/tablet view
 - [ ] 25.2 End-of-day shutdown ritual (review, inbox, plan tomorrow, mark done)
 - [ ] 25.3 Win log + wall of wins

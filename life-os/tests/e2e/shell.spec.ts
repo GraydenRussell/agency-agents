@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("root redirects to Today and the shell renders", async ({ page }) => {
+test("root redirects to Do Now and the shell renders", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveURL(/\/today$/);
+  await expect(page).toHaveURL(/\/now$/);
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
 });
 

@@ -47,7 +47,7 @@ export default async function AssistantPage({ searchParams }: PageProps<"/assist
           ))}
         </nav>
         <div className="min-w-0">
-          <ChatView key={id ?? "new"} initialConversationId={id} initialItems={items} />
+          <ChatView key={id ?? "new"} initialConversationId={id} initialItems={items} initialPrompt={!id && typeof sp.q === "string" && sp.q.trim() ? sp.q.trim().slice(0, 2000) : undefined} />
         </div>
       </div>
     </>
